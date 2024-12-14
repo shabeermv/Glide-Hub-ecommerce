@@ -1,0 +1,50 @@
+<%- include("../../views/partials/admin/header.ejs") %>
+
+<main class="main-wrap">
+    <header class="main-header navbar">
+        <div class="col-search">
+            <form class="searchform">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search term" />
+                    <button class="btn btn-light bg" type="button"><i class="material-icons md-search"></i></button>
+                </div>
+            </form>
+        </div>
+    </header>
+
+    <section class="content-main">
+        <div class="content-header">
+            <h2 class="content-title card-title">Products Grid</h2>
+            <a href="/admin/addProduct" class="btn btn-primary btn-sm rounded">Create New</a>
+        </div>
+    
+        <div class="row">
+            <% updatedProducts.forEach(product => { %>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="card card-product-grid">
+                        <a href="#" class="img-wrap">
+                            <!-- Use a placeholder image if product.images is empty or undefined -->
+                            <img 
+                                src="<%= product.images && product.image.length > 0 ? '/uploads/' + product.image[0] : '/path/to/placeholder-image.jpg' %>"
+                                alt="Product Image" 
+                            />
+                        </a>
+                        <div class="info-wrap">
+                            <h5 class="title"><%= product.title %></h5>
+                            <div class="price mt-1">$<%= product.price %></div>
+                            <div>Stock: <%= product.stock || 'Out of Stock' %></div>
+                            <div> <%= product.category.name || 'Uncategorized' %></div>
+                        </div>
+                        <!-- Show Details Button -->
+                        <div class="card-footer">
+                            <a href="/admin/productDetails/<%= product._id %>" class="btn btn-info btn-sm">Show Details</a>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </section>
+    
+</main>
+
+<%- include("../../views/partials/admin/footer.ejs") %>

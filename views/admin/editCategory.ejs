@@ -1,0 +1,126 @@
+<%- include("../../views/partials/admin/header.ejs") %>
+
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Edit Category</h2>
+            <p>Edit the details of the selected category</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <form id="editCategoryForm">
+                        <!-- Hidden input to store category ID -->
+                        <input type="hidden" id="categoryId" value="<%= category._id %>" />
+
+                        <!-- Input field for category name -->
+                        <div class="mb-4">
+                            <label for="categoryName" class="form-label">Name</label>
+                            <input
+                                type="text"
+                                placeholder="Type here"
+                                class="form-control"
+                                id="categoryName"
+                                value="<%= category.name %>"
+                                required
+                            />
+                        </div>
+
+                        <!-- Input field for category offer -->
+                        <div class="mb-4">
+                            <label for="categoryOffer" class="form-label">Offer</label>
+                            <input
+                                type="text"
+                                placeholder="Type here"
+                                class="form-control"
+                                id="categoryOffer"
+                                value="<%= category.offer %>"
+                                required
+                            />
+                        </div>
+
+                        <!-- Textarea for category description -->
+                        <div class="mb-4">
+                            <label for="categoryDescription" class="form-label">Description</label>
+                            <textarea
+                                placeholder="Type here"
+                                class="form-control"
+                                id="categoryDescription"
+                                required
+                            ><%= category.description %></textarea>
+                        </div>
+
+                        <!-- Submit button -->
+                        <div class="d-grid">
+                            <button class="btn btn-primary" id="updateCategory">Update Category</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="main-footer font-xs">
+    <div class="row pb-30 pt-15">
+        <div class="col-sm-6">
+            <script>
+                document.write(new Date().getFullYear());
+            </script>
+            &copy; Nest - HTML Ecommerce Template.
+        </div>
+        <div class="col-sm-6">
+            <div class="text-sm-end">All rights reserved</div>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Handle the "Update Category" button click event
+    document.getElementById('updateCategory').addEventListener('click', function (e) {
+        e.preventDefault();
+
+        // Retrieve category ID and form data
+        const categoryId = document.getElementById('categoryId').value;
+        const formData = {
+            name: document.getElementById('categoryName').value.trim(),
+            offer: document.getElementById('categoryOffer').value.trim(),
+            description: document.getElementById('categoryDescription').value.trim(),
+        };
+
+        // Validate form fields
+        if (!formData.name || !formData.offer || !formData.description) {
+            alert('All fields are required!');
+            return;
+        }
+
+        // Send a PUT request to update the category
+        fetch(`/admin/edit/${categoryId}`, {
+    method: "PUT",
+    headers: {
+        "Content-Type": "application/json",
+    },
+    body: JSON.stringify(formData),
+})
+    .then((response) => {
+        console.log('Response Status:', response.status);
+        return response.json();
+    })
+    .then((data) => {
+        console.log('Backend Response:', data);
+        if (data.success) {
+            window.location.href = '/admin/categories';
+        } else {
+            alert(data.message || 'Error updating category');
+        }
+    })
+    .catch((error) => {
+        console.error('Fetch Error:', error);
+        alert('An error occurred while updating the category. Please try again.');
+    });
+    });
+</script>
+
+<%- include("../../views/partials/admin/footer.ejs") %>

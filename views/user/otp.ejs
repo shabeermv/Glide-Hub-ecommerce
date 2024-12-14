@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/otp.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    
+</head>
+<body>
+    <div class="d-flex justify-content-center align-items-center container">
+        <div class="card py-5 px-3">
+
+            <h5 class="m-0">verify your account</h5><span class="mobile-text">We have to send your mail a one time otp.please enter here...</span>
+            <p id="error-otp" ></p>
+            <div class="d-flex flex-row mt-5">
+                <input type="text" class="form-control" id="1" autofocus="">
+                <input type="text" class="form-control" id="2">
+                <input type="text" class="form-control" id="3">
+                <input type="text" class="form-control" id="4">
+                <input type="text" class="form-control" id="5">
+                <input type="text" class="form-control" id="6">
+            </div>
+            <div class="submit-btn-container mt-4 d-flex justify-content-center">
+                <a href="#">
+                    <button class="movebtn google align-items-center" id="Submit" type="Submit">
+                        Submit <i class="fa fa-fw fa-google"></i>
+                    </button>
+                </a>
+            </div>
+            <div class="text-center mt-5">
+                <span class="d-block mobile-text">Didn't receive the code?</span>
+                <button id="resend-btn" class="btn btn-primary font-weight-bold" disabled>Resend OTP</button>
+                <p id="timer" class="mt-2">Resend available in: <span id="countdown">60</span> seconds</p>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+         
+        function startTimer(duration) {
+            const countDown=document.getElementById('countdown');
+            const resendButton=document.getElementById('resend-btn')
+            let timer=duration;
+            
+        
+         const interval=setInterval(()=>{
+            countDown.textContent=timer;
+    
+            if(timer<=0){
+            clearInterval(interval);
+            countDown.textContent='0';
+            resendButton.disabled=false;
+            }
+            else{
+                timer--;
+            }
+         },1000);
+        }
+    
+         
+    
+    </script>
+    <script>
+        startTimer(60);
+      
+        const otpInputs = document.querySelectorAll('input[type="text"]');
+        
+        otpInputs.forEach((input, index) => {
+           
+            input.addEventListener('input', (e) => {
+               
+                if (e.target.value.length > 1) {
+                    e.target.value = e.target.value.slice(0, 1);
+                }
+    
+                
+                if (e.target.value.length === 1 && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+    
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && e.target.value.length === 0 && index > 0) {
+                    
+                    otpInputs[index - 1].focus();
+                }
+            });
+        });
+    </script>
+    <script>
+//first otp submittion
+    document.getElementById('Submit').addEventListener('click', function(event) {
+    event.preventDefault();
+    
+    const one = document.getElementById('1').value;
+    const two = document.getElementById('2').value;
+    const three = document.getElementById('3').value;
+    const four = document.getElementById('4').value;
+    const five = document.getElementById('5').value;
+    const six = document.getElementById('6').value;
+
+    
+    const totalOtp = [one, two, three, four, five, six];
+    const fillOtp = totalOtp.join('');
+
+    
+    const otpAsInt = parseInt(fillOtp, 10);
+
+    fetch('/otp', {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ fillOtp: otpAsInt }),
+    })
+    .then((response) => response.json())
+    .then((data) => {
+        console.log(data, "dataaaaaaaaaaaaaaa");
+
+        if (data.success) {
+            
+            window.location.href = "/";
+        } else if (data.success === false) {
+            document.getElementById('error-otp').innerHTML = data.message;
+        } else {
+            alert("Error: " + data.message);
+        }
+    })
+    .catch((error) => {
+        console.error("Error:", error);
+        alert("Something went wrong!");
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const resendButton = document.getElementById('resend-btn');
+    resendButton.addEventListener('click', () => {
+        resendButton.disabled = true;
+        fetch('/resendOtp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    startTimer(60); 
+                } else {
+                    alert('Failed to generate a new OTP.');
+                    resendButton.disabled = false; 
+                }
+            })
+            .catch((err) => {
+                console.error('Error occurred while resending OTP:', err);
+                resendButton.disabled = false; 
+            });
+    });
+});
+
+
+</script>
+
+
+
+    
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<%- include("../../views/partials/admin/header.ejs") %>
+
+<!-- Cropper CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet" />
+
+<!-- Cropper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+
+<main class="main-wrap">
+    <header class="main-header navbar">
+        <div class="col-search">
+            <form class="searchform">
+                <div class="input-group">
+                    <input list="search_terms" type="text" class="form-control" placeholder="Search term" />
+                    <button class="btn btn-light bg" type="button"><i class="material-icons md-search"></i></button>
+                </div>
+                <datalist id="search_terms">
+                    <option value="Products"></option>
+                    <option value="New orders"></option>
+                    <option value="Apple iphone"></option>
+                    <option value="Ahmed Hassan"></option>
+                </datalist>
+            </form>
+        </div>
+        <div class="col-nav">
+            <button class="btn btn-icon btn-mobile me-auto" data-trigger="#offcanvas_aside"><i class="material-icons md-apps"></i></button>
+            <ul class="nav">
+                <li class="nav-item">
+                    <a class="nav-link btn-icon" href="#">
+                        <i class="material-icons md-notifications animation-shake"></i>
+                        <span class="badge rounded-pill">3</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link btn-icon darkmode" href="#"> <i class="material-icons md-nights_stay"></i> </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="requestfullscreen nav-link btn-icon"><i class="material-icons md-cast"></i></a>
+                </li>
+                <li class="dropdown nav-item">
+                    <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" id="dropdownLanguage" aria-expanded="false"><i class="material-icons md-public"></i></a>
+                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownLanguage">
+                        <a class="dropdown-item text-brand" href="#"><img src="asset2/imgs/theme/flag-us.png" alt="English" />English</a>
+                        <a class="dropdown-item" href="#"><img src="asset2/imgs/theme/flag-fr.png" alt="Français" />Français</a>
+                        <a class="dropdown-item" href="#"><img src="asset2/imgs/theme/flag-jp.png" alt="Français" />日本語</a>
+                        <a class="dropdown-item" href="#"><img src="asset2/imgs/theme/flag-cn.png" alt="Français" />中国人</a>
+                    </div>
+                </li>
+                <li class="dropdown nav-item">
+                    <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" id="dropdownAccount" aria-expanded="false"> <img class="img-xs rounded-circle" src="assets/imgs/people/avatar-2.png" alt="User" /></a>
+                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownAccount">
+                        <a class="dropdown-item" href="#"><i class="material-icons md-perm_identity"></i>Edit Profile</a>
+                        <a class="dropdown-item" href="#"><i class="material-icons md-settings"></i>Account Settings</a>
+                        <a class="dropdown-item" href="#"><i class="material-icons md-account_balance_wallet"></i>Wallet</a>
+                        <a class="dropdown-item" href="#"><i class="material-icons md-receipt"></i>Billing</a>
+                        <a class="dropdown-item" href="#"><i class="material-icons md-help_outline"></i>Help center</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" href="#"><i class="material-icons md-exit_to_app"></i>Logout</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </header>
+    <section class="content-main">
+        <div class="row">
+            <div class="col-9">
+                <div class="content-header">
+                    <h2 class="content-title">Add New Product</h2>
+                    <div>
+                        <button class="btn btn-md rounded font-sm hover-up" id="applyButton">Publish</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <label for="product_title" class="form-label">Product title</label>
+                            <input type="text" placeholder="Type here" class="form-control" id="product_title" required />
+                        </div>
+                        <div class="row gx-2">
+                            <div class="col-md-4 mb-3">
+                                <label for="product_color" class="form-label">Color</label>
+                                <input type="text" placeholder="Type here" class="form-control" id="product_color" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="product_size" class="form-label">Size</label>
+                                <input type="text" placeholder="Type here" class="form-control" id="product_size" />
+                                <button type="button" id="addSizeButton" class="btn btn-sm btn-primary mt-2">Add Size</button>
+                                <ul id="sizeList"></ul>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="product_brand" class="form-label">Brand</label>
+                            <input type="text" placeholder="Type here" class="form-control" id="product_brand" required />
+                        </div>
+                        <div class="mb-4">
+                            <label for="product_stock" class="form-label">Stock</label>
+                            <input type="text" placeholder="Type here" class="form-control" id="product_stock" required />
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div>
+                            <label class="form-label">Description</label>
+                            <textarea placeholder="Type here" class="form-control" rows="4"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div>
+                            <label class="form-label" for="product_images">Images</label>
+                            <input type="file" id="product_images" accept="image/*" name="images" multiple>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <label class="form-label">Price</label>
+                            <input type="number" placeholder="Type here" class="form-control" id="product_price" required />
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="product_status" name="category">
+                                <option disabled selected>Select a Category</option>
+                                <% categories.forEach(category => { %>
+                                    <option value="<%= category._id %>"><%= category.name %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Tags</label>
+                            <input type="text" placeholder="Type here" class="form-control" id="product_tags" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    let sizes = [];
+
+    document.getElementById('addSizeButton').addEventListener('click', () => {
+        const sizeInput = document.getElementById('product_size').value.trim();
+        if (sizeInput && !sizes.includes(sizeInput)) {
+            sizes.push(sizeInput);
+            const listItem = document.createElement('li');
+            listItem.textContent = sizeInput;
+            document.getElementById('sizeList').appendChild(listItem);
+            document.getElementById('product_size').value = ''; // clear the input
+        } else if (!sizeInput) {
+            alert('Please enter a size.');
+        } else {
+            alert('This size already exists.');
+        }
+    });
+
+    document.getElementById('applyButton').addEventListener('click', () => {
+        const productName = document.getElementById('product_title').value.trim();
+        const productDescription = document.querySelector('textarea').value.trim();
+        const productBrand = document.getElementById('product_brand').value.trim();
+        const productStock = document.getElementById('product_stock').value.trim();
+        const productPrice = document.getElementById('product_price').value.trim();
+        const productStatus = document.getElementById('product_status').value;
+        const images = document.getElementById('product_images').files;
+
+        if (productName === '' || productDescription === '' || productBrand === '' || productStock === '' || productPrice === '') {
+            alert('Please fill in all required fields.');
+            return;
+        }
+
+        if (images.length === 0) {
+            alert('You must upload at least 1 image.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('title', productName);
+        formData.append('description', productDescription);
+        formData.append('brandName', productBrand);
+        formData.append('stock', productStock);
+        formData.append('price', productPrice);
+        formData.append('category', productStatus);
+        formData.append('sizes', JSON.stringify(sizes));  // Send the array of sizes as a JSON string
+
+        Array.from(images).forEach((file) => {
+            formData.append('images', file);
+        });
+
+        fetch('/admin/addProduct', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Product added successfully.');
+                window.location.href = '/admin/products';
+            } else {
+                alert('Error adding product: ' + data.message);
+            }
+        })
+        .catch(err => console.error('Error:', err));
+    });
+</script>

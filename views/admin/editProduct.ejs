@@ -1,0 +1,165 @@
+<%- include("../../views/partials/admin/header.ejs") %>
+
+<main class="main-wrap">
+    <header class="main-header navbar">
+        <!-- Your header content -->
+    </header>
+    <section class="content-main">
+        <div class="row">
+            <div class="col-9">
+                <div class="content-header">
+                    <h2 class="content-title">Edit Product</h2>
+                    <div>
+                        <button class="btn btn-light rounded font-sm mr-5 text-body hover-up">Save to draft</button>
+                        <button class="btn btn-md rounded font-sm hover-up" id="applyButton">Update</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <label for="product_title" class="form-label">Product title</label>
+                            <input type="text" placeholder="Type here" class="form-control" id="product_title" value="<%= product.title %>" required />
+                        </div>
+                        <!-- Product Color & Size -->
+                        <div class="row gx-2">
+                            <div class="col-md-4 mb-3">
+                                <label for="product_color" class="form-label">Color</label>
+                                <input type="text" placeholder="Type here" class="form-control" id="product_color" value="<%= product.color %>" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="product_size" class="form-label">Size</label>
+                                <input type="text" placeholder="Type here" class="form-control" id="product_size" />
+                                <button type="button" id="addSizeButton" class="btn btn-sm btn-primary mt-2">Add Size</button>
+                                <ul id="sizeList"></ul>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="product_brand" class="form-label">Brand</label>
+                            <input type="text" placeholder="Type here" class="form-control" id="product_brand" value="<%= product.brandName %>" required />
+                        </div>
+                        <div class="mb-4">
+                            <label for="product_stock" class="form-label">Stock</label>
+                            <input type="number" placeholder="Type here" class="form-control" id="product_stock" value="<%= product.stock %>" required />
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div>
+                            <label class="form-label">Description</label>
+                            <textarea placeholder="Type here" class="form-control" rows="4" id="product_description"><%= product.description %></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div>
+                            <label class="form-label" for="product_images">Images</label>
+                            <input type="file" id="product_images" accept="image/*" name="images" multiple>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <label class="form-label">Price</label>
+                            <input type="number" placeholder="Type here" class="form-control" id="product_price" value="<%= product.price %>" required />
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="product_status" name="category">
+                                <option disabled>Select a Category</option>
+                                <% categories.forEach(category => { %>
+                                    <option value="<%= category._id %>" <%= category._id == product.category ? 'selected' : '' %>><%= category.name %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Tags</label>
+                            <input type="text" placeholder="Type here" class="form-control" id="product_tags" value="<%= product.tags %>" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+   let sizes = [];
+
+document.getElementById('addSizeButton').addEventListener('click', () => {
+    const sizeInput = document.getElementById('product_size').value.trim();
+    if (sizeInput && !sizes.includes(sizeInput)) {
+        sizes.push(sizeInput);
+        const listItem = document.createElement('li');
+        listItem.textContent = sizeInput;
+        document.getElementById('sizeList').appendChild(listItem);
+        document.getElementById('product_size').value = ''; // clear the input
+    } else if (!sizeInput) {
+        alert('Please enter a size.');
+    } else {
+        alert('This size already exists.');
+    }
+});
+
+document.getElementById('applyButton').addEventListener('click', () => {
+    const productName = document.getElementById('product_title').value.trim();
+    const productDescription = document.getElementById('product_description').value.trim();
+    const productBrand = document.getElementById('product_brand').value.trim();
+    const productStock = document.getElementById('product_stock').value.trim();
+    const productPrice = document.getElementById('product_price').value.trim();
+    const productStatus = document.getElementById('product_status').value;
+    const images = document.getElementById('product_images').files;
+
+    if (productName === '' || productDescription === '' || productBrand === '' || productStock === '' || productPrice === '') {
+        alert('Please fill in all required fields.');
+        return;
+    }
+
+    if (images.length === 0) {
+        alert('You must upload at least 1 image.');
+        return;
+    }
+
+    // Create the form data
+    const formData = new FormData();
+    formData.append('title', productName);
+    formData.append('description', productDescription);
+    formData.append('brandName', productBrand);
+    formData.append('stock', productStock);
+    formData.append('price', productPrice);
+    formData.append('category', productStatus);
+    
+    // Add the sizes to the form data
+    sizes.forEach((size) => {
+        formData.append('sizes[]', size);
+    });
+
+    Array.from(images).forEach((file) => {
+        formData.append('images', file);
+    });
+
+    // Submit the form data via fetch
+    fetch('/admin/updateProduct/<%= product._id %>', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Product updated successfully.');
+            window.location.href = '/admin/products';
+        } else {
+            alert('Error updating product: ' + data.message);
+        }
+    })
+    .catch(err => console.error('Error:', err));
+});
+</script>
+
+<%- include("../../views/partials/admin/footer.ejs") %>

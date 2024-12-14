@@ -1,0 +1,265 @@
+<%- include("../../views/partials/admin/header.ejs") %>
+
+<main class="main-wrap">
+  <header class="main-header navbar">
+    <div class="col-search">
+      <form class="searchform" method="GET" action="/users">
+        <div class="input-group">
+          <input
+            list="search_terms"
+            type="text"
+            class="form-control"
+            name="search"
+            placeholder="Search term"
+            value="<%= search %>"
+          />
+          <button class="btn btn-light bg" type="submit">
+            <i class="material-icons md-search"></i>
+          </button>
+        </div>
+        <datalist id="search_terms">
+          <option value="Products"></option>
+          <option value="New orders"></option>
+          <option value="Apple iphone"></option>
+          <option value="Ahmed Hassan"></option>
+        </datalist>
+      </form>
+    </div>
+  </header>
+
+  <section class="content-main">
+    <div class="content-header">
+      <h2 class="content-title">Users List</h2>
+    </div>
+
+    <div class="card mb-4">
+      <header class="card-header">
+        <div class="row gx-3">
+          <div class="col-lg-4 col-md-6 me-auto">
+            <form method="GET" action="/users">
+              <input
+                type="text"
+                placeholder="Search..."
+                class="form-control"
+                name="search"
+                value="<%= search %>"
+              />
+            </form>
+          </div>
+        </div>
+      </header>
+
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Contact</th>
+                <th>Registered</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (data.length === 0) { %>
+              <tr>
+                <td colspan="5" class="text-center">No users found</td>
+              </tr>
+              <% } else { %> 
+                <% for (let i = 0; i < data.length; i++) { %>
+                <tr>
+                  <td><%= data[i].username %></td>
+                  <td><%= data[i].email %></td>
+                  <td><%= data[i].contact %></td>
+                  <td>
+                    <% if (data[i].createdAt) { %> 
+                      <%= new Date(data[i].createdAt).toDateString() %> 
+                    <% } else { %> 
+                      N/A 
+                    <% } %>
+                  </td>
+                  <td class="text-end">
+                    <% if (data[i].isBlocked) { %>
+                      <button class="btn btn-success btn-sm unblock-btn" 
+                        data-id="<%= data[i]._id %>" 
+                        data-isblocked="true">Unblock</button>
+                    <% } else { %>
+                      <button class="btn btn-danger btn-sm block-btn" 
+                        data-id="<%= data[i]._id %>" 
+                        data-isblocked="false">Block</button>
+                    <% } %>
+                  </td>
+                </tr>
+                <% } %> 
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+
+    <!-- Pagination -->
+    <div class="pagination-area mt-15 mb-50">
+      <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-start">
+          <% if (currentPage > 1) { %>
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="?page=<%= currentPage - 1 %>&search=<%= search %>"
+            >
+              <i class="material-icons md-chevron_left"></i>
+            </a>
+          </li>
+          <% } %> <% for (let i = 1; i <= totalPages; i++) { %>
+          <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+            <a class="page-link" href="?page=<%= i %>&search=<%= search %>"
+              ><%= i %></a
+            >
+          </li>
+          <% } %> <% if (currentPage < totalPages) { %>
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="?page=<%= currentPage + 1 %>&search=<%= search %>"
+            >
+              <i class="material-icons md-chevron_right"></i>
+            </a>
+          </li>
+          <% } %>
+        </ul>
+      </nav>
+    </div>
+  </section>
+</main>
+
+
+<script>
+    document.querySelectorAll('.unblock-btn').forEach(button => {
+      button.addEventListener('click', function () {
+
+        
+        const categoryId = this.getAttribute('data-id'); // Assuming the category ID is set as a data attribute.
+        const action = this.textContent.trim().toLowerCase(); // Get "Block" or "Unblock" from button text.
+        const newStatus = action === 'block' ? false : true; // Determine the new status based on the button text.
+  
+        fetch(`/admin/updateStatus/${categoryId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ isBlocked: newStatus }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Status updated successfully');
+            window.location.reload(); // Reload to reflect the change.
+          } else {
+            alert('Failed to update status');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while updating the status');
+        });
+      });
+    });
+  </script>
+  <script>
+    // Attach event listener to all block/unblock buttons
+    document.querySelectorAll('.block-btn, .unblock-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const userId = e.target.getAttribute('data-id');
+        const isBlocked = e.target.getAttribute('data-isblocked') === 'true';
+  
+        // Toggle the button text and style
+        if (isBlocked) {
+          e.target.textContent = 'Block';
+          e.target.classList.remove('btn-success');
+          e.target.classList.add('btn-danger');
+          e.target.setAttribute('data-isblocked', 'false');
+        } else {
+          e.target.textContent = 'Unblock';
+          e.target.classList.remove('btn-danger');
+          e.target.classList.add('btn-success');
+          e.target.setAttribute('data-isblocked', 'true');
+        }
+  
+        // Send request to backend
+        fetch(`/users/block-unblock/${userId}`, {
+          method: 'PATCH', // You can also use PUT if needed
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ isBlocked: !isBlocked }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('User status updated:', data);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+      });
+    });
+  </script>
+  
+
+<!-- JavaScript for Block/Unblock -->
+<!-- <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("Script loaded successfully.");
+
+    // Select all block and unblock buttons
+    const buttons = document.querySelectorAll(".block-btn, .unblock-btn");
+    console.log("Buttons found:", buttons.length); // Debugging line
+
+    if (buttons.length > 0) {
+      buttons.forEach((button) => {
+        button.addEventListener("click", async (event) => {
+          console.log("Button clicked"); // Debugging line
+
+          const buttonElement = event.target;
+          const userId = buttonElement.dataset.id;
+          const isBlocked = buttonElement.dataset.isblocked === "true";
+          const actionUrl = isBlocked
+            ? `/users/unblock/${userId}`
+            : `/users/block/${userId}`;
+
+          try {
+            const response = await fetch(actionUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+
+            if (response.ok) {
+              alert(
+                `User ${isBlocked ? "unblocked" : "blocked"} successfully.`
+              );
+              location.reload(); // Reload the page to reflect changes
+            } else {
+              const errorData = await response.json();
+              alert(
+                `Failed to update user status: ${
+                  errorData.message || "Please try again."
+                }`
+              );
+            }
+          } catch (error) {
+            console.error("Error:", error);
+            alert("An error occurred while processing your request.");
+          }
+        });
+      });
+    } else {
+      console.log("No buttons found for blocking/unblocking.");
+    }
+  });
+</script> -->

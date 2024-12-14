@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Form with Glide_hub</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/login.css">
+    
+</head>
+<body>
+
+    <div class="form">
+        <form class="form-horizontal signin">
+            <div class="form-wrap" style="position: relative;">
+              <h2>Login</h2>
+              <div class="form-group">
+                <div id="error-message" style="color: red;"></div>
+                  
+                  <div class="relative">
+                      <input class="form-control" 
+                      id="email" type="text" required="" 
+                      autofocus="" title="" autocomplete="" 
+                      placeholder="email">
+                      <i class="fa fa-user"></i>
+                  </div>
+              </div>
+              
+              <div class="form-group">
+                  <!-- <label for="email">Password:</label> -->
+                  <div class="relative">
+                      <input class="form-control" id="password" type="password" required="" placeholder="Password">
+                      <i class="fa fa-key"></i>
+                  </div>
+                  <span class="pull-right"><small><a href="#">Forgot Password?</a></small></span>
+              </div> 
+                              
+              <div class="login-btn">
+                <button class="movebtn movebtnsu" id="loginForm" type="button">Login <i class="fa fa-fw fa-lock"></i></button>
+                  <div class="relative"><hr><span class="login-text">or login with</span></div>
+                  <div class="clearfix"></div>
+                  <div class="social-btn clearfix">
+                    <a href="/auth/google" class="movebtn google" type="Submit">
+                      Google <i class="fa fa-fw fa-google"></i></a>
+                  </div>
+              </div>
+              
+            </div>
+            <div class="sign-up">
+              <a href="#" class="signbtn"><small>Not a member?<a href="signup"> Sign Up</a> <i>(Click me)</i></small></a>
+          </div>
+        </form>
+    
+        
+
+        <script>
+            document.getElementById('loginForm').addEventListener('click', async function (e) {
+                e.preventDefault();
+        
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const errorMessage = document.getElementById('error-message');
+        
+                
+                errorMessage.textContent = "";
+        
+                
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    errorMessage.textContent = "Please enter a valid email address.";
+                    return;
+                }
+        
+                try {
+                    const response = await fetch('/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email, password }) 
+                    });
+        
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('Login successful:', result);
+                        window.location.href = '/';
+                    } else {
+                        
+                        errorMessage.textContent = result.message || "Login failed. Incorrect email or password.";
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    errorMessage.textContent = "An error occurred. Please try again later.";
+                }
+            });
+        </script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.js"></script>
+
+</body>
+</html>
