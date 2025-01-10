@@ -1,22 +1,36 @@
 const Product=require('../../models/productSchema');
+const Category=require('../../models/categorySchema')
 
 
-const shopInfo=async(req,res)=>{
+const shopInfo = async (req, res) => {
     try {
-        const products = await Product.find().lean(); 
-        
-                
-                const updatedProducts = products.map(product => ({
-                    ...product,
-                    images: product.images || [], // Default to an empty array if `images` is missing
-                }));
-                res.render('products',{updatedProducts})
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10; 
+        const skip = (page - 1) * limit;
+
+        const totalProducts = await Product.countDocuments(); 
+        const products = await Product.find({isDeleted:false}).skip(skip).limit(limit).lean();
+        const categories = await Category.find({});
+
+
+        const updatedProducts = products.map(product => ({
+            ...product,
+            images: product.images || [],
+        }));
+
+        res.render('products', {
+            categories,
+            updatedProducts,
+
+            currentPage: page,
+            totalPages: Math.ceil(totalProducts / limit),
+        });
     } catch (error) {
-        res.status(500).json({message:'internal server error'});
-        console.log('shop Info error');
-        
+        res.status(500).json({ message: 'Internal server error' });
+        console.log('shopInfo error', error);
     }
-}
+};
+
 
 const getDetailInfo=async(req,res)=>{
     try {

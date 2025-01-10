@@ -1,0 +1,210 @@
+<%- include("../../views/partials/users/header.ejs") %>
+
+<div class="wrap-header-cart js-panel-cart">
+    <div class="s-full js-hide-cart"></div>
+
+    <div class="header-cart flex-col-l p-l-65 p-r-25">
+        <div class="header-cart-title flex-w flex-sb-m p-b-8">
+            <span class="mtext-103 cl2">
+                Your Cart
+            </span>
+
+            <div class="fs-35 lh-10 cl2 p-lr-5 pointer hov-cl1 trans-04 js-hide-cart">
+                <i class="zmdi zmdi-close"></i>
+            </div>
+        </div>
+        
+        <div class="header-cart-content flex-w js-pscroll">
+            <ul class="header-cart-wrapitem w-full">
+                <% if (cart && cart.product.length > 0) { %>
+                    <% cart.product.forEach(item => { %>
+                        <li class="header-cart-item flex-w flex-t m-b-12">
+                            <div class="header-cart-item-img">
+                                <!-- Display product image from uploads folder -->
+                                <img src="/uploads/<%= item.productId.image %>" alt="IMG">
+                                <!-- Product name below the image -->
+                                <div class="header-cart-item-name">
+                                    <%= item.productId.title %>
+                                </div>
+                            </div>
+
+                            <div class="header-cart-item-txt p-t-8">
+                                <a href="#" class="header-cart-item-name m-b-18 hov-cl1 trans-04">
+                                    <%= item.productId.name %>
+                                </a>
+
+                                <span class="header-cart-item-info">
+                                    <%= item.quantity %> x $<%= item.price %>
+                                </span>
+                            </div>
+                        </li>
+                    <% }); %>
+                <% } else { %>
+                    <li>Your cart is empty.</li>
+                <% } %>
+            </ul>
+            
+            <div class="w-full">
+                <div class="header-cart-total w-full p-tb-40">
+                    Total: $<%= cart && cart.totalPrice ? cart.totalPrice : '0.00' %>
+                </div>
+
+                <div class="header-cart-buttons flex-w w-full">
+                    <a href="shoping-cart.html" class="flex-c-m stext-101 cl0 size-107 bg3 bor2 hov-btn3 p-lr-15 trans-04 m-r-8 m-b-10">
+                        View Cart
+                    </a>
+
+                    <a href="shoping-cart.html" class="flex-c-m stext-101 cl0 size-107 bg3 bor2 hov-btn3 p-lr-15 trans-04 m-b-10">
+                        Check Out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cart page details -->
+<form class="bg0 p-t-75 p-b-85">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 col-xl-7 m-lr-auto m-b-50">
+                <div class="m-l-25 m-r--38 m-lr-0-xl">
+                    <div class="wrap-table-shopping-cart">
+                        <table class="table-shopping-cart">
+                            <tr class="table_head">
+                                <th class="column-1">Product</th>
+                                <th class="column-2">Product Title</th> 
+                                <th class="column-3">Price</th>
+                                <th class="column-4">Quantity</th>
+                                <th class="column-5">Total</th>
+                                <th class="column-6">Remove</th> 
+                            </tr>
+
+                            <% if (cart && cart.product.length > 0) { %>
+                                <% cart.product.forEach(item => { %>
+                                    <tr class="table_row">
+                                        <td class="column-1">
+                                            <div class="how-itemcart1">
+                                                <!-- Display product image from uploads folder -->
+                                                <img src="/uploads/<%= item.productId.image %>" alt="IMG">
+                                                <!-- Product name below the image -->
+                                                <div class="how-itemcart-name">
+                                                    <%= item.productId.name %>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="column-2"><%= item.productId.title %></td> <!-- Display product title -->
+                                        <td class="column-3">$<%= item.price %></td>
+                                        <td class="column-4">
+                                            <div class="wrap-num-product flex-w m-l-auto m-r-0">
+                                                <div class="btn-num-product-down cl8 hov-btn3 trans-04 flex-c-m">
+                                                    <i class="fs-16 zmdi zmdi-minus"></i>
+                                                </div>
+
+                                                <input class="mtext-104 cl3 txt-center num-product" type="number" name="num-product<%= item.productId._id %>" value="<%= item.quantity %>">
+
+                                                <div class="btn-num-product-up cl8 hov-btn3 trans-04 flex-c-m">
+                                                    <i class="fs-16 zmdi zmdi-plus"></i>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="column-5">$<%= item.totalPrice %></td>
+
+                                        <!-- Add Remove button in the next column -->
+                                        <td class="column-6">
+                                            <form action="/remove-from-cart/<%= item.productId._id %>" method="POST">
+                                                <button type="submit" class="btn-remove-item">
+                                                    Remove
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="6">Your cart is empty.</td>
+                                </tr>
+                            <% } %>
+                        </table>
+
+                        <!-- Cart totals section after the table -->
+                        <div class="cart-totals">
+                            <h4 class="mtext-109 cl2 p-b-30">
+                                Cart Totals
+                            </h4>
+
+                            <div class="flex-w flex-t bor12 p-b-13">
+                                <div class="size-208">
+                                    <span class="stext-110 cl2">
+                                        Subtotal:
+                                    </span>
+                                </div>
+
+                                <div class="header-cart-total w-full p-tb-40">
+                                    Total: $<%= cart && cart.totalPrice ? cart.totalPrice : '0.00' %>
+                                </div>
+                            </div>
+
+                            <button class="flex-c-m stext-101 cl0 size-116 bg3 bor14 hov-btn3 p-lr-15 trans-04 pointer">
+                                Proceed to Checkout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cart totals section can also be adjusted via CSS -->
+        </div>
+    </div>
+</form>
+
+<%- include("../../views/partials/users/footer.ejs") %>
+
+<style>
+    /* Increase the width of the entire table */
+    .table-shopping-cart {
+        width: 100%; /* Set table width to 100% of the container */
+        margin-bottom: 20px; /* Add space between the table and the cart totals */
+    }
+
+    /* Make sure each column is properly spaced */
+    .table-shopping-cart .column-1, .table-shopping-cart .column-2, .table-shopping-cart .column-3, .table-shopping-cart .column-4, .table-shopping-cart .column-5, .table-shopping-cart .column-6 {
+        padding: 15px; /* Adjust the padding for better spacing */
+    }
+
+    /* Ensure the Remove button is aligned */
+    .column-6 {
+        text-align: center;
+    }
+
+    /* Optional: Adjust column widths to control layout */
+    .table-shopping-cart .column-1 {
+        width: 20%; /* Adjust the width for the product image */
+    }
+
+    .table-shopping-cart .column-2 {
+        width: 30%; /* Adjust the width for the product title */
+    }
+
+    .table-shopping-cart .column-3, .table-shopping-cart .column-4, .table-shopping-cart .column-5, .table-shopping-cart .column-6 {
+        width: 10%; /* Adjust other columns' width */
+    }
+
+    .btn-remove-item {
+        padding: 10px 20px;
+        background-color: red;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .btn-remove-item:hover {
+        background-color: darkred;
+    }
+
+    .cart-totals {
+        margin-top: 30px; /* Adjust this value to increase/decrease the space */
+        text-align: center;
+    }
+</style>

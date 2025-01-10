@@ -2,16 +2,37 @@ const Product = require('../../models/productSchema');
 const Category = require('../../models/categorySchema');
 const fs = require('fs');
 const path = require('path');
+const { nextTick } = require('process');
+const sharp=require('sharp')
 
-// Fetch all products
+
 const productsInfo = async (req, res) => {
     try {
-        const products = await Product.find().lean();
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10; 
+
+        const skip = (page - 1) * limit;
+
+        const totalProducts = await Product.countDocuments();
+
+        const products = await Product.find()
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
         const updatedProducts = products.map(product => ({
             ...product,
             images: product.images || [], 
         }));
-        res.render('productsInfo', { updatedProducts });
+
+        const totalPages = Math.ceil(totalProducts / limit);
+
+        res.render('productsInfo', {
+            updatedProducts,
+            currentPage: page,
+            totalPages,
+            limit,
+        });
     } catch (error) {
         console.error('Error fetching products:', error);
         res.status(500).send('Server error');
@@ -29,7 +50,7 @@ const addProductInfo = async (req, res) => {
     }
 };
 
-// Add product to database
+
 const productAdd = async (req, res) => {
     try {
         const { title, description, price, stock, brandName, category, sizes } = req.body;
@@ -39,8 +60,26 @@ const productAdd = async (req, res) => {
             return res.status(400).send('Please upload at least one image.');
         }
 
-        const imagePaths = req.files.map(file => file.filename);
+        // Define directory for processed images
+        const processedImagesDir = path.join(__dirname, '../../uploads');
 
+        // Ensure the directory exists
+        if (!fs.existsSync(processedImagesDir)) {
+            fs.mkdirSync(processedImagesDir, { recursive: true });
+        }
+
+        // Process images with Sharp
+        const imagePaths = [];
+        for (const file of req.files) {
+            const outputPath = path.join(processedImagesDir, `cropped-${file.filename}`);
+            await sharp(file.path)
+                .resize(500, 500) // Resize to 500x500 pixels
+                .toFile(outputPath); // Save the processed image
+
+            imagePaths.push(`cropped-${file.filename}`);
+        }
+
+        // Save product with processed image paths
         const newProduct = new Product({
             title,
             description,
@@ -53,26 +92,26 @@ const productAdd = async (req, res) => {
         });
 
         await newProduct.save();
-        res.redirect('/admin/products');
+        res.status(200).json({ success: true, message: 'Product saved successfully...' });
     } catch (error) {
         console.error('Error adding product:', error);
         res.status(500).send('Internal Server Error');
     }
 };
 
-// Product details page
 const getProductDeatilsInfo = async (req, res) => {
     try {
         const productId = req.params.id;
         const product = await Product.findById(productId).populate('category', 'name').exec();
 
         if (!product) {
-            res.status(404).json({ message: "Product Not Found" });
+            const error=new Error('product Not Found')
+            error.status=404
+            throw error
         }
-        res.render('productDetailsInfo', { product });
+        res.render('productDetailsInfo', { product});
     } catch (error) {
-        res.status(500).json({ message: "Internal Server Error" });
-        console.log('Product Details Page error');
+        next(error)
     }
 };
 
@@ -83,7 +122,7 @@ const renderEditProduct = async (req, res) => {
         const product = await Product.findById(productId);
 
         if (!product) {
-            res.status(404).json({ message: 'Product Not Found' });
+            throw new Error('product not found');
         }
 
         const categories = await Category.find();
@@ -93,7 +132,7 @@ const renderEditProduct = async (req, res) => {
     }
 };
 
-// Update product
+
 const updateProduct = async (req, res) => {
     try {
         const productId = req.params.id;
@@ -103,7 +142,7 @@ const updateProduct = async (req, res) => {
         const product = await Product.findById(productId);
 
         if (!product) {
-            return res.status(404).json({ success: false, message: 'Product not found' });
+            throw new Error('product not found')
         }
 
         product.title = title || product.title;
@@ -114,9 +153,9 @@ const updateProduct = async (req, res) => {
         product.category = category || product.category;
         product.sizes = parsedSizes || product.sizes;
 
-        // If new images are uploaded, remove the old ones
+       
         if (req.files && req.files.length > 0) {
-            // Delete old images from the file system
+            
             product.image.forEach(image => {
                 const imagePath = path.join(__dirname, 'uploads', image);
                 if (fs.existsSync(imagePath)) {
@@ -124,12 +163,12 @@ const updateProduct = async (req, res) => {
                 }
             });
 
-            // Add the new images
+           
             const imagePaths = req.files.map(file => file.filename);
             product.image = imagePaths;
         }
 
-        // Save the updated product
+        
         await product.save();
         res.json({ success: true, message: 'Product updated successfully' });
     } catch (error) {
@@ -138,31 +177,37 @@ const updateProduct = async (req, res) => {
     }
 };
 
-// Delete product
-const deleteProduct = async (req, res) => {
+
+
+
+
+
+
+
+const softDeleteProduct = async (req, res) => {
     try {
         const productId = req.params.id;
-        const product = await Product.findById(productId);
+
+        // Find the product and mark it as deleted
+        const product = await Product.findByIdAndUpdate(
+            productId,
+            { isDeleted: true },
+            { new: true } // Return the updated document
+        );
 
         if (!product) {
-            res.status(404).json({ message: 'Product not found' });
+            return res.status(404).json({ success: false, message: 'Product not found' });
         }
 
-        // Delete images from the file system
-        product.image.forEach(image => {
-            const imagePath = path.join(__dirname, 'uploads', image);
-            if (fs.existsSync(imagePath)) {
-                fs.unlinkSync(imagePath);
-            }
-        });
-
-        await Product.findByIdAndDelete(productId);
-        res.status(200).json({ success: true, message: 'Product successfully deleted' });
+        // Respond with success
+        res.json({ success: true, message: 'Product soft deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Internal Server Error' });
-        console.log('Product deleting error');
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+    
 
 module.exports = {
     productsInfo,
@@ -171,5 +216,5 @@ module.exports = {
     getProductDeatilsInfo,
     renderEditProduct,
     updateProduct,
-    deleteProduct
+    softDeleteProduct
 };

@@ -63,73 +63,57 @@
             </thead>
             <tbody>
               <% if (data.length === 0) { %>
-              <tr>
-                <td colspan="5" class="text-center">No users found</td>
-              </tr>
-              <% } else { %> 
-                <% for (let i = 0; i < data.length; i++) { %>
                 <tr>
-                  <td><%= data[i].username %></td>
-                  <td><%= data[i].email %></td>
-                  <td><%= data[i].contact %></td>
+                  <td colspan="5" class="text-center">No users found</td>
+                </tr>
+              <% } else { %>
+                <% data.forEach(user => { %>
+                <tr>
+                  <td><%= user.username %></td>
+                  <td><%= user.email %></td>
+                  <td><%= user.contact %></td>
                   <td>
-                    <% if (data[i].createdAt) { %> 
-                      <%= new Date(data[i].createdAt).toDateString() %> 
-                    <% } else { %> 
-                      N/A 
-                    <% } %>
+                    <%= user.createdAt ? new Date(user.createdAt).toDateString() : 'N/A' %>
                   </td>
                   <td class="text-end">
-                    <% if (data[i].isBlocked) { %>
-                      <button class="btn btn-success btn-sm unblock-btn" 
-                        data-id="<%= data[i]._id %>" 
-                        data-isblocked="true">Unblock</button>
-                    <% } else { %>
-                      <button class="btn btn-danger btn-sm block-btn" 
-                        data-id="<%= data[i]._id %>" 
-                        data-isblocked="false">Block</button>
-                    <% } %>
+                    <button 
+                      class="btn <%= user.isBlocked ? 'btn-success' : 'btn-danger' %> btn-sm toggle-btn" 
+                      data-id="<%= user._id %>" 
+                      data-isblocked="<%= user.isBlocked %>">
+                      <%= user.isBlocked ? 'Unblock' : 'Block' %>
+                    </button>
                   </td>
+                  
                 </tr>
-                <% } %> 
+                <% }) %>
               <% } %>
             </tbody>
           </table>
         </div>
       </div>
     </div>
-  </section>
-</main>
 
-
-    <!-- Pagination -->
     <div class="pagination-area mt-15 mb-50">
       <nav aria-label="Page navigation example">
         <ul class="pagination justify-content-start">
           <% if (currentPage > 1) { %>
-          <li class="page-item">
-            <a
-              class="page-link"
-              href="?page=<%= currentPage - 1 %>&search=<%= search %>"
-            >
-              <i class="material-icons md-chevron_left"></i>
-            </a>
-          </li>
-          <% } %> <% for (let i = 1; i <= totalPages; i++) { %>
-          <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-            <a class="page-link" href="?page=<%= i %>&search=<%= search %>"
-              ><%= i %></a
-            >
-          </li>
-          <% } %> <% if (currentPage < totalPages) { %>
-          <li class="page-item">
-            <a
-              class="page-link"
-              href="?page=<%= currentPage + 1 %>&search=<%= search %>"
-            >
-              <i class="material-icons md-chevron_right"></i>
-            </a>
-          </li>
+            <li class="page-item">
+              <a class="page-link" href="?page=<%= currentPage - 1 %>&search=<%= search %>">
+                <i class="material-icons md-chevron_left"></i>
+              </a>
+            </li>
+          <% } %>
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+              <a class="page-link" href="?page=<%= i %>&search=<%= search %>"><%= i %></a>
+            </li>
+          <% } %>
+          <% if (currentPage < totalPages) { %>
+            <li class="page-item">
+              <a class="page-link" href="?page=<%= currentPage + 1 %>&search=<%= search %>">
+                <i class="material-icons md-chevron_right"></i>
+              </a>
+            </li>
           <% } %>
         </ul>
       </nav>
@@ -139,127 +123,36 @@
 
 
 <script>
-    document.querySelectorAll('.unblock-btn').forEach(button => {
-      button.addEventListener('click', function () {
-
-        
-        const categoryId = this.getAttribute('data-id'); // Assuming the category ID is set as a data attribute.
-        const action = this.textContent.trim().toLowerCase(); // Get "Block" or "Unblock" from button text.
-        const newStatus = action === 'block' ? false : true; // Determine the new status based on the button text.
-  
-        fetch(`/admin/updateStatus/${categoryId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ isBlocked: newStatus }),
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            alert('Status updated successfully');
-            window.location.reload(); // Reload to reflect the change.
-          } else {
-            alert('Failed to update status');
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('An error occurred while updating the status');
-        });
-      });
-    });
-  </script>
-  <script>
-    // Attach event listener to all block/unblock buttons
-    document.querySelectorAll('.block-btn, .unblock-btn').forEach((btn) => {
+  document.querySelectorAll('.toggle-btn').forEach((btn) => {
       btn.addEventListener('click', (e) => {
-        const userId = e.target.getAttribute('data-id');
-        const isBlocked = e.target.getAttribute('data-isblocked') === 'true';
-  
-        // Toggle the button text and style
-        if (isBlocked) {
-          e.target.textContent = 'Block';
-          e.target.classList.remove('btn-success');
-          e.target.classList.add('btn-danger');
-          e.target.setAttribute('data-isblocked', 'false');
-        } else {
-          e.target.textContent = 'Unblock';
-          e.target.classList.remove('btn-danger');
-          e.target.classList.add('btn-success');
-          e.target.setAttribute('data-isblocked', 'true');
-        }
-  
-        // Send request to backend
-        fetch(`/users/block-unblock/${userId}`, {
-          method: 'PATCH', // You can also use PUT if needed
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ isBlocked: !isBlocked }),
-        })
-        .then(response => response.json())
-        .then(data => {
-          console.log('User status updated:', data);
-        })
-        .catch(error => {
-          console.error('Error:', error);
-        });
-      });
-    });
-  </script>
-  
+          const button = e.target;
+          const userId = button.getAttribute('data-id');
+          const isBlocked = button.getAttribute('data-isblocked') === 'true';  
 
-<!-- JavaScript for Block/Unblock -->
-<!-- <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    console.log("Script loaded successfully.");
+          // Toggle the button's appearance and text
+          button.textContent = isBlocked ? 'Block' : 'Unblock';
+          button.classList.toggle('btn-danger', !isBlocked);
+          button.classList.toggle('btn-success', isBlocked);
+          button.setAttribute('data-isblocked', !isBlocked); 
 
-    // Select all block and unblock buttons
-    const buttons = document.querySelectorAll(".block-btn, .unblock-btn");
-    console.log("Buttons found:", buttons.length); // Debugging line
-
-    if (buttons.length > 0) {
-      buttons.forEach((button) => {
-        button.addEventListener("click", async (event) => {
-          console.log("Button clicked"); // Debugging line
-
-          const buttonElement = event.target;
-          const userId = buttonElement.dataset.id;
-          const isBlocked = buttonElement.dataset.isblocked === "true";
-          const actionUrl = isBlocked
-            ? `/users/unblock/${userId}`
-            : `/users/block/${userId}`;
-
-          try {
-            const response = await fetch(actionUrl, {
-              method: "POST",
+          fetch(`/admin/users/block-unblock/${userId}`, {
+              method: 'PATCH',
               headers: {
-                "Content-Type": "application/json",
+                  'Content-Type': 'application/json',
               },
-            });
-
-            if (response.ok) {
-              alert(
-                `User ${isBlocked ? "unblocked" : "blocked"} successfully.`
-              );
-              location.reload(); // Reload the page to reflect changes
-            } else {
-              const errorData = await response.json();
-              alert(
-                `Failed to update user status: ${
-                  errorData.message || "Please try again."
-                }`
-              );
-            }
-          } catch (error) {
-            console.error("Error:", error);
-            alert("An error occurred while processing your request.");
-          }
-        });
+              body: JSON.stringify({ isBlocked: !isBlocked }), 
+          })
+          .then(response => response.json())
+          .then(data => {
+              console.log('User status updated:', data);
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              alert('An error occurred while processing your request.');
+          });
       });
-    } else {
-      console.log("No buttons found for blocking/unblocking.");
-    }
   });
-</script> -->
+</script>
+
+  
+

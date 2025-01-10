@@ -30,9 +30,9 @@ const userSchema=new Schema({
       contact:{
         type:Number,
         required:false,
-        unique:true,
-        sparse:true,
-        default:null
+        
+        
+        
       },
       googleId: {
         type: String,

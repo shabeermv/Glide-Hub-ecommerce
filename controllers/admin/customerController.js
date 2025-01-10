@@ -2,28 +2,39 @@ const User = require('../../models/userSchema');
 
 const userInfo = async (req, res) => {
     try {
+        // Capture the search query and set default to empty string if not provided
         const search = req.query.search || ''; 
+        
+        // Get the current page from the query parameter, defaulting to 1 if not provided
         const page = parseInt(req.query.page) || 1; 
-        const limit = 6;
+        
+        // Set the number of users per page
+        const limit = 6; 
 
+        // Ensure that the page is at least 1
         const validPage = Math.max(page, 1);
 
+        // Prepare a regex search pattern for case-insensitive search
+        const searchQuery = new RegExp(search, 'i');
+
+        // Find the users matching the search query with pagination
         const userData = await User.find({
             isAdmin: false,
             $or: [
-                { name: { $regex: ".*" + search + ".*", $options: "i" } }, 
-                { email: { $regex: ".*" + search + ".*", $options: "i" } }
+                { name: { $regex: searchQuery } },  // Search by name
+                { email: { $regex: searchQuery } }  // Search by email
             ]
         })
         .limit(limit)
-        .skip((validPage - 1) * limit)
+        .skip((validPage - 1) * limit) // Skip results for pagination
         .exec();
 
+        // Get the count of users matching the search query (for pagination)
         const count = await User.countDocuments({
             isAdmin: false,
             $or: [
-                { name: { $regex: ".*" + search + ".*", $options: "i" } },
-                { email: { $regex: ".*" + search + ".*", $options: "i" } }
+                { name: { $regex: searchQuery } },
+                { email: { $regex: searchQuery } }
             ]
         });
 
@@ -32,8 +43,8 @@ const userInfo = async (req, res) => {
         res.render('users', {
             data: userData,
             currentPage: validPage,
-            totalPages: totalPages,
-            search: search,
+            totalPages,
+            search, 
         });
     } catch (error) {
         console.error('Error in userInfo:', error);
@@ -41,40 +52,33 @@ const userInfo = async (req, res) => {
     }
 };
 
-const blockUser = async (req, res) => {
+const toggleBlockStatus = async (req, res) => {
     try {
-        const userId = req.params.id;
-        const user = await User.findByIdAndUpdate(userId, { isBlocked: true }, { new: true });
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        res.status(200).json({ message: 'User blocked', user });
-    } catch (error) {
-        console.error('Internal error:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
-
-const unBlockUser = async (req, res) => {
+        const { userId } = req.params; 
+        const { isBlocked } = req.body; 
     
-    try {
-        const userId = req.params.id;
-        const user = await User.findByIdAndUpdate(userId, { isBlocked: false }, { new: true });
-  
-  
+        const user = await User.findById(userId);
+    
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            throw new Error('user not found...')
         }
-        res.status(200).json({ message: 'User unblocked', user });
+    
+        user.isBlocked = isBlocked;
+    
+        await user.save();
+    
+        res.status(200).json({ success: true, message: `User ${isBlocked ? 'blocked' : 'unblocked'} successfully.` });
     } catch (error) {
-        console.error('Unblocking error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        console.error('Error updating user status:', error);
+        res.status(500).json({ success: false, message: 'An error occurred while updating the user status' });
     }
 };
+
+
+
+
 
 module.exports = {
     userInfo,
-    blockUser,
-    unBlockUser
+    toggleBlockStatus
 };

@@ -4,11 +4,13 @@ const path = require('path');
 const session = require('express-session');
 const dotenv = require('dotenv').config();
 const userRouter = require('./routers/userRouter');
+const errorHandler=require('./middleware/errorHandler')
 const connectDb = require('./config/db');
 const adminRouter = require('./routers/adminRouter');
 const nocache = require('nocache');
 const passport = require('./config/passport');
 const methodOverride=require('method-override')
+const cors=require('cors');
 
 
 connectDb();
@@ -28,7 +30,7 @@ app.use(
         saveUninitialized: true,
         cookie: {
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 1000 * 60 * 5, 
+            maxAge: 3600000 
         },
     })
 );
@@ -36,6 +38,7 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(errorHandler)
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public/asset1')));

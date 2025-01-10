@@ -20,19 +20,19 @@ adminRouter.post('/addProduct', upload.array('images', 3), productController.pro
 adminRouter.get('/productDetails/:id',productController.getProductDeatilsInfo);
 adminRouter.get('/edit/:id',productController.renderEditProduct);
 adminRouter.post('/updateProduct/:id', upload.array('images', 3), productController.updateProduct);
-adminRouter.delete('/delete/:id',productController.deleteProduct);
+adminRouter.delete('/delete/:id', productController.softDeleteProduct);
 
 // Users address
 adminRouter.get('/users', customerController.userInfo);
-adminRouter.post('/users/block/:id',customerController.blockUser);
-adminRouter.post('/users/unBlock/:id',customerController.unBlockUser);
+adminRouter.patch('/users/block-unblock/:userId', customerController.toggleBlockStatus);
 
 // Categories routes
 adminRouter.get('/categories', categoryController.getCategory);
 adminRouter.post('/addCategory', categoryController.addCategory);
-adminRouter.get('/edit/:id',categoryController.renderEditCategory);
-adminRouter.put('/edit/:id',categoryController.updateCategory);
-adminRouter.delete('/delete/:id',categoryController.deleteCategory)
+adminRouter.get('/editCategory/:id',categoryController.renderEditCategory);
+adminRouter.put('/editCategory/:id',categoryController.updateCategory);
+adminRouter.delete('/soft-delete/:id', categoryController.deleteCategory);
+adminRouter.put('/toggle-status/:id', categoryController.toggleCategoryStatus);
 
 
 module.exports = adminRouter;

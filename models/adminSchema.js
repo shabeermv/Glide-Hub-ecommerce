@@ -3,12 +3,7 @@ const bcrypt = require('bcrypt');
 
 
 const adminSchema = new mongoose.Schema({
-    adminname: {
-        type: String,
-        required: false,
-        trim:false,
-        minlength: 3
-    },
+   
     email: {
         type: String,
         required: true,
@@ -20,10 +15,11 @@ const adminSchema = new mongoose.Schema({
         required: true,
         minlength: 6
     },
-    createdAt: {
-        type: Date,
-        default: Date.now
+    isAdmin:{
+        type:Boolean,
+        default:true
     }
+   
 });
 
 

@@ -31,9 +31,9 @@
                         </a>
                         <div class="info-wrap">
                             <h5 class="title"><%= product.title %></h5>
-                            <div class="price mt-1">$<%= product.price %></div>
+                            <div class="price mt-1"><%= product.price %></div>
                             <div>Stock: <%= product.stock || 'Out of Stock' %></div>
-                            <div> <%= product.category.name || 'Uncategorized' %></div>
+                            <div> <%= product.category ? product.category.name : 'Uncategorized' %></div>
                         </div>
                         <!-- Show Details Button -->
                         <div class="card-footer">
@@ -43,6 +43,26 @@
                 </div>
             <% }); %>
         </div>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination">
+                <% if (currentPage > 1) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="/admin/products?page=<%= currentPage - 1 %>&limit=<%= limit %>">Previous</a>
+                    </li>
+                <% } %>
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                        <a class="page-link" href="/admin/products?page=<%= i %>&limit=<%= limit %>"><%= i %></a>
+                    </li>
+                <% } %>
+                <% if (currentPage < totalPages) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="/admin/products?page=<%= currentPage + 1 %>&limit=<%= limit %>">Next</a>
+                    </li>
+                <% } %>
+            </ul>
+        </nav>
+        
     </section>
     
 </main>

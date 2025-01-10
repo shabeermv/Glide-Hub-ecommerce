@@ -2,6 +2,7 @@ const express=require('express')
 const userRouter=express.Router();
 const userController=require('../controllers/user/userController');
 const productController=require('../controllers/user/productControllers')
+const cartController=require('../controllers/user/cartController')
 const authMiddleware=require('../middleware/middlewares');
 const passport=require('../config/passport')
 
@@ -24,6 +25,11 @@ userRouter.get('/auth/google/callback',passport.authenticate('google',{failureRe
 //product
 
 userRouter.get('/show/:id',productController.getDetailInfo)
-userRouter.get('/shop',productController.shopInfo)
+userRouter.get('/shop',productController.shopInfo);
+
+userRouter.get('/profile',userController.userProfileInfo)
+
+userRouter.get('/cart',cartController.cartPageInfo);
+userRouter.post('/cart/add',cartController.addProductCart);
 
 module.exports=userRouter;

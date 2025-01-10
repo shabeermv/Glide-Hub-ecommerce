@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose=require('mongoose')
 
 const categorySchema = new mongoose.Schema({
     name: {
@@ -10,15 +10,12 @@ const categorySchema = new mongoose.Schema({
     description: {
         type: String,
         trim: true,
-        required:true
+        required: true,
     },
-    offer:{
-        type:String,
-        ref:'offer',
-        required:false
-
+    isDeleted: {
+        type: Boolean,
+        default: false, // Default to false (not deleted)
     },
-
     createdAt: {
         type: Date,
         default: Date.now,
@@ -29,12 +26,9 @@ const categorySchema = new mongoose.Schema({
     },
     isBlocked: {
         type: Boolean,
-        default: false, 
-        required: true,
+        default: false,
+        required: false,
     },
-    
 });
-
-
 
 module.exports = mongoose.model('Category', categorySchema);

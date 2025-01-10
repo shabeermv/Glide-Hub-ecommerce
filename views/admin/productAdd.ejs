@@ -1,10 +1,5 @@
 <%- include("../../views/partials/admin/header.ejs") %>
 
-<!-- Cropper CSS -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet" />
-
-<!-- Cropper JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 
 
 <main class="main-wrap">
@@ -98,6 +93,7 @@
                         <div class="mb-4">
                             <label for="product_stock" class="form-label">Stock</label>
                             <input type="text" placeholder="Type here" class="form-control" id="product_stock" required />
+                            <div id="product_stock_error" class="text-danger"></div>
                         </div>
                     </div>
                 </div>
@@ -124,6 +120,7 @@
                         <div class="mb-4">
                             <label class="form-label">Price</label>
                             <input type="number" placeholder="Type here" class="form-control" id="product_price" required />
+                            <div id="product_price_error" class="text-danger"></div>
                         </div>
                         <div class="mb-4">
                             <label class="form-label">Category</label>
@@ -156,7 +153,7 @@
             const listItem = document.createElement('li');
             listItem.textContent = sizeInput;
             document.getElementById('sizeList').appendChild(listItem);
-            document.getElementById('product_size').value = ''; // clear the input
+            document.getElementById('product_size').value = ''; 
         } else if (!sizeInput) {
             alert('Please enter a size.');
         } else {
@@ -177,11 +174,24 @@
             alert('Please fill in all required fields.');
             return;
         }
+        if (isNaN(productStock) || productStock <= 0) {
+        isValid = false;
+        document.getElementById('product_stock_error').textContent = 'Stock must be a positive number.';
+        return
+    }
+   
+
+        if (isNaN(productPrice) || productPrice <= 0) {
+        isValid = false;
+        document.getElementById('product_price_error').textContent = 'Price must be a positive number.';
+        return
+    }
 
         if (images.length === 0) {
             alert('You must upload at least 1 image.');
             return;
         }
+        
 
         const formData = new FormData();
         formData.append('title', productName);
@@ -190,7 +200,7 @@
         formData.append('stock', productStock);
         formData.append('price', productPrice);
         formData.append('category', productStatus);
-        formData.append('sizes', JSON.stringify(sizes));  // Send the array of sizes as a JSON string
+        formData.append('sizes', JSON.stringify(sizes));  
 
         Array.from(images).forEach((file) => {
             formData.append('images', file);
@@ -203,8 +213,23 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Product added successfully.');
-                window.location.href = '/admin/products';
+                
+                
+                
+                document.getElementById('product_title').value = '';
+                document.getElementById('product_color').value = '';
+                document.getElementById('product_size').value = '';
+                document.getElementById('product_brand').value = '';
+                document.getElementById('product_stock').value = '';
+                document.querySelector('textarea').value = '';
+                document.getElementById('product_price').value = '';
+                document.getElementById('product_status').value = '';
+                document.getElementById('product_tags').value = '';
+                sizes = [];
+                document.getElementById('sizeList').innerHTML = '';
+                document.getElementById('product_images').value = '';
+
+                window.location.href = '/admin/products'; 
             } else {
                 alert('Error adding product: ' + data.message);
             }

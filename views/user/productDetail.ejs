@@ -1,162 +1,221 @@
 <%- include("../../views/partials/users/header.ejs") %>
 
-    <!-- Product Detail -->
-    <section class="sec-product-detail bg0 p-t-65 p-b-60" style="margin-top: 20px;">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6 col-lg-7 p-b-30">
-                    <div class="p-l-25 p-r-30 p-lr-0-lg">
-                        <div class="wrap-slick3 flex-sb flex-w">
-                            <div class="wrap-slick3-dots"></div>
-                            <div class="wrap-slick3-arrows flex-sb-m flex-w"></div>
+<!-- Product Detail -->
+<section class="sec-product-detail bg0 p-t-65 p-b-60" style="margin-top: 50px;">
+    <div class="container">
+        <div class="row">
+            <!-- Product /asset1/images Section -->
+            <div class="col-md-6 col-lg-7 p-b-30">
+                <div class="p-l-25 p-r-30 p-lr-0-lg">
+                    <!-- Image Gallery -->
+                    <div class="wrap-slick3 flex-sb flex-w">
+                        <div class="wrap-slick3-dots"></div>
+                        <div class="wrap-slick3-arrows flex-sb-m flex-w"></div>
 
-                            <div class="slick3 gallery-lb">
-                                
-                                <div class="item-slick3" data-thumb="/uploads/<%= product.image[0] %>">
+                        <div class="slick3 gallery-lb">
+                            <% product.image.forEach((img, index) => { %>
+                                <div class="item-slick3" data-thumb="/uploads/<%= img %>">
                                     <div class="wrap-pic-w pos-relative">
-                                        <img src="/uploads/<%= product.image[0] %>" alt="IMG-PRODUCT">
-                                        <a class="btn-view-image" href="/uploads/<%= product.image[0] %>">
-                                            View Image
-                                        </a>
-                                        <i class="fa fa-expand"></i>
-                                    </div>
-                                </div>
-                                
-                                <!-- Similarly for other images -->
-                                <div class="item-slick3" data-thumb="/uploads/<%= product.image[1] %>">
-                                    <div class="wrap-pic-w pos-relative">
-                                        <img src="/uploads/<%= product.image[1] %>" alt="IMG-PRODUCT">
-                                        <a class="btn-view-image" href="/uploads/<%= product.image[1] %>">
+                                        <img src="/uploads/<%= img %>" alt="IMG-PRODUCT">
+                                        <a class="btn-view-image" href="/uploads/<%= img %>">
                                             <i class="fa fa-expand"></i>
                                         </a>
                                     </div>
                                 </div>
-                                <div class="item-slick3" data-thumb="/uploads/<%= product.image[2] %>">
-                                    <div class="wrap-pic-w pos-relative">
-                                        <img src="/uploads/<%= product.image[2] %>" alt="IMG-PRODUCT">
-                                        <a class="btn-view-image" href="/uploads/<%= product.image[2] %>">
-                                            <i class="fa fa-expand"></i>
-                                        </a>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-lg-5 p-b-30">
-                    <div class="p-r-50 p-t-5 p-lr-0-lg">
-                        <h4 class="mtext-105 cl2 js-name-detail p-b-14">
-                            <%= product.name %> <!-- Product Name -->
-                        </h4>
-
-                        <span class="mtext-106 cl2">
-                            <%= product.price %> <!-- Product Price -->
-                        </span>
-
-                        <p class="stext-102 cl3 p-t-23">
-                            <%= product.description %> <!-- Product Description -->
-                        </p>
-
-                        <!-- Size and Color Selectors -->
-                        <div class="p-t-33">
-                            <div class="flex-w flex-r-m p-b-10">
-                                <div class="size-203 flex-c-m respon6">
-                                    Size
-                                </div>
-
-                                <div class="size-204 respon6-next">
-                                    <div class="rs1-select2 bor8 bg0">
-                                        <select class="js-select2" name="size">
-                                            <option>Choose an option</option>
-                                            <option>Size S</option>
-                                            <option>Size M</option>
-                                            <option>Size L</option>
-                                            <option>Size XL</option>
-                                        </select>
-                                        <div class="dropDownSelect2"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="flex-w flex-r-m p-b-10">
-                                <div class="size-203 flex-c-m respon6">
-                                    Color
-                                </div>
-
-                                <div class="size-204 respon6-next">
-                                    <div class="rs1-select2 bor8 bg0">
-                                        <select class="js-select2" name="color">
-                                            <option>Choose an option</option>
-                                            <option>Red</option>
-                                            <option>Blue</option>
-                                            <option>White</option>
-                                            <option>Grey</option>
-                                        </select>
-                                        <div class="dropDownSelect2"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="flex-w flex-r-m p-b-10">
-                                <div class="size-204 flex-w flex-m respon6-next">
-                                    <div class="wrap-num-product flex-w m-r-20 m-tb-10">
-                                        <div class="btn-num-product-down cl8 hov-btn3 trans-04 flex-c-m">
-                                          <i class="fs-16 zmdi zmdi-minus"></i>
-                                        </div>
-
-                                        <input class="mtext-104 cl3 txt-center num-product" type="number" name="num-product" value="1">
-
-                                        <div class="btn-num-product-up cl8 hov-btn3 trans-04 flex-c-m">
-                                          <i class="fs-16 zmdi zmdi-plus"></i>
-                                        </div>
-                                    </div>
-
-                                    <button class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail">
-                                        Add to cart
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Social Media Buttons -->
-                        <div class="flex-w flex-m p-l-100 p-t-40 respon7">
-                            <div class="flex-m bor9 p-r-10 m-r-11">
-                                <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 js-addwish-detail tooltip100" data-tooltip="Add to Wishlist">
-                                  <i class="zmdi zmdi-favorite"></i>
-                                </a>
-                            </div>
-
-                            <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Facebook">
-                                <i class="fa fa-facebook"></i>
-                            </a>
-
-                            <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Twitter">
-                                <i class="fa fa-twitter"></i>
-                            </a>
-
-                            <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Google Plus">
-                                <i class="fa fa-google-plus"></i>
-                            </a>
+                            <% }) %>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Product Details Section -->
+            <!-- Product Details Section -->
+<div class="col-md-6 col-lg-5 p-b-30">
+    <div class="p-r-50 p-t-5 p-lr-0-lg">
+        <!-- Product Title -->
+        <p class="mtext-106 cl2" style="font-size: 24px; font-weight: bold; color: #555;">
+            <%= product.title %>
+        </p>
+
+        <!-- Product Prict -->
+        <span class="mtext-106 cl2" style="font-size: 24px; font-weight: bold; color: #4CAF50;">
+            ₹ <%= product.price %>
+        </span>
+
+        <!-- Product Description -->
+        <p class="stext-102 cl3 p-t-23" style="font-size: 16px; color: #555;">
+            <%= product.description %>
+        </p>
+
+        <!-- Stock Availability -->
+        <div class="p-t-20">
+            <% if (product.stock > 0) { %>
+                <p class="text-success" style="font-size: 18px; font-weight: 500;">
+                    In Stock: <%= product.stock %> items available
+                </p>
+            <% } else { %>
+                <p class="text-danger" style="font-size: 18px; font-weight: 500;">
+                    Sold Out
+                </p>
+            <% } %>
         </div>
-    </section>
 
-    <div class="bg6 flex-c-m flex-w size-302 m-t-73 p-tb-15">
-        <span class="stext-107 cl6 p-lr-25">
-            SKU: JAK-01
-        </span>
+        <!-- Size and Color Selectors -->
+        <div class="p-t-33">
+            <!-- Size Selector -->
+            <div class="flex-w flex-r-m p-b-10">
+                <div class="size-203 flex-c-m respon6">
+                    Size
+                </div>
 
-        <span class="stext-107 cl6 p-lr-25">
-            Categories: Jacket, Men
-        </span>
+                <div class="size-204 respon6-next">
+                    <div class="rs1-select2 bor8 bg0">
+                        <select class="js-select2" name="size">
+                            <option>Choose an option</option>
+                            <option>Size S</option>
+                            <option>Size M</option>
+                            <option>Size L</option>
+                            <option>Size XL</option>
+                        </select>
+                        <div class="dropDownSelect2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Color Selector -->
+            <div class="flex-w flex-r-m p-b-10">
+                <div class="size-203 flex-c-m respon6">
+                    Color
+                </div>
+
+                <div class="size-204 respon6-next">
+                    <div class="rs1-select2 bor8 bg0">
+                        <select class="js-select2" name="color">
+                            <option>Choose an option</option>
+                            <option>Red</option>
+                            <option>Blue</option>
+                            <option>White</option>
+                            <option>Grey</option>
+                        </select>
+                        <div class="dropDownSelect2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quantity Selector -->
+            <div class="flex-w flex-r-m p-b-10">
+                <div class="size-204 flex-w flex-m respon6-next">
+                    <div class="wrap-num-product flex-w m-r-20 m-tb-10">
+                        <div class="btn-num-product-down cl8 hov-btn3 trans-04 flex-c-m">
+                            <i class="fs-16 zmdi zmdi-minus"></i>
+                        </div>
+
+                        <input class="mtext-104 cl3 txt-center num-product" type="number" name="num-product" value="1">
+
+                        <div class="btn-num-product-up cl8 hov-btn3 trans-04 flex-c-m">
+                            <i class="fs-16 zmdi zmdi-plus"></i>
+                        </div>
+                    </div>
+
+                    <% if (product.stock > 0) { %>
+                        <div class="p-t-20 display-flex" style="display: flex; justify-content: space-between; align-items: center;">
+                            <!-- Add to Cart Button -->
+                            <button id="addCart" class="flex-c-m stext-101 cl0 size-101 bg-warning bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail">
+                                Add to Cart
+                            </button>
+                            <!-- Buy Now Button -->
+                            <button class="flex-c-m stext-101 cl0 size-101 bg-success bor1 hov-btn1 p-lr-15 trans-04 js-buynow-detail">
+                                Buy Now
+                            </button>
+                        </div>
+                    <% } else { %>
+                        <button class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04" disabled>
+                            Sold Out
+                        </button>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+                    <!-- Social Media Buttons -->
+                    <div class="flex-w flex-m p-l-100 p-t-40 respon7">
+                        <div class="flex-m bor9 p-r-10 m-r-11">
+                            <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 js-addwish-detail tooltip100" data-tooltip="Add to Wishlist">
+                                <i class="zmdi zmdi-favorite"></i>
+                            </a>
+                        </div>
+
+                        <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Facebook">
+                            <i class="fa fa-facebook"></i>
+                        </a>
+
+                        <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Twitter">
+                            <i class="fa fa-twitter"></i>
+                        </a>
+
+                        <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Google Plus">
+                            <i class="fa fa-google-plus"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
-<!-- Related Products -->
+<!-- Product SKU and Categories -->
+<div class="bg6 flex-c-m flex-w size-302 m-t-73 p-tb-15">
+    <span class="stext-107 cl6 p-lr-25">
+        SKU: JAK-01
+    </span>
+
+    <span class="stext-107 cl6 p-lr-25">
+        Categories: Jacket, Men
+    </span>
+</div>
+
+<!-- Related Products Section -->
+
+
+<script>
+    document.getElementById('addCart').addEventListener('click', async function (e) {
+        e.preventDefault();
+
+        const productId = "<%= product._id %>";
+        const quantity = document.querySelector('.num-product').value;
+        const size = document.querySelector('select[name="size"]').value;
+        const color = document.querySelector('select[name="color"]').value;
+
+        const cartData = { productId, quantity, size, color };
+
+        try {
+            const response = await fetch('/cart/add', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(cartData),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                console.log(result.message); // Show success message in the console
+                // Optionally, update the DOM or redirect
+            } else {
+                console.error(result.message); // Show error message in the console
+                // Optionally, display the error message in the UI
+            }
+        } catch (error) {
+            console.error('Error:', error.message);
+        }
+    });
+</script>
+
+
+
+    
 
 <%- include("../../views/partials/users/footer.ejs") %>

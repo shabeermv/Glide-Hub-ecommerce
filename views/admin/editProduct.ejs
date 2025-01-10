@@ -2,7 +2,7 @@
 
 <main class="main-wrap">
     <header class="main-header navbar">
-        <!-- Your header content -->
+       
     </header>
     <section class="content-main">
         <div class="row">
@@ -22,7 +22,7 @@
                             <label for="product_title" class="form-label">Product title</label>
                             <input type="text" placeholder="Type here" class="form-control" id="product_title" value="<%= product.title %>" required />
                         </div>
-                        <!-- Product Color & Size -->
+                        
                         <div class="row gx-2">
                             <div class="col-md-4 mb-3">
                                 <label for="product_color" class="form-label">Color</label>
@@ -99,7 +99,7 @@ document.getElementById('addSizeButton').addEventListener('click', () => {
         const listItem = document.createElement('li');
         listItem.textContent = sizeInput;
         document.getElementById('sizeList').appendChild(listItem);
-        document.getElementById('product_size').value = ''; // clear the input
+        document.getElementById('product_size').value = ''; 
     } else if (!sizeInput) {
         alert('Please enter a size.');
     } else {
@@ -126,7 +126,7 @@ document.getElementById('applyButton').addEventListener('click', () => {
         return;
     }
 
-    // Create the form data
+    
     const formData = new FormData();
     formData.append('title', productName);
     formData.append('description', productDescription);
@@ -135,7 +135,7 @@ document.getElementById('applyButton').addEventListener('click', () => {
     formData.append('price', productPrice);
     formData.append('category', productStatus);
     
-    // Add the sizes to the form data
+    
     sizes.forEach((size) => {
         formData.append('sizes[]', size);
     });
@@ -144,7 +144,7 @@ document.getElementById('applyButton').addEventListener('click', () => {
         formData.append('images', file);
     });
 
-    // Submit the form data via fetch
+    
     fetch('/admin/updateProduct/<%= product._id %>', {
         method: 'POST',
         body: formData,

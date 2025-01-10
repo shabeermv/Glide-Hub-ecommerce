@@ -1,180 +1,239 @@
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Sign Up Form with glide_hub</title>
-    
-      <link
-        href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.css"
-        rel="stylesheet"
-      />
-      <link rel="stylesheet" href="/css/login.css" />
-    </head>
-    <body>
-      <div class="form">
-        <form class="form-horizontal signup">
-          <div class="form-wrap" style="position: relative">
-            <h2>Sign Up</h2>
-    
-            <div class="form-group">
-              <p id="error-message" class="text-center"></p>
-              <div class="relative">
-                <input
-                  class="form-control"
-                  id="email"
-                  type="email"
-                  name="email"
-                  required=""
-                  autofocus=""
-                  placeholder="Email Address"
-                />
-                <i class="fa fa-envelope"></i>
-              </div>
-            </div>
-    
-            <div class="form-group">
-              <!-- Username -->
-              <div class="relative">
-                <input
-                  class="form-control"
-                  id="username"
-                  type="text"
-                  required=""
-                  name="name"
-                  placeholder="Username"
-                />
-                <i class="fa fa-user"></i>
-              </div>
-            </div>
-    
-            <div class="form-group">
-             
-              <div class="relative">
-                <input
-                  class="form-control"
-                  id="contactNumber"
-                  type="text"
-                  
-                  name="contactNumber"
-                  placeholder="Contact Number"
-                />
-                <i class="fa fa-phone"></i>
-              </div>
-            </div>
-    
-            <div class="form-group">
-              <!-- Password -->
-              <div class="relative">
-                <input
-                  class="form-control"
-                  id="password"
-                  type="password"
-                  name="password"
-                  placeholder="Password"
-                />
-                <i class="fa fa-key"></i>
-              </div>
-              <span class="pull-right"
-                ><small><a href="#">Show / Hide</a></small></span
-              >
-            </div>
-    
-            <div class="login-btn">
-              <button class="movebtn movebtnsu" id="submitBtn" type="button">
-                Submit <i class="fa fa-fw fa-paper-plane"></i>
-              </button>
-              <div class="relative">
-                <hr />
-                <span class="login-text">or sign up with</span>
-              </div>
-              <div class="clearfix"></div>
-              <div class="social-btn clearfix">
-                <a href="/auth/google" class="movebtn google" type="Submit">
-                  Google <i class="fa fa-fw fa-google"></i></a>
-              </div>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up Form with glide_hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/login.css" />
+    <style>
+      .password-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .password-container input {
+        padding-right: 30px;
+      }
+      .password-container .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #888;
+        font-size: 16px;
+      }
+      .password-container .form-control {
+        width: 100%;
+        padding-right: 40px; /* Add space to the right for the icon */
+      }
+      
+    </style>
+  </head>
+  <body>
+    <div class="form">
+      <form class="form-horizontal signup">
+        <div class="form-wrap" style="position: relative">
+          <h2>Sign Up</h2>
+  
+          <div class="form-group">
+            <p id="error-message" class="text-center"></p>
+            <div class="relative">
+              <input
+                class="form-control"
+                id="email"
+                type="email"
+                name="email"
+                required=""
+                autofocus=""
+                placeholder="Email Address"
+              />
+              <i class="fa fa-envelope"></i>
             </div>
           </div>
-          <div class="sign-up">
-            <a href="#" class="signbtn"
-              ><small
-                >Already a member? <a href="login">sign in</a>
-                <i>(Click me)</i></small
-              ></a
-            >
+  
+          <div class="form-group">
+            <!-- Username -->
+            <div class="relative">
+              <input
+                class="form-control"
+                id="username"
+                type="text"
+                required=""
+                name="name"
+                placeholder="Username"
+              />
+              <i class="fa fa-user"></i>
+            </div>
           </div>
-        </form>
-      </div>
-    
-      <script
-        type="text/javascript"
-        src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.js"
-      ></script>
-    
-      <script>
-        document.getElementById("submitBtn").addEventListener("click", function (event) {
-          event.preventDefault();
-    
-          const email = document.getElementById("email").value;
-          const userName = document.getElementById("username").value;
-          const password = document.getElementById("password").value;
-          const contactNumber = document.getElementById("contactNumber").value;
-    
-          const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-          const usernameRegex = /^[a-zA-Z0-9]{3,15}$/;
-          const passwordRegex = /^[a-zA-Z0-9]{6,}$/;
-          const contactNumberRegex = /^[0-9]{10}$/;
-    
-          if (!emailRegex.test(email)) {
-    document.getElementById("error-message").innerText = "Please enter a valid email address.";
-    return;
-  }
+  
+          <div class="form-group">
+            <div class="relative">
+              <input
+                class="form-control"
+                id="contactNumber"
+                type="text"
+                name="contactNumber"
+                placeholder="Contact Number"
+              />
+              <i class="fa fa-phone"></i>
+            </div>
+          </div>
+  
+          <div class="form-group">
+            <!-- Password -->
+            <div class="relative">
+              <input
+                class="form-control"
+                id="password"
+                type="password"
+                name="password"
+                placeholder="Password"
+              />
+              <i class="fa fa-eye toggle-password" id="togglePassword"></i>
 
-  if (!usernameRegex.test(userName)) {
-    document.getElementById("error-message").innerText = "Username must be alphanumeric and between 3 to 15 characters.";
-    return;
-  }
+            </div>
+            
+          </div>
 
-  if (!contactNumberRegex.test(contactNumber)) {
-    document.getElementById("error-message").innerText = "Contact number must be exactly 10 digits.";
-    return;
-  }
+          <!-- Confirm Password -->
+          <div class="form-group">
+            <div class="relative">
+              <input
+                class="form-control"
+                id="confirmPassword"
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm Password"
+              />
+              <i class="fa fa-eye toggle-password" id="togglePassword"></i>
 
-  if (!passwordRegex.test(password)) {
-    document.getElementById("error-message").innerText = "Password must be at least 8 characters long, include at least one number, one uppercase letter, and one special character.";
-    return;
-  }
-
-          const userData = {
-            email: email,
-            userName: userName,
-            contact: contactNumber,
-            password: password,
-          };
-    
-          fetch("/signup", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(userData),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.success) {
-                window.location.href = "/otp";
-              } else if (data.success === false) {
-                document.getElementById("error-message").innerHTML = data.message;
-              } else {
-                alert("Error: " + data.message);
-              }
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-              alert("Something went wrong!");
-            });
+            </div>
+          </div>
+  
+          <div class="login-btn">
+            <button class="movebtn movebtnsu" id="submitBtn" type="button">
+              Submit <i class="fa fa-fw fa-paper-plane"></i>
+            </button>
+            <div class="relative">
+              <hr />
+              <span class="login-text">or sign up with</span>
+            </div>
+            <div class="clearfix"></div>
+            <div class="social-btn clearfix">
+              <a href="/auth/google" class="movebtn google" type="Submit">
+                Google <i class="fab fa-google"></i></a>
+            </div>
+          </div>
+        </div>
+        <div class="sign-up">
+          <a href="#" class="signbtn"
+            ><small
+              >Already a member? <a href="login">sign in</a>
+              <i>(Click me)</i></small
+            ></a
+          >
+        </div>
+      </form>
+    </div>
+  
+    <script
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.js"
+    ></script>
+    <script>
+      // Add event listeners for all toggle-password icons
+      document.querySelectorAll('.toggle-password').forEach((icon) => {
+        icon.addEventListener('click', function () {
+          // Find the associated password input field
+          const passwordInput = this.previousElementSibling;
+          
+          if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            this.classList.remove('fa-eye');
+            this.classList.add('fa-eye-slash'); 
+          } else {
+            passwordInput.type = 'password';
+            this.classList.remove('fa-eye-slash');
+            this.classList.add('fa-eye'); 
+          }
         });
-      </script>
-    </body>
+      });
+    </script>
     
-  </html>
+  
+    <script>
+      document.getElementById("submitBtn").addEventListener("click", function (event) {
+        event.preventDefault();
+  
+        const email = document.getElementById("email").value;
+        const userName = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        const confirmPassword = document.getElementById("confirmPassword").value;
+        const contactNumber = document.getElementById("contactNumber").value;
+  
+        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+       
+        const passwordRegex = /^[a-zA-Z0-9]{6,}$/;
+        const contactNumberRegex = /^[0-9]{10}$/;
+  
+        if (!emailRegex.test(email)) {
+          document.getElementById("error-message").innerText = "Please enter a valid email address.";
+          return;
+        }
+
+        
+        if (!contactNumberRegex.test(contactNumber)) {
+          document.getElementById("error-message").innerText = "Contact number must be exactly 10 digits.";
+          return;
+        }
+
+        if (!passwordRegex.test(password)) {
+          document.getElementById("error-message").innerText = "Password must be at least 8 characters long, include at least one number, one uppercase letter, and one special character.";
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          document.getElementById("error-message").innerText = "Passwords do not match.";
+          return;
+        }
+
+        const userData = {
+          email: email,
+          userName: userName,
+          contact: contactNumber,
+          password: password,
+        };
+  
+        fetch("/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(userData),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              window.location.href = "/otp";
+            } else if (data.success === false) {
+              document.getElementById("error-message").innerHTML = data.message;
+            } else {
+              alert("Error: " + data.message);
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Something went wrong!");
+          });
+      });
+    </script>
+  </body>
+</html>

@@ -22,7 +22,7 @@
                                 </div>
                             </div>
                             
-                            <!-- Similarly for other images -->
+                       
                             <div class="item-slick3" data-thumb="/uploads/<%= product.image[1] %>">
                                 <div class="wrap-pic-w pos-relative">
                                     <img src="/uploads/<%= product.image[1] %>" alt="IMG-PRODUCT">
@@ -68,8 +68,9 @@
                     </tr>
                     <tr>
                         <td>Category</td>
-                        <td><%= product.category.name|| 'Not specified' %></td>
+                        <td><%= product.category ? product.category.name : 'Not specified' %></td>
                     </tr>
+                    
                     <tr>
                         <td>Brand</td>
                         <td><%= product.brandName || 'Not specified' %></td>
@@ -99,13 +100,11 @@
                 </tbody>
             </table>
             
-            <!-- Buttons to Edit and Delete Product -->
+            
             <div class="p-t-20">
                 <a href="/admin/edit/<%= product._id %>" class="btn btn-primary m-r-10">Edit Product</a>
-                <form action="/admin/delete/<%= product._id %>" method="POST" style="display: inline;">
-                    <input type="hidden" name="_method" value="DELETE">
-                    <button type="submit" class="btn btn-danger">Delete Product</button>
-                </form>
+                <a href="#" onclick="deleteProduct('<%= product._id %>')" class="btn btn-danger">Delete Product</a>
+
                 
             </div>
             
@@ -140,7 +139,7 @@
   </section>
 
   <script>
-   document.querySelector('.btn-danger').addEventListener('click', function (event) {
+  document.querySelector('.btn-danger').addEventListener('click', function (event) {
     event.preventDefault(); // Prevent the default form submission
 
     const productId = '<%= product._id %>';
