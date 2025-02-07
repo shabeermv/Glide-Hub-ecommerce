@@ -1,0 +1,74 @@
+<%-include("../../views/partials/users/header.ejs")%>
+
+<div style="display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; background-color: #eef2f3; padding-top: 40px; padding-bottom: 30px;">
+    <form action="#" id="colorfulAddressForm" style="background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); width: 50%; max-width: 600px; margin-top: 40px;">
+        <h2 style="text-align: center; color: #3a3b3d; margin-bottom: 20px;">Edit Address</h2>
+        
+        <label for="fullName" style="color: #343a40; font-weight: bold;">Full Name *</label>
+        <input type="text" id="fullName" name="fullName" class="form-control" value="<%= user.username %>" style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+
+        <label for="address" style="color: #343a40; font-weight: bold;">Address *</label>
+        <input type="text" id="address" name="address" class="form-control" value="<%= user.address[0].address %>"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+
+        <label for="city" style="color: #343a40; font-weight: bold;">City *</label>
+        <input type="text" id="city" name="city" class="form-control" value="<%= user.address[0].city %>"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+
+        <label for="state" style="color: #343a40; font-weight: bold;">State *</label>
+        <input type="text" id="state" name="state" class="form-control" value="<%= user.address[0].state %>"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+
+        <label for="postCode" style="color: #3a3b3d; font-weight: bold;">Post Code *</label>
+        <input type="text" id="postCode" name="postCode" class="form-control" value="<%= user.address[0].postCode %>"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+
+        <label for="country" style="color: #3a3b3d; font-weight: bold;">Country *</label>
+        <input type="text" id="country" name="country" class="form-control" value="<%= user.address[0].country %>"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+
+        <button id="confirm" type="submit" class="btn btn-block" style="background-color: #3a3b3d; color: #fff; font-weight: bold; padding: 15px; border-radius: 8px; width: 100%; font-size: 1.2rem;">
+            SAVE CHANGES
+        </button>
+        
+        <div id="response-message" class="mt-3" style="text-align: center;"></div>
+    </form>
+</div>
+
+<%-include("../../views/partials/users/footer.ejs")%>
+
+<script>
+   document.querySelector("#confirm").addEventListener("click", function (e) {
+    e.preventDefault(); // Prevent form submission
+    const userId = "<%= user._id %>";
+
+    // Create the address object from input values
+    const address = {
+        fullName: document.querySelector("#fullName").value,
+        address: document.querySelector("#address").value,
+        city: document.querySelector("#city").value,
+        state: document.querySelector("#state").value,
+        postCode: document.querySelector("#postCode").value,
+        country: document.querySelector("#country").value
+    };
+    console.log(address,":this is the address");
+
+    // Send data to backend using fetch API
+    fetch(`/editProfile/${userId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(address) // Convert object to JSON string
+    })
+    .then(response => response.json()) // Parse JSON response
+    .then(data => {
+        if (data.success) {
+            alert('Address updated successfully!');
+            window.location.href = '/profile'; // Redirect to profile page
+        } else {
+            alert('Failed to update address.');
+        }
+    })
+    .catch(err => {
+        alert('Error updating address.');
+        console.error('Error:', err);
+    });
+});
+
+</script>

@@ -9,39 +9,27 @@
                     <div class="wrap-slick3 flex-sb flex-w">
                         <div class="wrap-slick3-dots"></div>
                         <div class="wrap-slick3-arrows flex-sb-m flex-w"></div>
-
+            
                         <div class="slick3 gallery-lb">
-                            
-                            <div class="item-slick3" data-thumb="/uploads/<%= product.image[0] %>">
-                                <div class="wrap-pic-w pos-relative">
-                                    <img src="/uploads/<%= product.image[0] %>" alt="IMG-PRODUCT">
-                                    <a class="btn-view-image" href="/uploads/<%= product.image[0] %>">
-                                        View Image
-                                    </a>
-                                    <i class="fa fa-expand"></i>
+                            <% if (product.image && product.image.length > 0) { %>
+                                <% product.image.forEach((imagePath, index) => { %>
+                                    <div class="item-slick3" data-thumb="<%= imagePath %>">
+                                        <div class="wrap-pic-w pos-relative">
+                                            <img src="<%= imagePath %>" alt="Product Image <%= index + 1 %>" class="img-fluid">
+                                            <a class="btn-view-image" href="<%= imagePath %>">
+                                                View Image
+                                            </a>
+                                            <i class="fa fa-expand"></i>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            <% } else { %>
+                                <div class="item-slick3">
+                                    <div class="wrap-pic-w pos-relative">
+                                        <img src="/images/placeholder.jpg" alt="No Image Available" class="img-fluid">
+                                    </div>
                                 </div>
-                            </div>
-                            
-                       
-                            <div class="item-slick3" data-thumb="/uploads/<%= product.image[1] %>">
-                                <div class="wrap-pic-w pos-relative">
-                                    <img src="/uploads/<%= product.image[1] %>" alt="IMG-PRODUCT">
-                                    <a class="btn-view-image" href="/uploads/<%= product.image[1] %>">
-                                        View Image
-                                    </a>
-                                    <i class="fa fa-expand"></i>
-                                </div>
-                            </div>
-                            <div class="item-slick3" data-thumb="/uploads/<%= product.image[2] %>">
-                                <div class="wrap-pic-w pos-relative">
-                                    <img src="/uploads/<%= product.image[2] %>" alt="IMG-PRODUCT">
-                                    <a class="btn-view-image" href="/uploads/<%= product.image[2] %>">
-                                        View Image
-                                    </a>
-                                    
-                                </div>
-                            </div>
-
+                            <% } %>
                         </div>
                     </div>
                 </div>
@@ -81,17 +69,18 @@
                     </tr>
                     <tr>
                         <td>Stock</td>
-                        <td><%= product.stock %></td>
+                        <td><%= product.totalStock %></td>
                     </tr>
                     <tr>
                         <td>Sizes</td>
                         <td>
                             <% if (product.sizes && product.sizes.length > 0) { %>
-                                <%= product.sizes.join(', ') %>
+                                <%= product.sizes.map(s => s.size).join(', ') %>
                             <% } else { %>
                                 Not available
                             <% } %>
                         </td>
+                        
                     </tr>
                     <tr>
                         <td>Color</td>
@@ -137,6 +126,8 @@
 	  </div>
 	</div>
   </section>
+  <%- include("../../views/partials/admin/footer.ejs") %>
+
 
   <script>
   document.querySelector('.btn-danger').addEventListener('click', function (event) {
@@ -167,6 +158,5 @@
 
   
 
-  <%- include("../../views/partials/admin/footer.ejs") %>
 
   

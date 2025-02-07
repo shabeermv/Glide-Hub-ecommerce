@@ -1,8 +1,10 @@
 <%- include("../../views/partials/admin/header.ejs") %>
 
+<link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet">
+
 <main class="main-wrap">
     <header class="main-header navbar">
-       
+        <!-- Header content remains the same -->
     </header>
     <section class="content-main">
         <div class="row">
@@ -10,7 +12,6 @@
                 <div class="content-header">
                     <h2 class="content-title">Edit Product</h2>
                     <div>
-                        <button class="btn btn-light rounded font-sm mr-5 text-body hover-up">Save to draft</button>
                         <button class="btn btn-md rounded font-sm hover-up" id="applyButton">Update</button>
                     </div>
                 </div>
@@ -22,26 +23,34 @@
                             <label for="product_title" class="form-label">Product title</label>
                             <input type="text" placeholder="Type here" class="form-control" id="product_title" value="<%= product.title %>" required />
                         </div>
-                        
                         <div class="row gx-2">
                             <div class="col-md-4 mb-3">
                                 <label for="product_color" class="form-label">Color</label>
                                 <input type="text" placeholder="Type here" class="form-control" id="product_color" value="<%= product.color %>" />
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="product_size" class="form-label">Size</label>
-                                <input type="text" placeholder="Type here" class="form-control" id="product_size" />
-                                <button type="button" id="addSizeButton" class="btn btn-sm btn-primary mt-2">Add Size</button>
-                                <ul id="sizeList"></ul>
+                            <div class="col-md-8 mb-3">
+                                <label for="product_size" class="form-label">Size Management</label>
+                                <div class="size-management">
+                                    <input type="text" placeholder="Type size here" class="form-control mb-2" id="product_size" />
+                                    <input type="number" placeholder="Enter stock for size" class="form-control mb-2" id="size_stock" />
+                                    <button type="button" id="addSizeButton" class="btn btn-sm btn-primary">Add Size with Stock</button>
+                                </div>
+                                <div id="sizeList" class="mt-3">
+                                    <% product.sizes.forEach((size, index) => { %>
+                                        <div class="size-item d-flex align-items-center mb-2" data-size="<%= size.size %>">
+                                            <span class="me-2"><%= size.size %> - Stock: </span>
+                                            <input type="number" class="form-control form-control-sm size-stock-input me-2" 
+                                                   value="<%= size.stock %>" style="width: 80px;"
+                                                   data-original-stock="<%= size.stock %>">
+                                            <button type="button" class="btn btn-sm btn-danger delete-size">Delete</button>
+                                        </div>
+                                    <% }); %>
+                                </div>
                             </div>
                         </div>
                         <div class="mb-4">
                             <label for="product_brand" class="form-label">Brand</label>
                             <input type="text" placeholder="Type here" class="form-control" id="product_brand" value="<%= product.brandName %>" required />
-                        </div>
-                        <div class="mb-4">
-                            <label for="product_stock" class="form-label">Stock</label>
-                            <input type="number" placeholder="Type here" class="form-control" id="product_stock" value="<%= product.stock %>" required />
                         </div>
                     </div>
                 </div>
@@ -56,8 +65,20 @@
                 <div class="card mb-4">
                     <div class="card-body">
                         <div>
-                            <label class="form-label" for="product_images">Images</label>
+                            <label class="form-label">Current Images</label>
+                            <div class="current-images-container">
+                                <% product.image.forEach((img, index) => { %>
+                                    <div class="current-image-wrapper">
+                                        <img src="<%= img %>" alt="Product image <%= index + 1 %>" class="current-image">
+                                        <button type="button" class="btn btn-sm btn-danger remove-image" data-index="<%= index %>">Remove</button>
+                                    </div>
+                                <% }); %>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="form-label" for="product_images">Add New Images</label>
                             <input type="file" id="product_images" accept="image/*" name="images" multiple>
+                            <div id="image-preview-container" class="mt-3"></div>
                         </div>
                     </div>
                 </div>
@@ -74,13 +95,9 @@
                             <select class="form-select" id="product_status" name="category">
                                 <option disabled>Select a Category</option>
                                 <% categories.forEach(category => { %>
-                                    <option value="<%= category._id %>" <%= category._id == product.category ? 'selected' : '' %>><%= category.name %></option>
+                                    <option value="<%= category._id %>" <%= category._id.toString() === product.category.toString() ? 'selected' : '' %>><%= category.name %></option>
                                 <% }); %>
                             </select>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label">Tags</label>
-                            <input type="text" placeholder="Type here" class="form-control" id="product_tags" value="<%= product.tags %>" />
                         </div>
                     </div>
                 </div>
@@ -89,70 +106,236 @@
     </section>
 </main>
 
-<script>
-   let sizes = [];
+<script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
 
+<style>
+    .image-wrapper {
+        position: relative;
+        display: inline-block;
+        margin: 10px;
+    }
+    .image-preview {
+        max-width: 200px;
+        max-height: 200px;
+        display: block;
+    }
+    .current-image-wrapper {
+        display: inline-block;
+        margin: 10px;
+        position: relative;
+    }
+    .current-image {
+        max-width: 200px;
+        max-height: 200px;
+        display: block;
+    }
+    .remove-image {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+    }
+    .crop-button {
+        display: block;
+        margin-top: 5px;
+    }
+    .size-item {
+        background-color: #f8f9fa;
+        padding: 8px;
+        border-radius: 4px;
+    }
+</style>
+
+<script>
+let sizesWithStock =<%-JSON.stringify(product.sizes || []) %>;
+let croppers = [];
+let croppedImages = [];
+let removedImages = [];
+let currentImages = <%- JSON.stringify(product.image || []) %>;
+
+// Handle size stock updates
+document.querySelectorAll('.size-stock-input').forEach(input => {
+    input.addEventListener('change', function() {
+        const sizeItem = this.closest('.size-item');
+        const size = sizeItem.dataset.size;
+        const newStock = parseInt(this.value);
+        
+        if (isNaN(newStock) || newStock < 0) {
+            alert('Please enter a valid stock number');
+            this.value = this.dataset.originalStock;
+            return;
+        }
+        
+        const sizeIndex = sizesWithStock.findIndex(s => s.size === size);
+        if (sizeIndex !== -1) {
+            sizesWithStock[sizeIndex].stock = newStock;
+        }
+    });
+});
+
+// Handle size deletion
+document.querySelectorAll('.delete-size').forEach(button => {
+    button.addEventListener('click', function() {
+        const sizeItem = this.closest('.size-item');
+        const size = sizeItem.dataset.size;
+        sizesWithStock = sizesWithStock.filter(s => s.size !== size);
+        sizeItem.remove();
+    });
+});
+
+// Add new size with stock
 document.getElementById('addSizeButton').addEventListener('click', () => {
     const sizeInput = document.getElementById('product_size').value.trim();
-    if (sizeInput && !sizes.includes(sizeInput)) {
-        sizes.push(sizeInput);
-        const listItem = document.createElement('li');
-        listItem.textContent = sizeInput;
-        document.getElementById('sizeList').appendChild(listItem);
-        document.getElementById('product_size').value = ''; 
-    } else if (!sizeInput) {
+    const sizeStockInput = document.getElementById('size_stock').value.trim();
+
+    if (!sizeInput) {
         alert('Please enter a size.');
+        return;
+    }
+    if (!sizeStockInput || isNaN(sizeStockInput) || sizeStockInput <= 0) {
+        alert('Please enter a valid stock number.');
+        return;
+    }
+
+    if (!sizesWithStock.some(size => size.size === sizeInput)) {
+        const newSize = { size: sizeInput, stock: Number(sizeStockInput) };
+        sizesWithStock.push(newSize);
+
+        const sizeList = document.getElementById('sizeList');
+        const newSizeElement = document.createElement('div');
+        newSizeElement.className = 'size-item d-flex align-items-center mb-2';
+        newSizeElement.dataset.size = sizeInput;
+        newSizeElement.innerHTML = `
+            <span class="me-2">${sizeInput} - Stock: </span>
+            <input type="number" class="form-control form-control-sm size-stock-input me-2" 
+                   value="${sizeStockInput}" style="width: 80px;"
+                   data-original-stock="${sizeStockInput}">
+            <button type="button" class="btn btn-sm btn-danger delete-size">Delete</button>
+        `;
+
+        // Add event listeners to new elements
+        const deleteButton = newSizeElement.querySelector('.delete-size');
+        deleteButton.addEventListener('click', function() {
+            sizesWithStock = sizesWithStock.filter(s => s.size !== sizeInput);
+            newSizeElement.remove();
+        });
+
+        const stockInput = newSizeElement.querySelector('.size-stock-input');
+        stockInput.addEventListener('change', function() {
+            const newStock = parseInt(this.value);
+            if (isNaN(newStock) || newStock < 0) {
+                alert('Please enter a valid stock number');
+                this.value = this.dataset.originalStock;
+                return;
+            }
+            const sizeIndex = sizesWithStock.findIndex(s => s.size === sizeInput);
+            if (sizeIndex !== -1) {
+                sizesWithStock[sizeIndex].stock = newStock;
+            }
+        });
+
+        sizeList.appendChild(newSizeElement);
+        document.getElementById('product_size').value = '';
+        document.getElementById('size_stock').value = '';
     } else {
         alert('This size already exists.');
     }
 });
 
+// Handle removal of existing images
+document.querySelectorAll('.remove-image').forEach(button => {
+    button.addEventListener('click', function() {
+        const index = this.dataset.index;
+        removedImages.push(currentImages[index]);
+        this.closest('.current-image-wrapper').remove();
+    });
+});
+
+// Handle new image selection and cropping
+const imageInput = document.getElementById('product_images');
+const imagePreviewContainer = document.getElementById('image-preview-container');
+
+imageInput.addEventListener('change', function(event) {
+    imagePreviewContainer.innerHTML = '';
+    croppers = [];
+    croppedImages = [];
+
+    const files = event.target.files;
+    if (files.length === 0) return;
+
+    Array.from(files).forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imgWrapper = document.createElement('div');
+            imgWrapper.classList.add('image-wrapper');
+            imgWrapper.innerHTML = `
+                <img src="${e.target.result}" class="image-preview" id="image-${index}">
+                <button type="button" class="btn btn-sm btn-success crop-button" data-index="${index}">Crop</button>
+            `;
+            imagePreviewContainer.appendChild(imgWrapper);
+
+            const imgElement = document.getElementById(`image-${index}`);
+            const cropper = new Cropper(imgElement, {
+                aspectRatio: 1,
+                viewMode: 1,
+            });
+
+            croppers[index] = cropper;
+
+            imgWrapper.querySelector('.crop-button').addEventListener('click', () => {
+                const canvas = cropper.getCroppedCanvas();
+                croppedImages[index] = canvas.toDataURL('image/png');
+                imgElement.src = croppedImages[index];
+                cropper.destroy();
+            });
+        };
+        reader.readAsDataURL(file);
+    });
+});
+
+// Form submission
 document.getElementById('applyButton').addEventListener('click', () => {
     const productName = document.getElementById('product_title').value.trim();
     const productDescription = document.getElementById('product_description').value.trim();
     const productBrand = document.getElementById('product_brand').value.trim();
-    const productStock = document.getElementById('product_stock').value.trim();
     const productPrice = document.getElementById('product_price').value.trim();
     const productStatus = document.getElementById('product_status').value;
-    const images = document.getElementById('product_images').files;
+    const productColor = document.getElementById('product_color').value;
 
-    if (productName === '' || productDescription === '' || productBrand === '' || productStock === '' || productPrice === '') {
+    if (!productName || !productDescription || !productBrand || !productPrice || !productColor) {
         alert('Please fill in all required fields.');
         return;
     }
 
-    if (images.length === 0) {
-        alert('You must upload at least 1 image.');
+    if (sizesWithStock.length === 0) {
+        alert('Please add at least one size with stock.');
         return;
     }
 
-    
     const formData = new FormData();
     formData.append('title', productName);
     formData.append('description', productDescription);
     formData.append('brandName', productBrand);
-    formData.append('stock', productStock);
+    formData.append('color', productColor);
     formData.append('price', productPrice);
     formData.append('category', productStatus);
-    
-    
-    sizes.forEach((size) => {
-        formData.append('sizes[]', size);
+    formData.append('sizesWithStock', JSON.stringify(sizesWithStock));
+    formData.append('removedImages', JSON.stringify(removedImages));
+
+    croppedImages.forEach((imageData, index) => {
+        if (imageData) {
+            const blob = dataURLtoBlob(imageData);
+            formData.append('images', blob, `cropped-image-${index}.png`);
+        }
     });
 
-    Array.from(images).forEach((file) => {
-        formData.append('images', file);
-    });
-
-    
     fetch('/admin/updateProduct/<%= product._id %>', {
-        method: 'POST',
+        method: 'PATCH',
         body: formData,
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Product updated successfully.');
+            alert('Product updated successfully!');
             window.location.href = '/admin/products';
         } else {
             alert('Error updating product: ' + data.message);
@@ -160,6 +343,18 @@ document.getElementById('applyButton').addEventListener('click', () => {
     })
     .catch(err => console.error('Error:', err));
 });
+
+// Helper function to convert data URL to Blob
+function dataURLtoBlob(dataURL) {
+    const byteString = atob(dataURL.split(',')[1]);
+    const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: mimeString });
+}
 </script>
 
 <%- include("../../views/partials/admin/footer.ejs") %>

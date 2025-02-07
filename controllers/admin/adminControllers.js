@@ -60,8 +60,27 @@ const postAdmin = async (req, res) => {
     }
 };
 
+const logoutAdmin = (req, res) => {
+    // Check if the logged-in user is an admin
+    if (req.session.user && req.session.user.isAdmin) {
+      console.log("Admin is logging out");
+  
+      // Perform admin-specific logout actions here if needed (e.g., logging activity)
+    }
+  
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ success: false, message: "Could not log out" });
+      }
+      res.clearCookie("connect.sid"); // Clear the session cookie
+      res.render("adminLogin"); // Redirect to login page after logout
+    });
+  };
+  
+
 module.exports = {
     adminLogin,
     postAdmin,
-    getHome
+    getHome,
+    logoutAdmin
 };

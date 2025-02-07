@@ -1,70 +1,90 @@
 <%- include("../../views/partials/admin/header.ejs") %>
-
 <main class="main-wrap">
-    <header class="main-header navbar">
-        <div class="col-search">
-            <form class="searchform">
-                <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Search term" />
-                    <button class="btn btn-light bg" type="button"><i class="material-icons md-search"></i></button>
-                </div>
-            </form>
+  <header class="main-header navbar">
+    <div class="col-search">
+      <form class="searchform">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Search term" />
+          <button class="btn btn-light bg" type="button">
+            <i class="material-icons md-search"></i>
+          </button>
         </div>
-    </header>
+      </form>
+    </div>
+  </header>
 
-    <section class="content-main">
-        <div class="content-header">
-            <h2 class="content-title card-title">Products Grid</h2>
-            <a href="/admin/addProduct" class="btn btn-primary btn-sm rounded">Create New</a>
-        </div>
-    
-        <div class="row">
-            <% updatedProducts.forEach(product => { %>
-                <div class="col-xl-3 col-lg-4 col-md-6">
-                    <div class="card card-product-grid">
-                        <a href="#" class="img-wrap">
-                            <!-- Use a placeholder image if product.images is empty or undefined -->
-                            <img 
-                                src="<%= product.images && product.image.length > 0 ? '/uploads/' + product.image[0] : '/path/to/placeholder-image.jpg' %>"
-                                alt="Product Image" 
-                            />
-                        </a>
-                        <div class="info-wrap">
-                            <h5 class="title"><%= product.title %></h5>
-                            <div class="price mt-1"><%= product.price %></div>
-                            <div>Stock: <%= product.stock || 'Out of Stock' %></div>
-                            <div> <%= product.category ? product.category.name : 'Uncategorized' %></div>
-                        </div>
-                        <!-- Show Details Button -->
-                        <div class="card-footer">
-                            <a href="/admin/productDetails/<%= product._id %>" class="btn btn-info btn-sm">Show Details</a>
+  <section class="content-main">
+    <div class="content-header">
+      <h2 class="content-title card-title">Products Grid</h2>
+      <a href="/admin/addProduct" class="btn btn-primary btn-sm rounded"
+        >Create New</a
+      >
+    </div>
+
+   
+          <div class="row">
+            <% updatedProducts?.forEach(product => { %>
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="card card-product-grid">
+                    <a href="#" class="img-wrap">
+                        <img
+                            src="<%= product.image && product.image.length > 0 ? product.image[0] : '/images/placeholder.jpg' %>"
+                            alt="<%= product.title %>"
+                            
+                            class="img-fluid"
+                        />
+                    </a>
+                    <div class="info-wrap">
+                        <h5 class="title"><%= product.title %></h5>
+                        <div class="price mt-1"><%= product.price %></div>
+                        <div>Stock: <%= product.totalStock || 'Out of Stock' %></div>
+                        <div>
+                            <%= product.category ? product.category.name : 'Uncategorized' %>
                         </div>
                     </div>
-                </div>
-            <% }); %>
+                    
+          <!-- Show Details Button -->
+          <div class="card-footer">
+            <a
+              href="/admin/productDetails/<%= product._id %>"
+              class="btn btn-info btn-sm"
+              >Show Details</a
+            >
+          </div>
         </div>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination">
-                <% if (currentPage > 1) { %>
-                    <li class="page-item">
-                        <a class="page-link" href="/admin/products?page=<%= currentPage - 1 %>&limit=<%= limit %>">Previous</a>
-                    </li>
-                <% } %>
-                <% for (let i = 1; i <= totalPages; i++) { %>
-                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                        <a class="page-link" href="/admin/products?page=<%= i %>&limit=<%= limit %>"><%= i %></a>
-                    </li>
-                <% } %>
-                <% if (currentPage < totalPages) { %>
-                    <li class="page-item">
-                        <a class="page-link" href="/admin/products?page=<%= currentPage + 1 %>&limit=<%= limit %>">Next</a>
-                    </li>
-                <% } %>
-            </ul>
-        </nav>
-        
-    </section>
-    
+      </div>
+      <% }); %>
+    </div>
+    <nav aria-label="Page navigation example">
+      <ul class="pagination">
+        <% if (currentPage > 1) { %>
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="/admin/products?page=<%= currentPage - 1 %>&limit=<%= limit %>"
+            >Previous</a
+          >
+        </li>
+        <% } %> <% for (let i = 1; i <= totalPages; i++) { %>
+        <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+          <a
+            class="page-link"
+            href="/admin/products?page=<%= i %>&limit=<%= limit %>"
+            ><%= i %></a
+          >
+        </li>
+        <% } %> <% if (currentPage < totalPages) { %>
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="/admin/products?page=<%= currentPage + 1 %>&limit=<%= limit %>"
+            >Next</a
+          >
+        </li>
+        <% } %>
+      </ul>
+    </nav>
+  </section>
 </main>
 
 <%- include("../../views/partials/admin/footer.ejs") %>

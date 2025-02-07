@@ -1,7 +1,6 @@
 <%-include("../../views/partials/users/header.ejs")%>
 
 
-<!-- molla/dashboard.html  22 Nov 2019 10:03:13 GMT -->
 
 <body>
     <div class="page-wrapper">
@@ -36,14 +35,12 @@
 								        <a class="nav-link" id="tab-orders-link" data-toggle="tab" href="#tab-orders" role="tab" aria-controls="tab-orders" aria-selected="false">Orders</a>
 								    </li>
 								    <li class="nav-item">
-								        <a class="nav-link" id="tab-downloads-link" data-toggle="tab" href="#tab-downloads" role="tab" aria-controls="tab-downloads" aria-selected="false">Downloads</a>
+								        <a class="nav-link" id="tab-downloads-link" data-toggle="tab" href="#tab-downloads" role="tab" aria-controls="tab-downloads" aria-selected="false">Coupons</a>
 								    </li>
 								    <li class="nav-item">
 								        <a class="nav-link" id="tab-address-link" data-toggle="tab" href="#tab-address" role="tab" aria-controls="tab-address" aria-selected="false">Adresses</a>
 								    </li>
-								    <li class="nav-item">
-								        <a class="nav-link" id="tab-account-link" data-toggle="tab" href="#tab-account" role="tab" aria-controls="tab-account" aria-selected="false">Account Details</a>
-								    </li>
+								    
 								    <li class="nav-item">
 								        <a class="nav-link" href="/logout">Sign Out</a>
 								    </li>
@@ -52,14 +49,86 @@
 
 	                		<div class="col-md-8 col-lg-9">
 	                			<div class="tab-content">
-								    <div class="tab-pane fade show active" id="tab-dashboard" role="tabpanel" aria-labelledby="tab-dashboard-link">
-								    	<p>Hello <span class="font-weight-normal text-dark">User</span> (not <span class="font-weight-normal text-dark">User</span>? <a href="#">Log out</a>) 
-								    	<br>
-								    	From your account dashboard you can view your <a href="#tab-orders" class="tab-trigger-link link-underline">recent orders</a>, manage your <a href="#tab-address" class="tab-trigger-link">shipping and billing addresses</a>, and <a href="#tab-account" class="tab-trigger-link">edit your password and account details</a>.</p>
-								    </div><!-- .End .tab-pane -->
+								    
+                                    <div style="margin-top: 30px;">
+                                        <!-- My Cart Button -->
+                                        <a href="/cart" class="btn btn-success" style="margin-right: 10px;">
+                                            My Cart
+                                        </a>
+                                        <!-- My Wishlist Button -->
+                                        <a href="/wishlist" class="btn btn-primary"style="margin-right: 10px;">
+                                            My Wishlist
+                                        </a>
+                                        <a href="/resetPassword" class="btn btn-secondary">
+                                            Reset Password
+                                        </a>
+                                    </div><!-- .End .tab-pane -->
 
-								    <div class="tab-pane fade" id="tab-orders" role="tabpanel" aria-labelledby="tab-orders-link">
-								    	<p>No order has been made yet.</p>
+                                    <div class="tab-pane fade" id="tab-orders" role="tabpanel" aria-labelledby="tab-orders-link">
+                                        <div class="container">
+                                            <h3 class="mb-4">Your Orders</h3>
+                                            <% if (orders && orders.length > 0) { %>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Order ID</th>
+                                                                <th>Date</th>
+                                                                <th>Products</th>
+                                                                <th>Total Amount</th>
+                                                                <th>Status</th>
+                                                                <th>Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <% orders.forEach(order => { %>
+                                                                <tr>
+                                                                    <td><%= order.orderId %></td>
+                                                                    <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                                                    <td>
+                                                                        <ul class="list-unstyled">
+                                                                            <% order.products.forEach(product => { %>
+                                                                                <li>
+                                                                                    <%= product.productId ? product.productId.title : 'Product Not Found' %>
+                                                                                </li>
+                                                                            <% }) %>
+                                                                        </ul>
+                                                                    </td>
+                                                                    <td>
+                                                                        <% const total = order.products.reduce((sum, product) => sum + (product.price * product.quantity), 0); %>
+                                                                        $<%= total %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="badge badge-<%= 
+                                                                            order.orderStatus === 'Completed' ? 'success' : 
+                                                                            order.orderStatus === 'Pending' ? 'warning' : 
+                                                                            order.orderStatus === 'Cancelled' ? 'danger' : 'info' 
+                                                                        %>">
+                                                                            <%= order.orderStatus %>
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <% if (order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Completed') { %>
+                                                                            <button class="btn btn-sm btn-danger cancel-order-btn" style="height: 50px;"
+                                                                                    data-order-id="<%= order._id %>">
+                                                                                Cancel Order
+                                                                            </button>
+                                                                        <% } %>
+                                                                    </td>
+                                                                </tr>
+                                                            <% }) %>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            <% } else { %>
+                                                <div class="alert alert-info">
+                                                    <p class="mb-0">You haven't placed any orders yet.</p>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                   
+                                    
 								    	<a href="/shop" class="btn btn-outline-primary-2"><span>GO SHOP</span><i class="icon-long-arrow-right"></i></a>
 								    </div><!-- .End .tab-pane -->
 
@@ -70,73 +139,107 @@
 
 								    <div class="tab-pane fade" id="tab-address" role="tabpanel" aria-labelledby="tab-address-link">
 								    	<p>The following addresses will be used on the checkout page by default.</p>
+                                        <div class="row">
+                                            <% user.address.forEach(function(address, index) { %>
+                                                <div class="col-lg-6">
+                                                    <div class="card card-dashboard">
+                                                        <div class="card-body">
+                                                            <h3 class="card-title">Address <%= index + 1 %></h3>
+                                                            <br>
+                                                            <p>
+                                                                <%= user.username %><br>
+                                                                <%= user.contact %><br>
+                                                                <%= user.email %><br>
+                                                                <%= address.address %><br>
+                                                                <%= address.city %><br>
+                                                                <%= address.state %><br>
+                                                                <%= address.postCode %><br>
+                                                                <%= address.country %><br>
+                                                                <a href="/editProfile/<%= address._id %>">Edit <i class="icon-edit"></i></a>
+                                                                <button type="submit"  class="btn btn-danger" data-address-id="<%= address._id %>">Delete</button>
+                                                            </p>
+                                                        </div><!-- End .card-body -->
+                                                    </div><!-- End .card-dashboard -->
+                                                </div><!-- End .col-lg-6 -->
+                                            <% }); %>
+                                        </div>
+                                        <div class="col-12">
+                                            <a href="javascript:void(0)" id="showAddressForm" class="btn btn-outline-primary-2 mt-4">
+                                                <span>ADD NEW ADDRESS</span>
+                                                <i class="icon-plus"></i>
+                                            </a>
+                                        </div>
+                                       
+                                        
+                                            <form action="#" id="colorfulAddressForm" style="background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); width: 50vw; max-width: 600px; margin-top: 40px;">
+                                        
+                                                <h2 style="text-align: center; color: #3a3b3d; margin-bottom: 20px;">Add Address</h2>
+                                        
+                                                <label for="fullName" style="color: #343a40; font-weight: bold;">Full Name *</label>
+                                                <input type="text" id="fullName" name="fullName" class="form-control"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                        
+                                                <label for="address" style="color: #343a40; font-weight: bold;">Address *</label>
+                                                <input type="text" id="address" name="address" class="form-control"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                        
+                                                <label for="city" style="color: #343a40; font-weight: bold;">City *</label>
+                                                <input type="text" id="city" name="city" class="form-control"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                        
+                                                <label for="state" style="color: #343a40; font-weight: bold;">State *</label>
+                                                <input type="text" id="state" name="state" class="form-control"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                        
+                                                <label for="postCode" style="color: #3a3b3d; font-weight: bold;">Post Code *</label>
+                                                <input type="text" id="postCode" name="postCode" class="form-control"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                        
+                                                <label for="country" style="color: #3a3b3d; font-weight: bold;">Country *</label>
+                                                <input type="text" id="country" name="country" class="form-control"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                        
+                                                <button id="confirm" type="submit" class="btn btn-block" style="background-color: #3a3b3d; color: #fff; font-weight: bold; padding: 15px; border-radius: 8px; width: 100%; font-size: 1.2rem;">
+                                                    SAVE CHANGES
+                                                </button>
+                                        
+                                                <div id="response-message" class="mt-3" style="text-align: center;"></div>
+                                            </form>
+                                        </div>
+                                        
+                                        <!-- Modal -->
+<!-- Modal -->
+<div id="successModal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Success</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">Address added successfully!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .modal-dialog {
+    max-width: 600px;
+    margin: 30px auto;
+}
 
-								    	<div class="row">
-								    		<div class="col-lg-6">
-								    			<div class="card card-dashboard">
-								    				<div class="card-body">
-								    					<h3 class="card-title">Billing Address</h3><!-- End .card-title -->
+/* Ensure that the modal content takes up the full width */
+.modal-content {
+    width: 100%;
+}
+</style>
+<!-- End .row -->
+                                        
 
-														<p>User Name<br>
-														User Company<br>
-														John str<br>
-														New York, NY 10001<br>
-														1-234-987-6543<br>
-														yourmail@mail.com<br>
-														<a href="#">Edit <i class="icon-edit"></i></a></p>
-								    				</div><!-- End .card-body -->
-								    			</div><!-- End .card-dashboard -->
-								    		</div><!-- End .col-lg-6 -->
 
-								    		<div class="col-lg-6">
-								    			<div class="card card-dashboard">
-								    				<div class="card-body">
-								    					<h3 class="card-title">Shipping Address</h3><!-- End .card-title -->
-
-														<p>You have not set up this type of address yet.<br>
-														<a href="#">Edit <i class="icon-edit"></i></a></p>
-								    				</div><!-- End .card-body -->
-								    			</div><!-- End .card-dashboard -->
-								    		</div><!-- End .col-lg-6 -->
-								    	</div><!-- End .row -->
-								    </div><!-- .End .tab-pane -->
-
-								    <div class="tab-pane fade" id="tab-account" role="tabpanel" aria-labelledby="tab-account-link">
-								    	<form action="#">
-			                				<div class="row">
-			                					<div class="col-sm-6">
-			                						<label>First Name *</label>
-			                						<input type="text" class="form-control" required>
-			                					</div><!-- End .col-sm-6 -->
-
-			                					<div class="col-sm-6">
-			                						<label>Last Name *</label>
-			                						<input type="text" class="form-control" required>
-			                					</div><!-- End .col-sm-6 -->
-			                				</div><!-- End .row -->
-
-		            						<label>Display Name *</label>
-		            						<input type="text" class="form-control" required>
-		            						<small class="form-text">This will be how your name will be displayed in the account section and in reviews</small>
-
-		                					<label>Email address *</label>
-		        							<input type="email" class="form-control" required>
-
-		            						<label>Current password (leave blank to leave unchanged)</label>
-		            						<input type="password" class="form-control">
-
-		            						<label>New password (leave blank to leave unchanged)</label>
-		            						<input type="password" class="form-control">
-
-		            						<label>Confirm new password</label>
-		            						<input type="password" class="form-control mb-2">
-
-		                					<button type="submit" class="btn btn-outline-primary-2">
-			                					<span>SAVE CHANGES</span>
-			            						<i class="icon-long-arrow-right"></i>
-			                				</button>
-			                			</form>
-								    </div><!-- .End .tab-pane -->
+                                            <!-- End .col-lg-6 -->
+                                            
+								    
+                                    <!-- .End .tab-pane -->
 								</div>
 	                		</div><!-- End .col-lg-9 -->
 	                	</div><!-- End .row -->
@@ -157,5 +260,158 @@
     <!-- Main JS File -->
     <script src="/asset3/js/main.js"></script>
  
+
+    <script>
+        // Select the button and form
+        const showAddressFormButton = document.getElementById('showAddressForm');
+        const addressForm = document.getElementById('addressForm');
+    
+        // Add an event listener to the button
+        showAddressFormButton.addEventListener('click', function () {
+            // Toggle the display of the address form
+            if (addressForm.style.display === 'none') {
+                addressForm.style.display = 'flex';
+            } else {
+                addressForm.style.display = 'none';
+            }
+        });
+    </script>
+    
+
+    <script>
+       // Add click event listeners to all cancel order buttons
+document.querySelectorAll('.cancel-order-btn').forEach(button => {
+    button.addEventListener('click', async function() {
+        const orderId = this.getAttribute('data-order-id');
+        
+        if (confirm('Are you sure you want to cancel this order?')) {
+            try {
+                const response = await fetch(`/cancelOrder/${orderId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Order cancelled successfully!');
+                    window.location.reload(); // Refresh the page
+                } else {
+                    alert(result.message || 'Failed to cancel order');
+                }
+            } catch (error) {
+                console.error('Error cancelling order:', error);
+                alert('An error occurred while cancelling the order');
+            }
+        }
+    });
+});
+  
+    
+
+
+document.getElementById('colorfulAddressForm').addEventListener('submit', async function (event) {
+    event.preventDefault(); // Prevent the default form submission
+
+    // Collect form data
+    const address = {
+        fullName: document.querySelector('[name="fullName"]').value,
+        address: document.querySelector('[name="address"]').value,
+        city: document.querySelector('[name="city"]').value,
+        state: document.querySelector('[name="state"]').value,
+        postCode: document.querySelector('[name="postCode"]').value,
+        country: document.querySelector('[name="country"]').value,
+    };
+
+    try {
+        // Send the data to the backend using fetch
+        const response = await fetch('/accountDetails', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(address), // Send the address object as a JSON string
+        });
+
+        // Handle the response
+        const result = await response.json();
+
+        const messageElement = document.getElementById('response-message');
+        if (response.ok && result.success) {
+            messageElement.textContent = result.message || 'Changes saved successfully!';
+            messageElement.style.color = 'green';
+
+            // Show the success modal
+            showModal(result.message || 'Address added successfully!');
+        } else {
+            messageElement.textContent = result.message || 'Failed to save changes.';
+            messageElement.style.color = 'red';
+        }
+    } catch (error) {
+        const messageElement = document.getElementById('response-message');
+        messageElement.textContent = error.message || 'An unexpected error occurred.';
+        messageElement.style.color = 'red';
+        console.error('Fetch error:', error);
+    }
+});
+
+
+function showModal(message) {
+    document.getElementById('modalMessage').textContent = message;
+    $('#successModal').modal('show');
+}
+
+
+
+function showModal(message) {
+    
+    document.getElementById('modalMessage').textContent = message;
+
+    
+    $('#successModal').modal('show');
+}
+
+
+ 
+document.querySelectorAll('.btn-danger').forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        
+        const addressId = button.getAttribute('data-address-id');
+
+        console.log(addressId, 'address id');
+
+        
+        fetch(`/deleteAddress/${addressId}`, {
+            method: "DELETE",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Address deleted successfully');
+                
+                window.location.reload();
+            } else {
+                alert('Error deleting address: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting address:', error);
+            alert('Error deleting address: ' + error.message);
+        });
+    });
+});
+
+ </script>
+    
+        
     
     <%-include("../../views/partials/users/footer.ejs")%>
+
+

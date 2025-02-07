@@ -1,0 +1,193 @@
+<%- include("../../views/partials/users/header.ejs") %>
+
+<main class="main">
+    <div class="page-header text-center" style="background-image: url('/asset3/images/page-header-bg.jpg')">
+        <div class="container">
+            <h1 class="page-title">Wishlist<span>Shop</span></h1>
+        </div>
+    </div>
+
+    <nav aria-label="breadcrumb" class="breadcrumb-nav">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item"><a href="/shop">Shop</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Wishlist</li>
+            </ol>
+        </div>
+    </nav>
+
+    <div class="page-content">
+        <div class="container">
+            <% if (wishlist.length === 0) { %>
+                <p>No products in your wishlist.</p>
+            <% } else { %>
+                <table class="table table-wishlist table-mobile">
+                    <% wishlist.forEach(item => { %>
+                        <% if (item.productId) { %> <!-- Ensure item.productId exists -->
+                            <tr>
+                                <td class="product-col">
+                                    <div class="product">
+                                        <figure class="product-media">
+                                            <% if (item.productId && item.productId.images && item.productId.images.length > 0) { %>
+                                                <!-- Adjust the image source path to point to the correct static folder -->
+                                                <img src="/uploads/products/<%= item.productId.images[0] %>" alt="<%= item.productId.title %>" class="product-image">
+                                            <% } else { %>
+                                                <img src="/default-image.jpg" alt="No Image Available" class="product-image">
+                                            <% } %>
+                                        </figure>
+                                        <h3 class="product-title">
+                                            <a href="/show/<%= item.productId._id %>">
+                                                <%= item.productId.title %>
+                                            </a>
+                                        </h3>
+                                    </div>
+                                    
+                                </td>
+                                <td class="price-col"><%= item.productId.price %></td>
+                                <td class="stock-col">
+                                    <span class="<%= item.productId.stock > 0 ? 'in-stock' : 'out-of-stock' %>">
+                                        <%= item.productId.totalStock > 0 ? 'In stock' : 'Out of stock' %>
+                                    </span>
+                                </td>
+                                <td class="action-col">
+                                    <td class="action-col">
+                                        <a href="#" 
+                                           class="add-to-cart-btn flex-c-m stext-101 cl0 size-101 bg-warning bor1 hov-btn1 p-lr-15 trans-04" 
+                                           data-product-id="<%= item.productId._id %>"
+                                           data-size="S"
+                                           data-quantity="1">
+                                            Add to Cart
+                                        </a>
+                                    </td>
+                                </td>
+                                <td class="remove-col">
+                                    <button class="btn-remove" data-id="<%= item.productId._id %>"><i class="icon-close"></i></button>
+                                </td>
+                            </tr>
+                        <% } %> <!-- End of check for item.productId -->
+                    <% }); %>
+                </table>
+            <% } %>
+        </div>
+    </div>
+
+    <div class="pagination-container">
+        <% if (totalPages > 1) { %>
+            <ul class="pagination">
+                <% if (currentPage > 1) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="/wishlist?page=<%= currentPage - 1 %>&limit=5">Previous</a>
+                    </li>
+                <% } %>
+
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                        <a class="page-link" href="/wishlist?page=<%= i %>&limit=5"><%= i %></a>
+                    </li>
+                <% } %>
+
+                <% if (currentPage < totalPages) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="/wishlist?page=<%= currentPage + 1 %>&limit=5">Next</a>
+                    </li>
+                <% } %>
+            </ul>
+        <% } %>
+    </div>
+
+    <style>
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination {
+            list-style: none;
+            display: flex;
+            gap: 10px;
+            padding: 0;
+        }
+
+        .pagination .page-item {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .pagination .page-link {
+            padding: 5px 10px;
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #007bff;
+            color: #fff;
+            pointer-events: none;
+        }
+    </style>
+</main>
+
+<%- include("../../views/partials/users/footer.ejs") %>
+
+<script>
+    document.querySelectorAll('.btn-remove').forEach(button => {
+        button.addEventListener('click',function(e){
+            e.preventDefault();
+
+            const productId=this.getAttribute('data-id');
+
+            console.log(productId,'productId from wishlist got.....');fetch(`/removeWishlistItem/${productId}`, {
+    method: 'DELETE',
+    headers: {
+        'Content-Type': 'application/json'
+    }
+})
+.then(response => response.json())
+.then(data => {
+    if (data.success) {
+        alert('Product deleted from wishlist successfully.');
+        window.location.reload(); 
+    } else {
+        alert(data.message || 'Error deleting product from wishlist.');
+    }
+})
+.catch(error => {
+    console.error('Error:', error); 
+    alert('Internal server error. Please try again later.');
+});
+        })
+    })
+
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        const productId = this.getAttribute('data-product-id');
+        const size = this.getAttribute('data-size');
+        const quantity = this.getAttribute('data-quantity');
+
+        fetch(`/cart/add-from-wishlist?productId=${productId}&size=${size}&quantity=${quantity}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Product added to cart successfully.');
+                // Optionally, you can remove the item from wishlist after adding to cart
+                // This would require an additional backend route
+            } else {
+                alert(data.message || 'Error adding product to cart.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Internal server error. Please try again later.');
+        });
+    });
+});
+</script>

@@ -27,10 +27,10 @@ app.use(
     session({
         secret: process.env.SESSION_SECRET,
         resave: false,
-        saveUninitialized: true,
+        saveUninitialized: false,
         cookie: {
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 3600000 
+            maxAge: 60 * 60 * 1000
         },
     })
 );
@@ -38,9 +38,10 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(errorHandler)
+app.use(errorHandler);
+app.use(cors());
+app.use('/uploads',express.static(path.join(__dirname, 'uploads')));
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public/asset1')));
 app.use(express.static(path.join(__dirname, 'public')));
 

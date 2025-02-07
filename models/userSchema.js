@@ -1,51 +1,64 @@
-const mongoose=require('mongoose');
-const {Schema}=mongoose;
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
-const userSchema=new Schema({
+const userSchema = new Schema(
+  {
     email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    username: {
+      type: String,
+      required: false,
+    },
+    password: {
+      type: String,
+      required: false,
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false,
+    },
+    contact: {
+      type: Number,
+      required: false,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      required: false,
+    },
+    address:[ {
+      address: {
         type: String,
-        required:true,
-        unique:true
-        
+        required: false,
       },
-      username: {
+      city: {
         type: String,
-        required:false
-        
-        
+        required: false,
       },
-      password: {
+      state: {
         type: String,
-        required:false
-        
+        required: false,
       },
-      isBlocked:{
-        type:Boolean,
-        default:false
-      },
-      isAdmin:{
-        type:Boolean,
-        default:false
-      },
-      contact:{
-        type:Number,
-        required:false,
-        
-        
-        
-      },
-      googleId: {
+      postCode: {
         type: String,
-        unique: true,
-        sparse: true,
-        required:false
-      }
-   
-  
+        required: false,
+      },
+      country: {
+        type: String,
+        required: false,
+      },
+    }],
+  },
+  { timestamps: true }
+);
 
-
-
-},{ timestamps: true });
-
-const User=mongoose.model("User",userSchema);
-module.exports=User;
+const User = mongoose.model('User', userSchema);
+module.exports = User;

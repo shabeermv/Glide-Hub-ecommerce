@@ -28,17 +28,24 @@ const productSchema = new mongoose.Schema({
      category: { type: mongoose.Schema.Types.ObjectId,
               ref: 'Category',
               required: true },
-    stock: { 
-      type: String, 
-      required: false
-    },
+    
     sizes: [{
-      type:String,
+                size: { type: String, required: true },
+                stock: { type: Number, required: true },
+            }],
+    totalStock:{
+      type:Number,
       required:true
-    }
-    ],
+
+    }  ,  
+    color: { 
+      type: String,
+      required:true
+     },
+    
     image: [{ 
-      type: String
+      type: String,
+      required:true
     }],
     isDeleted:{
       type:Boolean,
