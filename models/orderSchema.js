@@ -22,9 +22,14 @@ const orderSchema = new mongoose.Schema({
                 type: Number,
                 required: true,
                 default: 1
-            },size:{
-                type:Number,
-                required:true
+            },
+            size: {
+                type: String,  // Changed from Number to String to match the controller
+                required: true
+            },
+            price: {
+                type: Number,
+                required: true
             }
         }
     ],
@@ -43,13 +48,17 @@ const orderSchema = new mongoose.Schema({
         phone: String
     },
     paymentMethod: {
-        type: [String], 
+        type: [String],
         enum: ['Credit Card', 'Debit Card', 'PayPal', 'UPI', 'Cash on Delivery']
     },
     paymentStatus: {
         type: String,
         enum: ['Pending', 'Completed', 'Failed'],
         default: 'Pending'
+    },
+    totalAmount: {
+        type: Number,
+        required: true
     },
     createdAt: {
         type: Date,

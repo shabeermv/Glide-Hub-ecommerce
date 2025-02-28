@@ -27,10 +27,14 @@ const loadHome = async (req, res) => {
 };
 
 const loadLogin = async (req, res) => {
-  if (req.session.user) {
-    res.render("home");
-  } else {
-    res.render("userLogin");
+  try {
+    if (req.session.user) {
+      res.render("home");
+    } else {
+      res.render("userLogin");
+    }
+  } catch (error) {
+    next(error)
   }
 };
 
@@ -44,7 +48,6 @@ const postLogin = async (req, res) => {
       return res.json({ success: false, message: "Incorrect email" });
     }
 
-    // Check if the user is blocked
     if (findUser.isBlocked) {
       return res.json({ success: false, message: "Your account is blocked" });
     }
@@ -65,7 +68,7 @@ const postLogin = async (req, res) => {
     res.json({ success: true, message: "Login successful" });
   } catch (error) {
     console.error("Login error:", error);
-    res.json({ success: false, message: "Internal server error" });
+    next(error)
   }
 };
 
@@ -74,7 +77,7 @@ const loadSignUp = async (req, res) => {
     res.render("userSignUp");
   } catch (error) {
     console.log("Facing error on signup page", error.message);
-    res.status(500).send("Error loading signup page");
+    next(error)
   }
 };
 
@@ -152,8 +155,8 @@ const postSignUp = async (req, res) => {
     return res.json({ success: true });
   } catch (error) {
     console.error("Signup error:", error);
-    res.status(500).render("error", { message: "Internal server error" });
-  }
+    next(error)
+    }
 };
 
 const loadOtp = async (req, res) => {
@@ -161,6 +164,7 @@ const loadOtp = async (req, res) => {
     res.render("otp");
   } catch (error) {
     console.error("Error sharing OTP page", error);
+    next(error)
   }
 };
 
@@ -196,8 +200,8 @@ const postOtp = async (req, res) => {
     });
   } catch (error) {
     console.error("Error verifying OTP:", error);
-    return res.json({ success: false, message: "Error verifying OTP" });
-  }
+    next(error)
+    }
 };
 
 const logout = (req, res) => {
@@ -233,9 +237,7 @@ const resendOtp = async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error("Error in resending OTP:", err);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    next(error)
   }
 };
 
@@ -244,12 +246,7 @@ const forgetPass = async (req, res) => {
     res.render("forgetPass");
   } catch (error) {
     console.log(error.message);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error rendering forget password page",
-      });
+    next(error)
   }
 };
 
@@ -288,8 +285,8 @@ const postForgetEmail = async (req, res) => {
       });
   } catch (error) {
     console.error("Error in password reset OTP request:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
-  }
+    next(error)
+    }
 };
 
 const postOtpForPasswordReset = async (req, res) => {
@@ -320,9 +317,7 @@ const postOtpForPasswordReset = async (req, res) => {
     delete req.session.userOtp;
   } catch (error) {
     console.error("Error resetting password:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Error resetting password" });
+    next(error)
   }
 };
 
@@ -331,6 +326,7 @@ const resetPasswordForm = async (req, res) => {
     res.render("resetPassword");
   } catch (error) {
     console.log(error.message);
+    next(error)
   }
 };
 const postResetPasswordByOtp = async (req, res) => {
@@ -351,7 +347,6 @@ const postResetPasswordByOtp = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     user.password = hashedPassword;
@@ -365,9 +360,7 @@ const postResetPasswordByOtp = async (req, res) => {
       .json({ success: true, message: "Password reset successful" });
   } catch (error) {
     console.error("Error resetting password:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Error resetting password" });
+    next(error)
   }
 };
 
@@ -382,30 +375,26 @@ const userProfileInfo = async (req, res) => {
           return res.redirect("/login");
       }
 
-      // Fetch all orders with populated product details
       const orders = await Order.find({ userId: userId })
           .populate({
               path: 'products.productId',
-              select: 'title price' // Changed from 'name' to 'title'
+              select: 'title price' 
           })
           .sort({ createdAt: -1 });
 
-      // Calculate total amount for each order if not present
       orders.forEach(order => {
-          // Calculate total amount from products
           const calculatedTotal = order.products.reduce((sum, product) => {
               return sum + (product.price * product.quantity);
           }, 0);
           
-          // Use calculated total if totalAmount is not present
           order.totalAmount = order.totalAmount || calculatedTotal;
       });
 
       res.render("myAccount", { user, orders });
   } catch (error) {
       console.error('Error in userProfileInfo:', error);
-      res.status(500).render('error', { message: 'Internal server error' });
-  }
+      next(error)
+      }
 };
 const addAccountDetails = async (req, res) => {
   // console.log(req.body, 'controllersil ethi.........');
@@ -436,8 +425,8 @@ const addAccountDetails = async (req, res) => {
     return res.json({ success: true, message: "Address added successfully!" });
   } catch (error) {
     console.error("Error adding address:", error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
+    next(error)
+    }
 };
 
 const editProfileInfo = async (req, res) => {
@@ -485,9 +474,7 @@ const editProfile = async (req, res) => {
       .json({ success: true, message: "User details updated successfully" });
   } catch (error) {
     console.error("Error updating user:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Error updating user details" });
+    next(error)
   }
 };
 const deleteAddress = async (req, res) => {
@@ -510,7 +497,6 @@ const deleteAddress = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    // Remove address by filtering out the address with matching ID
     user.address = user.address.filter(
       (address) => address._id.toString() !== addressId
     );
@@ -520,16 +506,15 @@ const deleteAddress = async (req, res) => {
     return res.json({ success: true, message: "Address deleted successfully" });
   } catch (error) {
     console.error("Error deleting address:", error);
-    return res.status(500).json({ success: false, message: "Server error" });
-  }
+    next(error)
+    }
 };
 
 const resetLoginedPasswrod = async (req, res) => {
   try {
     res.render('resetNewPassword');
   } catch (error) {
-    return res.status(500).json({success:false,message:'internal server error'})
-  }
+    next(error)  }
 };
 const postResetPassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body;
@@ -564,9 +549,7 @@ const postResetPassword = async (req, res) => {
   } catch (error) {
     console.log("internal server error....", error);
 
-    return res
-      .status(500)
-      .json({ success: false, message: "interal server error" });
+    next(error)
   }
 };
 

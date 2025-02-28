@@ -35,10 +35,13 @@
 								        <a class="nav-link" id="tab-orders-link" data-toggle="tab" href="#tab-orders" role="tab" aria-controls="tab-orders" aria-selected="false">Orders</a>
 								    </li>
 								    <li class="nav-item">
-								        <a class="nav-link" id="tab-downloads-link" data-toggle="tab" href="#tab-downloads" role="tab" aria-controls="tab-downloads" aria-selected="false">Coupons</a>
+								        <a class="nav-link" id="tab-downloads-link" data-toggle="tab" href="#tab-downloads" role="tab" aria-controls="tab-downloads" aria-selected="false">Wallet</a>
 								    </li>
 								    <li class="nav-item">
 								        <a class="nav-link" id="tab-address-link" data-toggle="tab" href="#tab-address" role="tab" aria-controls="tab-address" aria-selected="false">Adresses</a>
+								    </li>
+                                    <li class="nav-item">
+								        <a class="nav-link" id="tab-address-link" data-toggle="tab" href="#tab-address" role="tab" aria-controls="tab-address" aria-selected="false">Coupons & Offers</a>
 								    </li>
 								    
 								    <li class="nav-item">
@@ -69,15 +72,15 @@
                                             <h3 class="mb-4">Your Orders</h3>
                                             <% if (orders && orders.length > 0) { %>
                                                 <div class="table-responsive">
-                                                    <table class="table table-bordered">
-                                                        <thead>
+                                                    <table class="table table-bordered table-hover">
+                                                        <thead class="thead-dark">
                                                             <tr>
                                                                 <th>Order ID</th>
                                                                 <th>Date</th>
                                                                 <th>Products</th>
                                                                 <th>Total Amount</th>
                                                                 <th>Status</th>
-                                                                <th>Actions</th>
+                                                                <th style="width: 200px;">Actions</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -86,34 +89,40 @@
                                                                     <td><%= order.orderId %></td>
                                                                     <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
                                                                     <td>
-                                                                        <ul class="list-unstyled">
+                                                                        <ul class="list-unstyled mb-0">
                                                                             <% order.products.forEach(product => { %>
-                                                                                <li>
+                                                                                <li class="mb-1">
                                                                                     <%= product.productId ? product.productId.title : 'Product Not Found' %>
                                                                                 </li>
                                                                             <% }) %>
                                                                         </ul>
                                                                     </td>
                                                                     <td>
-                                                                        <% const total = order.products.reduce((sum, product) => sum + (product.price * product.quantity), 0); %>
-                                                                        $<%= total %>
+                                                                        <strong>$<%= order.totalAmount %></strong>
                                                                     </td>
                                                                     <td>
                                                                         <span class="badge badge-<%= 
                                                                             order.orderStatus === 'Completed' ? 'success' : 
+                                                                            order.orderStatus === 'Shipped' ? 'primary' : 
                                                                             order.orderStatus === 'Pending' ? 'warning' : 
                                                                             order.orderStatus === 'Cancelled' ? 'danger' : 'info' 
-                                                                        %>">
+                                                                        %> p-2">
                                                                             <%= order.orderStatus %>
                                                                         </span>
                                                                     </td>
-                                                                    <td>
-                                                                        <% if (order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Completed') { %>
-                                                                            <button class="btn btn-sm btn-danger cancel-order-btn" style="height: 50px;"
-                                                                                    data-order-id="<%= order._id %>">
-                                                                                Cancel Order
-                                                                            </button>
-                                                                        <% } %>
+                                                                    <td class="text-center">
+                                                                        <div class="btn-group" role="group">
+                                                                            <a href="/order/details/<%= order._id %>" class="btn btn-sm btn-info" style="margin-right: 5px;">
+                                                                                View Details
+                                                                            </a>
+                                                                            
+                                                                            <% if (order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Completed') { %>
+                                                                                <button class="btn btn-sm btn-danger cancel-order-btn"
+                                                                                        data-order-id="<%= order._id %>">
+                                                                                    Cancel Order
+                                                                                </button>
+                                                                            <% } %>
+                                                                        </div>
                                                                     </td>
                                                                 </tr>
                                                             <% }) %>
@@ -126,17 +135,33 @@
                                                 </div>
                                             <% } %>
                                         </div>
+                                    
+                                        <!-- Order Details Modal -->
+                                        <div class="modal fade" id="orderDetailsModal" tabindex="-1" role="dialog" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog modal-lg" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body" id="orderDetailsContent">
+                                                        <!-- Content will be dynamically loaded here -->
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                    
                                     
 								    	<a href="/shop" class="btn btn-outline-primary-2"><span>GO SHOP</span><i class="icon-long-arrow-right"></i></a>
 								    </div><!-- .End .tab-pane -->
 
-								    <div class="tab-pane fade" id="tab-downloads" role="tabpanel" aria-labelledby="tab-downloads-link">
-								    	<p>No downloads available yet.</p>
-								    	<a href="category.html" class="btn btn-outline-primary-2"><span>GO SHOP</span><i class="icon-long-arrow-right"></i></a>
-								    </div><!-- .End .tab-pane -->
-
+								   
 								    <div class="tab-pane fade" id="tab-address" role="tabpanel" aria-labelledby="tab-address-link">
 								    	<p>The following addresses will be used on the checkout page by default.</p>
                                         <div class="row">
@@ -200,6 +225,163 @@
                                                 <div id="response-message" class="mt-3" style="text-align: center;"></div>
                                             </form>
                                         </div>
+                                        <div class="tab-pane fade" id="tab-wallet" role="tabpanel" aria-labelledby="tab-wallet-link">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-dashboard">
+                    <div class="card-body">
+                        <h3 class="card-title">Wallet Balance</h3>
+                        <div class="wallet-balance-section mb-4">
+                            <h2 class="text-primary">$<%= user.walletBalance ? user.walletBalance.toFixed(2) : '0.00' %></h2>
+                            <p class="text-muted">Available Balance</p>
+                        </div>
+
+                        <div class="wallet-actions mb-4">
+                            <button class="btn btn-primary mr-2" data-toggle="modal" data-target="#addMoneyModal">
+                                <i class="icon-plus"></i> Add Money
+                            </button>
+                            <button class="btn btn-outline-primary" data-toggle="modal" data-target="#withdrawModal">
+                                <i class="icon-minus"></i> Withdraw
+                            </button>
+                        </div>
+
+                        <div class="wallet-transactions">
+                            <h4 class="mb-3">Recent Transactions</h4>
+                            <% if (user.walletTransactions && user.walletTransactions.length > 0) { %>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Type</th>
+                                                <th>Amount</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% user.walletTransactions.forEach(transaction => { %>
+                                                <tr>
+                                                    <td><%= new Date(transaction.date).toLocaleDateString() %></td>
+                                                    <td><%= transaction.type %></td>
+                                                    <td class="<%= transaction.type === 'credit' ? 'text-success' : 'text-danger' %>">
+                                                        <%= transaction.type === 'credit' ? '+' : '-' %>$<%= transaction.amount.toFixed(2) %>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge badge-<%= transaction.status === 'completed' ? 'success' : 'warning' %>">
+                                                            <%= transaction.status %>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <% } else { %>
+                                <div class="alert alert-info">
+                                    No transactions yet.
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Money Modal -->
+<div class="modal fade" id="addMoneyModal" tabindex="-1" role="dialog" aria-labelledby="addMoneyModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addMoneyModalLabel">Add Money to Wallet</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="addMoneyForm" action="/wallet/add-money" method="POST">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="amount">Amount ($)</label>
+                        <input type="number" class="form-control" id="amount" name="amount" min="1" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentMethod">Payment Method</label>
+                        <select class="form-control" id="paymentMethod" name="paymentMethod" required>
+                            <option value="card">Credit/Debit Card</option>
+                            <option value="bank">Bank Transfer</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Money</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Withdraw Modal -->
+<div class="modal fade" id="withdrawModal" tabindex="-1" role="dialog" aria-labelledby="withdrawModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="withdrawModalLabel">Withdraw Money</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="withdrawForm" action="/wallet/withdraw" method="POST">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="withdrawAmount">Amount ($)</label>
+                        <input type="number" class="form-control" id="withdrawAmount" name="amount" min="1" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="withdrawMethod">Withdrawal Method</label>
+                        <select class="form-control" id="withdrawMethod" name="withdrawMethod" required>
+                            <option value="bank">Bank Account</option>
+                            <option value="card">Credit/Debit Card</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Withdraw</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add this to your existing styles -->
+<style>
+.wallet-balance-section {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.wallet-balance-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 5px;
+}
+
+.wallet-actions {
+    text-align: center;
+}
+
+.wallet-transactions {
+    margin-top: 30px;
+}
+
+.table td, .table th {
+    vertical-align: middle;
+}
+</style>
                                         
                                         <!-- Modal -->
 <!-- Modal -->
@@ -230,6 +412,28 @@
 /* Ensure that the modal content takes up the full width */
 .modal-content {
     width: 100%;
+}
+.table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table td, .table th {
+    vertical-align: middle;
+}
+
+.badge {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+}
+
+.btn-group .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.modal-lg {
+    max-width: 800px;
 }
 </style>
 <!-- End .row -->
@@ -280,6 +484,44 @@
 
     <script>
        // Add click event listeners to all cancel order buttons
+       document.querySelectorAll('.view-details-btn').forEach(button => {
+    button.addEventListener('click', async function() {
+        const orderId = this.getAttribute('data-order-id');
+        try {
+            const response = await fetch(`/order-details/${orderId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                // Populate modal with order details
+                document.getElementById('orderDetailsContent').innerHTML = `
+                    <div class="order-details">
+                        <h6>Order ID: ${data.order.orderId}</h6>
+                        <p>Date: ${new Date(data.order.createdAt).toLocaleDateString()}</p>
+                        <p>Status: ${data.order.orderStatus}</p>
+                        <hr>
+                        <h6>Products:</h6>
+                        <ul>
+                            ${data.order.products.map(product => `
+                                <li>${product.productId.title} - Quantity: ${product.quantity}</li>
+                            `).join('')}
+                        </ul>
+                        <hr>
+                        <p><strong>Total Amount: $${data.order.totalAmount.toFixed(2)}</strong></p>
+                    </div>
+                `;
+                
+                $('#orderDetailsModal').modal('show');
+            } else {
+                alert('Failed to load order details');
+            }
+        } catch (error) {
+            console.error('Error loading order details:', error);
+            alert('An error occurred while loading order details');
+        }
+    });
+});
+
+// Keep the existing cancel order functionality
 document.querySelectorAll('.cancel-order-btn').forEach(button => {
     button.addEventListener('click', async function() {
         const orderId = this.getAttribute('data-order-id');
@@ -297,7 +539,7 @@ document.querySelectorAll('.cancel-order-btn').forEach(button => {
 
                 if (result.success) {
                     alert('Order cancelled successfully!');
-                    window.location.reload(); // Refresh the page
+                    window.location.reload();
                 } else {
                     alert(result.message || 'Failed to cancel order');
                 }
@@ -308,7 +550,6 @@ document.querySelectorAll('.cancel-order-btn').forEach(button => {
         }
     });
 });
-  
     
 
 

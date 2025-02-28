@@ -1,0 +1,295 @@
+<%- include("../../views/partials/admin/header.ejs") %>
+
+<main class="main-wrap">
+    <header class="main-header navbar">
+        <div class="col-search">
+            <form class="searchform">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search term" />
+                    <button class="btn btn-light bg" type="button"><i class="material-icons md-search"></i></button>
+                </div>
+            </form>
+        </div>
+    </header>
+
+    <section class="content-main">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>Product Offers</h3>
+            <button id="toggleFormBtn" class="btn btn-primary">
+                <i class="material-icons md-add"></i> Add New Offer
+            </button>
+        </div>
+
+        <!-- Display existing offers in cards -->
+        <div class="row">
+            <% if (productOffers.length > 0) { %>
+                <% productOffers.forEach(offer => { %>
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title"><%= offer.description %></h5>
+                                <p class="card-text">
+                                    <strong>Product:</strong> 
+                                    <% if (offer.productId) { %>
+                                        <%= offer.productId.title %>
+                                    <% } else { %>
+                                        <span style="color: red;">Product Not Found</span>
+                                    <% } %> 
+                                    <br>
+                                    <strong>Discount:</strong> 
+                                    <% if (offer.discountType === 'percentage') { %>
+                                        <%= offer.discountValue %>% Off
+                                    <% } else { %>
+                                        ₹<%= offer.discountValue %> Off
+                                    <% } %><br>
+                                    <strong>Period:</strong> 
+                                    <%= new Date(offer.startDate).toLocaleDateString() %> to 
+                                    <%= new Date(offer.endDate).toLocaleDateString() %>
+                                </p>
+                                <div class="d-flex justify-content-end">
+                                    <button class="btn btn-sm btn-outline-danger me-2" onclick="deleteOffer('<%= offer._id %>')">Delete</button>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editOffer('<%= offer._id %>', '<%= offer.description %>', '<%= offer.discountType %>', '<%= offer.discountValue %>', '<%= offer.startDate %>', '<%= offer.endDate %>')">Edit</button>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <p>No product offers created yet.</p>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+        
+        <!-- Form card (initially hidden) -->
+        <div class="card mb-4" id="offerFormCard" style="display: none;">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0" id="formTitle">Add New Product Offer</h5>
+                <button type="button" class="btn-close" id="closeFormBtn"></button>
+            </div>
+            <div class="card-body">
+                <form id="categoryOfferForm">
+                    <input type="hidden" id="offerId" name="offerId" value="">
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="description" name="description" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="selectedProduct" class="form-label">Select Products</label>
+                        <select class="form-select" id="selectedProduct" name="selectedProduct" required>
+                            <% if(locals.products && products.length > 0) { %>
+                                <% products.forEach(product => { %>
+                                    <option value="<%= product._id %>"><%= product.title %></option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="discountType" class="form-label">Discount Type</label>
+                        <select class="form-select" id="discountType" name="discountType" required>
+                            <option value="percentage">Percentage (%)</option>
+                            <option value="fixed">Fixed Amount (₹)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="discountValue" class="form-label">Discount Value</label>
+                        <input type="number" class="form-control" id="discountValue" name="discountValue" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="startDate" name="startDate" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="endDate" name="endDate" required>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" id="submitBtn" class="btn btn-primary">Add Offer</button>
+                    </div>
+                </form>
+            </div>
+            
+        </div>
+        <div id="editOfferModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="document.getElementById('editOfferModal').style.display='none'">&times;</span>
+                <h2>Edit Offer</h2>
+                <input type="hidden" id="offerId">
+                <label>Description:</label>
+                <input type="text" id="editDescription" class="form-control">
+                <label>Discount Type:</label>
+                <select id="editDiscountType" class="form-control">
+                    <option value="percentage">Percentage</option>
+                    <option value="fixed">Fixed Amount</option>
+                </select>
+                <label>Discount Value:</label>
+                <input type="number" id="editDiscountValue" class="form-control">
+                <label>Start Date:</label>
+                <input type="date" id="editStartDate" class="form-control">
+                <label>End Date:</label>
+                <input type="date" id="editEndDate" class="form-control">
+                <button class="btn btn-primary" onclick="saveEditedOffer()">Save</button>
+            </div>
+        </div>
+        
+        <!-- Modal CSS -->
+        <style>
+            .modal { align-items: center; display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+            .modal-content { background-color: white; margin: 15% auto; padding: 20px; width: 50%; }
+            .close { float: right; font-size: 28px; cursor: pointer; }
+        </style>
+    </section>
+   
+
+
+</main>
+
+<%- include("../../views/partials/admin/footer.ejs") %>
+
+<script>
+    document.getElementById('toggleFormBtn').addEventListener('click', function() {
+        resetForm();
+        const formCard = document.getElementById('offerFormCard');
+        formCard.style.display = formCard.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.getElementById('closeFormBtn').addEventListener('click', function() {
+        document.getElementById('offerFormCard').style.display = 'none';
+    });
+
+    function resetForm() {
+        const form = document.getElementById('categoryOfferForm');
+        form.reset();
+        document.getElementById('offerId').value = '';
+        document.getElementById('formTitle').textContent = 'Add New Product Offer';
+        document.getElementById('submitBtn').textContent = 'Add Offer';
+        form.setAttribute('data-mode', 'add');
+    }
+
+    document.getElementById('categoryOfferForm').addEventListener('submit', function (e) {
+        e.preventDefault(); 
+
+        const offerId = document.getElementById('offerId').value;
+        const isEditMode = offerId !== '';
+
+        const formData = {
+            description: document.getElementById('description').value,
+            selectedProduct: document.getElementById('selectedProduct').value,
+            discountType: document.getElementById('discountType').value,
+            discountValue: document.getElementById('discountValue').value,
+            startDate: document.getElementById('startDate').value,
+            endDate: document.getElementById('endDate').value
+        };
+
+        console.log('Form Data:', formData); // Debugging purpose
+
+        let url = '/admin/addProductOffer';
+        let method = 'POST';
+
+        // If in edit mode, update the URL and method
+        if (isEditMode) {
+            url = `/admin/updateProductOffer/${offerId}`;
+            method = 'PUT';
+        }
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                alert(isEditMode ? 'Product offer updated successfully' : 'Product offer added successfully');
+                window.location.reload(); // Refresh page after submission
+            } else {
+                alert(data.message || 'Operation failed');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Operation failed');
+        });
+    });
+
+    
+function deleteOffer(offerId) {
+    if (!confirm("Are you sure you want to delete this offer?")) return;
+
+    fetch(`/admin/deleteProductOffer/${offerId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Offer deleted successfully.");
+            location.reload(); // Refresh page to show changes
+        } else {
+            alert("Failed to delete offer.");
+        }
+    })
+    .catch(error => console.error("Error deleting offer:", error));
+}
+
+// ✏️ Edit Offer (Open Modal)
+function editOffer(offerId, description, discountType, discountValue, startDate, endDate) {
+    document.getElementById("offerId").value = offerId;
+    document.getElementById("editDescription").value = description;
+    document.getElementById("editDiscountType").value = discountType;
+    document.getElementById("editDiscountValue").value = discountValue;
+    document.getElementById("editStartDate").value = new Date(startDate).toISOString().split("T")[0];
+    document.getElementById("editEndDate").value = new Date(endDate).toISOString().split("T")[0];
+
+    // Show the modal
+    document.getElementById("editOfferModal").style.display = "block";
+}
+
+// 📝 Save Edited Offer
+function saveEditedOffer() {
+    const offerId = document.getElementById("offerId").value;
+    const updatedOffer = {
+        description: document.getElementById("editDescription").value,
+        discountType: document.getElementById("editDiscountType").value,
+        discountValue: document.getElementById("editDiscountValue").value,
+        startDate: document.getElementById("editStartDate").value,
+        endDate: document.getElementById("editEndDate").value
+    };
+
+    fetch(`/admin/updateProductOffer/${offerId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedOffer),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Offer updated successfully.");
+            location.reload(); // Refresh page to reflect changes
+        } else {
+            alert("Failed to update offer.");
+        }
+    })
+    .catch(error => console.error("Error updating offer:", error));
+}
+
+
+    // Helper function to format date for the date input
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+    }
+</script>

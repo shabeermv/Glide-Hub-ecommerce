@@ -50,6 +50,8 @@ app.use('/', userRouter);
 app.use('/admin', adminRouter); 
 app.use(methodOverride('_method'))
 
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`Server running successfully on port ${PORT}`);

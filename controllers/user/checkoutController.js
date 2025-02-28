@@ -2,21 +2,22 @@ const Cart = require('../../models/cartSchema');
 const Product = require('../../models/productSchema');
 const User = require('../../models/userSchema');
 const Order = require('../../models/orderSchema');
+const CategoryOffer = require('../../models/categoryOffer');
+const ProductOffer = require('../../models/productOffer');
+
 
 const checkoutPageInfo = async (req, res) => {
     const userId = req.session.userId;
-    const productId = req.params.id; // Optional product ID for single product checkout
+    const productId = req.params.id; 
     
     try {
-        // Fetch user details
         const user = await User.findById(userId);
         
         let products = [];
         let totalPrice = 0;
 
         if (productId) {
-            // Single product checkout
-            const product = await Product.findById(productId);
+            const product = await Product.findById(productId).populate('category');
             if (!product) {
                 return res.status(404).render('checkout', { 
                     error: 'Product not found',
@@ -25,31 +26,54 @@ const checkoutPageInfo = async (req, res) => {
                         email: user.email,
                         username: user.username,
                         contact: user.contact,
-                        address: user.address && user.address.length > 0 ? user.address[0] : null
+                        address: user.address?.length > 0 ? user.address[0] : null
                     }
                 });
             }
 
-            // Fetch the cart to get the quantity and size for the product
+            // Fetch product and category offers
+            const productOffer = await ProductOffer.findOne({ productId });
+            const categoryOffer = await CategoryOffer.findOne({ categoryId: product.category._id });
+
+            let finalPrice = product.price;
+            let appliedOffer = null;
+
+            // Apply product offer first if available
+            if (productOffer) {
+                finalPrice = productOffer.discountType === 'percentage' 
+                    ? product.price - (product.price * productOffer.discountValue / 100)
+                    : product.price - productOffer.discountValue;
+                appliedOffer = productOffer;
+            } 
+            // If no product offer, apply category offer
+            else if (categoryOffer) {
+                finalPrice = categoryOffer.discountType === 'percentage' 
+                    ? product.price - (product.price * categoryOffer.discountValue / 100)
+                    : product.price - categoryOffer.discountValue;
+                appliedOffer = categoryOffer;
+            }
+
             const cart = await Cart.findOne({ userId });
             const cartItem = cart ? cart.product.find(item => item.productId.toString() === productId) : null;
 
             products = [{
                 productId: product._id,
                 title: product.title,
-                price: product.price,
-                quantity: cartItem ? cartItem.quantity : 1, // Use cart quantity if available, else default to 1
-                size: cartItem ? cartItem.size : 'M', // Use cart size if available, else default to 'M'
-                totalPrice: product.price * (cartItem ? cartItem.quantity : 1),
-                image: product.image && product.image[0] ? product.image[0] : 'default-product.jpg'
+                originalPrice: product.price,
+                discountedPrice: finalPrice,
+                hasDiscount: appliedOffer !== null,
+                appliedOffer,
+                price: finalPrice,  
+                quantity: cartItem ? cartItem.quantity : 1, 
+                size: cartItem ? cartItem.size : 'M', 
+                totalPrice: finalPrice * (cartItem ? cartItem.quantity : 1),
+                image: product.image?.length > 0 ? product.image[0] : 'default-product.jpg'
             }];
-            totalPrice = product.price * (cartItem ? cartItem.quantity : 1);
+            totalPrice = finalPrice * (cartItem ? cartItem.quantity : 1);
         } else {
-            // Cart checkout
             const cart = await Cart.findOne({ userId })
-                .populate('product.productId', 'title price image');
-            
-            // If no cart or cart is empty
+                .populate('product.productId', 'title price image category hasDiscount discountedPrice');
+
             if (!cart || !cart.product || cart.product.length === 0) {
                 return res.status(400).render('checkout', { 
                     error: 'Your cart is empty',
@@ -58,26 +82,57 @@ const checkoutPageInfo = async (req, res) => {
                         email: user.email,
                         username: user.username,
                         contact: user.contact,
-                        address: user.address && user.address.length > 0 ? user.address[0] : null
+                        address: user.address?.length > 0 ? user.address[0] : null
                     }
                 });
             }
 
-            products = cart.product.map(item => ({
-                productId: item.productId._id,
-                title: item.productId.title,
-                price: item.price,
-                quantity: item.quantity,
-                size: item.size,
-                totalPrice: item.totalPrice,
-                image: item.productId.image && item.productId.image[0] ? item.productId.image[0] : 'default-product.jpg'
+            products = await Promise.all(cart.product.map(async (item) => {
+                const product = item.productId;
+                let finalPrice = product.hasDiscount ? product.discountedPrice : product.price;
+                let appliedOffer = null;
+
+                // Fetch category offer
+                const categoryOffer = await categoryOffer.findOne({ categoryId: product.category });
+
+                // Fetch product offer
+                const productOffer = await productOffer.findOne({ productId: product._id });
+
+                // Apply product offer first if available
+                if (productOffer) {
+                    finalPrice = productOffer.discountType === 'percentage' 
+                        ? product.price - (product.price * productOffer.discountValue / 100)
+                        : product.price - productOffer.discountValue;
+                    appliedOffer = productOffer;
+                } 
+                // If no product offer, apply category offer
+                else if (categoryOffer) {
+                    finalPrice = categoryOffer.discountType === 'percentage' 
+                        ? product.price - (product.price * categoryOffer.discountValue / 100)
+                        : product.price - categoryOffer.discountValue;
+                    appliedOffer = categoryOffer;
+                }
+
+                return {
+                    productId: product._id,
+                    title: product.title,
+                    originalPrice: product.price,
+                    discountedPrice: finalPrice,
+                    hasDiscount: appliedOffer !== null,
+                    appliedOffer,
+                    price: finalPrice,
+                    quantity: item.quantity,
+                    size: item.size,
+                    totalPrice: finalPrice * item.quantity,
+                    image: product.image?.length > 0 ? product.image[0] : 'default-product.jpg'
+                };
             }));
-            totalPrice = cart.totalPrice;
+
+            totalPrice = products.reduce((sum, product) => sum + product.totalPrice, 0);
         }
 
-        // Get the default address (first address in the array)
-        const defaultAddress = user.address && user.address.length > 0 ? user.address[0] : null;
-        
+        const defaultAddress = user.address?.length > 0 ? user.address[0] : null;
+
         res.render('checkout', { 
             products,
             totalPrice,
@@ -94,18 +149,17 @@ const checkoutPageInfo = async (req, res) => {
         return res.status(500).send('Internal server error');
     }
 };
+
+
 const cartCheckoutPage = async (req, res) => {
     const userId = req.session.userId;
     
     try {
-        // Fetch user details
         const user = await User.findById(userId);
         
-        // Fetch cart with populated product details
         const cart = await Cart.findOne({ userId })
             .populate('product.productId', 'title price image');
         
-        // If no cart or cart is empty
         if (!cart || !cart.product || cart.product.length === 0) {
             return res.status(400).render('checkout', { 
                 error: 'Your cart is empty',
@@ -119,7 +173,6 @@ const cartCheckoutPage = async (req, res) => {
             });
         }
 
-        // Transform cart products for checkout
         const products = cart.product.map(item => ({
             productId: item.productId._id,
             title: item.productId.title,
@@ -130,7 +183,6 @@ const cartCheckoutPage = async (req, res) => {
             image: item.productId.image && item.productId.image[0] ? item.productId.image[0] : 'default-product.jpg'
         }));
 
-        // Get the default address (first address in the array)
         const defaultAddress = user.address && user.address.length > 0 ? user.address[0] : null;
         
         res.render('checkout', { 
@@ -156,7 +208,6 @@ const cartCheckoutPage = async (req, res) => {
     }
 };
 
-
 const generateOrderId = () => {
     const timestamp = Date.now().toString();
     const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
@@ -168,19 +219,16 @@ const buyNow = async (req, res) => {
         const userId = req.session.userId;
         const formData = req.body;
 
-        // Get cart items for the user
         const cart = await Cart.findOne({ userId }).populate('product.productId');
 
         if (!cart || !cart.product || cart.product.length === 0) {
             return res.status(400).json({ success: false, message: 'No items in cart' });
         }
 
-        // Calculate total price from cart
         const totalPrice = cart.product.reduce((sum, item) => {
             return sum + (item.price * item.quantity);
         }, 0);
 
-        // Map payment method to allowed enum values
         const mapPaymentMethod = (paymentMethod) => {
             const paymentMethodMap = {
                 'Direct bank transfer': 'UPI',
@@ -192,7 +240,6 @@ const buyNow = async (req, res) => {
             return paymentMethodMap[paymentMethod] || 'Cash on Delivery';
         };
 
-        // Create shipping address object
         const shippingAddress = {
             fullName: `${formData.firstName} ${formData.lastName}`,
             address: formData.streetAddress + (formData.landmark ? `, ${formData.landmark}` : ''),
@@ -203,15 +250,13 @@ const buyNow = async (req, res) => {
             phone: formData.phone
         };
 
-        // Create products array for order
         const orderProducts = cart.product.map(item => ({
             productId: item.productId._id,
-            size: item.size, // Include size if applicable
+            size: item.size, // This should be a string based on cart data
             quantity: item.quantity,
             price: item.price
         }));
 
-        // Create new order
         const newOrder = new Order({
             orderId: generateOrderId(),
             userId: userId,
@@ -223,7 +268,6 @@ const buyNow = async (req, res) => {
             totalAmount: totalPrice
         });
 
-        // Save the order
         await newOrder.save();
 
         for (const item of cart.product) {
@@ -235,7 +279,6 @@ const buyNow = async (req, res) => {
                 if (sizeIndex !== -1) {
                     product.sizes[sizeIndex].stock = Math.max(0, product.sizes[sizeIndex].stock - item.quantity);
                 } else {
-                    // Optional: Handle case where size is not found
                     console.warn(`Size ${item.size} not found for product ${product._id}`);
                 }
         
@@ -243,13 +286,11 @@ const buyNow = async (req, res) => {
             }
         }
         
-        // Clear the cart after successful order creation
         await Cart.findOneAndUpdate(
             { userId: userId },
             { $set: { product: [], totalPrice: 0 } }
         );
 
-        // Send success response
         res.status(200).json({
             success: true,
             message: 'Order placed successfully',
@@ -272,7 +313,6 @@ const cancelOrder = async (req, res) => {
         const orderId = req.params.id;
         const userId = req.session.userId;
 
-        // Find the order
         const order = await Order.findById(orderId);
 
         if (!order) {
@@ -282,38 +322,31 @@ const cancelOrder = async (req, res) => {
             });
         }
 
-        // Restore stock for each canceled product
         for (const item of order.products) {
             const product = await Product.findById(item.productId);
 
             if (product) {
-                // Ensure sizes array exists
                 if (!Array.isArray(product.sizes)) {
                     console.warn(`Product ${product._id} has no sizes array`);
                     continue;
                 }
 
-                // Find the correct size in the sizes array
                 const sizeIndex = product.sizes.findIndex(sizeObj => sizeObj.size === item.size);
 
                 if (sizeIndex !== -1) {
-                    // Add back the canceled quantity to stock if size exists
                     product.sizes[sizeIndex].stock += item.quantity;
                 } else {
-                    // If size does not exist, create a new entry for the canceled size
                     product.sizes.push({
                         size: item.size,
-                        stock: item.quantity,  // Add the canceled quantity to stock
-                        canceled: true  // Mark this size as a canceled stock
+                        stock: item.quantity,  
+                        canceled: true  
                     });
                 }
 
-                // Save the updated product stock
                 await product.save();
             }
         }
 
-        // Update order status to "Cancelled"
         order.orderStatus = 'Cancelled';
         await order.save();
 
@@ -331,11 +364,47 @@ const cancelOrder = async (req, res) => {
     }
 };
 
+const viewOrderDetails = async (req, res) => {
+    try {
+        const orderId = req.params.id;
+        const userId = req.session.userId;
+        
+        const order = await Order.findById(orderId)
+            .populate({
+                path: 'products.productId',
+                select: 'name price image' // Selecting product name, price, and image
+            })
+            .populate('userId', 'username email contact');
+
+        if (!order) {
+            return res.status(404).render('error', {
+                message: 'Order not found'
+            });
+        }
+        
+        if (order.userId._id.toString() !== userId) {
+            return res.status(403).render('error', {
+                message: 'Unauthorized access to order'
+            });
+        }
+        
+        res.render('orderDetails', {  
+            order: order,
+            user: order.userId
+        });
+    } catch (error) {
+        console.error('Error fetching order details:', error);
+        res.status(500).render('error', {
+            message: 'Error retrieving order details'
+        });
+    }
+};
 
 
 module.exports = {
     checkoutPageInfo,
     cartCheckoutPage,
     buyNow,
-    cancelOrder
+    cancelOrder,
+    viewOrderDetails
 };

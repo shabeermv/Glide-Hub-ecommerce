@@ -77,7 +77,8 @@
                             </td>
                             <td>
                                 <span class="badge <%= 
-                                    order.orderStatus === 'Delivered' ? 'bg-success' : 
+                                    order.orderStatus === 'Delivered' ? 'bg-success' :
+                                    order.orderStatus === 'Shipped' ? 'bg-primary' :  
                                     order.orderStatus === 'Cancelled' ? 'bg-danger' : 
                                     order.orderStatus === 'Processing' ? 'bg-info' : 
                                     'bg-warning' %>">
@@ -107,6 +108,32 @@
         </div>
     <% } %>
 </div>
+<div class="pagination-area mt-3">
+    <nav aria-label="Page navigation">
+        <% if (typeof currentPage !== 'undefined' && typeof totalPages !== 'undefined' && totalPages > 1) { %>
+        <ul class="pagination justify-content-center">
+            <% if (currentPage > 1) { %>
+                <li class="page-item">
+                    <a class="page-link" href="?page=<%= currentPage - 1 %>">Previous</a>
+                </li>
+            <% } %>
+
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                </li>
+            <% } %>
+
+            <% if (currentPage < totalPages) { %>
+                <li class="page-item">
+                    <a class="page-link" href="?page=<%= currentPage + 1 %>">Next</a>
+                </li>
+            <% } %>
+        </ul>
+        <% } %>
+    </nav>
+</div>
+
 
 <!-- Status Update Modal -->
 <div class="modal fade" id="updateStatusModal" tabindex="-1">
@@ -123,7 +150,7 @@
                         <label class="form-label">Select New Status:</label>
                         <select class="form-select" id="orderStatusSelect">
                             <option value="Pending">Pending</option>
-                            <option value="Delivered">shipped</option>
+                            <option value="Shipped">shipped</option>
                             <option value="Delivered">Delivered</option>
                             <option value="Cancelled">Cancelled</option>
                         </select>
@@ -157,7 +184,6 @@ function submitStatusUpdate() {
     const orderId = document.getElementById('orderIdInput').value;
     const newStatus = document.getElementById('orderStatusSelect').value;
     
-    // Make an AJAX call to your backend
     fetch('/admin/orders/update-status', {
         method: 'POST',
         headers: {
@@ -171,7 +197,6 @@ function submitStatusUpdate() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Refresh the page or update the UI
             window.location.reload();
         } else {
             alert('Failed to update order status: ' + data.message);
@@ -187,7 +212,6 @@ function submitStatusUpdate() {
 }
 
 function viewOrderDetails(orderId) {
-    // Implement your view details logic here
     window.location.href = `/admin/orders/${orderId}`;
 }
 </script>

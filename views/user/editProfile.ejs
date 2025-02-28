@@ -34,10 +34,10 @@
 
 <script>
    document.querySelector("#confirm").addEventListener("click", function (e) {
-    e.preventDefault(); // Prevent form submission
+    e.preventDefault(); 
     const userId = "<%= user._id %>";
 
-    // Create the address object from input values
+    
     const address = {
         fullName: document.querySelector("#fullName").value,
         address: document.querySelector("#address").value,

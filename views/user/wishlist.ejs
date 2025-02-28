@@ -24,14 +24,14 @@
             <% } else { %>
                 <table class="table table-wishlist table-mobile">
                     <% wishlist.forEach(item => { %>
+                        
                         <% if (item.productId) { %> <!-- Ensure item.productId exists -->
                             <tr>
                                 <td class="product-col">
                                     <div class="product">
                                         <figure class="product-media">
-                                            <% if (item.productId && item.productId.images && item.productId.images.length > 0) { %>
-                                                <!-- Adjust the image source path to point to the correct static folder -->
-                                                <img src="/uploads/products/<%= item.productId.images[0] %>" alt="<%= item.productId.title %>" class="product-image">
+                                            <% if (item.productId && item.productId.image && item.productId.image.length > 0) { %>
+                                                <img src="<%= item.productId.image[0] %>" alt="<%= item.productId.title %>" class="product-image">
                                             <% } else { %>
                                                 <img src="/default-image.jpg" alt="No Image Available" class="product-image">
                                             <% } %>

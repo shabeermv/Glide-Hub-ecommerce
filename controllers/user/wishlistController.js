@@ -12,7 +12,7 @@ const wishlistPageInfo = async (req, res) => {
             const wishlist = await Wishlist.findOne({ userId: req.session.userId })
                 .populate({
                     path: 'products.productId',
-                    options: { skip, limit }  // ✅ This ensures MongoDB paginates properly
+                    options: { skip, limit }  
                 })
                 .select('products')
                 .lean();
@@ -34,7 +34,7 @@ const wishlistPageInfo = async (req, res) => {
             const totalPages = Math.ceil((totalProducts[0]?.totalItems || 0) / limit);
 
             res.render('wishlist', {
-                wishlist: wishlist.products,  // ✅ Already paginated
+                wishlist: wishlist.products, 
                 currentPage: page,
                 totalPages,
             });
@@ -95,7 +95,6 @@ const removeWishlistItem = async (req, res) => {
             });
         }
 
-        // Update wishlist
         const updatedWishList = await Wishlist.findOneAndUpdate(
             { userId },
             { $pull: { products: { productId } } },

@@ -129,7 +129,6 @@
           const userId = button.getAttribute('data-id');
           const isBlocked = button.getAttribute('data-isblocked') === 'true';  
 
-          // Toggle the button's appearance and text
           button.textContent = isBlocked ? 'Block' : 'Unblock';
           button.classList.toggle('btn-danger', !isBlocked);
           button.classList.toggle('btn-success', isBlocked);

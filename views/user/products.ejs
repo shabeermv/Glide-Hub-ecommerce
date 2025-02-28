@@ -102,88 +102,111 @@
                             <% }) %>
                         </ul>
                     </div>
-
-                   
-
-
                 </div>
             </div>
         </div>
-
-        
 
         <div class="row flex-wrap">
             <% updatedProducts.forEach(product => { %>
-            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
-                <!-- Block2 -->
-                <div class="block2">
-                    <div class="block2-pic hov-img0">
-                        <img
-                        src="<%= product.image && product.image.length > 0 ? product.image[0] : '/images/placeholder.jpg' %>"
-                        alt="<%= product.title %>"
-                        
-                        class="img-fluid"
-                    />        
-                        <a href="/show/<%= product._id %>" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04">
-                            Quick View
-                        </a>
-                    </div>
-        
-                    <div class="block2-txt flex-w flex-t p-t-14">
-                        <div class="block2-txt-child1 flex-col-l">
-                            <a href="/show/<%= product._id %>" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                <%= product.title %>
+                <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
+                    <div class="block2">
+                        <div class="block2-pic hov-img0">
+                            <img 
+                                src="<%= product.image && product.image.length > 0 ? product.image[0] : '/images/placeholder.jpg' %>"
+                                alt="<%= product.title %>"
+                                class="img-fluid"
+                            />
+                            <a href="/show/<%= product._id %>" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04">
+                                Quick View
                             </a>
-        
-                            <span class="stext-105 cl3">
-                                ₹<%= product.price %> 
-                            </span>
                         </div>
-        
-                        <div class="product-to-wishlist block2-txt-child2 flex-r p-t-3" id="addWishlist">
-                            <button class="btn-addwish-b2 dis-block pos-relative js-addwish-b2" data-id="<%= product._id %>">
-                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-                            </button>
+
+                        <div class="block2-txt flex-w flex-t p-t-14">
+                            <div class="block2-txt-child1 flex-col-l">
+                                <a href="/show/<%= product._id %>" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
+                                    <%= product.title %>
+                                </a>
+
+                                <% if (product.hasDiscount) { %>
+                                    <!-- Discount badge - show offer type -->
+                                    <div class="offer-type-badge" style="background-color: <%= product.offerType === 'category' ? '#6c42f5' : '#dc3545' %>;">
+                                        <%= product.offerType === 'category' ? 'CATEGORY OFFER' : 'PRODUCT OFFER' %>
+                                    </div>
+                                    
+                                    <!-- Price display with strikethrough -->
+                                    <div class="price-container">
+                                        <span class="original-price">
+                                            ₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                        </span>
+                                        <span class="discounted-price">
+                                            ₹<%= parseFloat(product.discountedPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Discount information -->
+                                    <div class="discount-info">
+                                        <span class="discount-badge">
+                                            <% if (product.appliedOffer.discountType === 'percentage') { %>
+                                                <%= product.appliedOffer.discountValue %>% OFF
+                                            <% } else { %>
+                                                ₹<%= product.appliedOffer.discountValue %> OFF
+                                            <% } %>
+                                        </span>
+                                        <span class="savings">
+                                            (Save ₹<%= Math.round(product.appliedOffer.discountAmount) %>)
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Offer description -->
+                                    <div class="offer-description">
+                                        <%= product.appliedOffer.description %>
+                                    </div>
+                                <% } else { %>
+                                    <p class="price" style="font-weight: bold; font-size: 1rem;">
+                                        ₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                    </p>
+                                <% } %>
+                            </div>
+                            
+                            <div class="block2-txt-child2 flex-r p-t-3">
+                                <a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2" data-id="<%= product._id %>">
+                                    <img class="icon-heart1 dis-block trans-04" src="/asset1/images/icons/icon-heart-01.png" alt="ICON">
+                                    <img class="icon-heart2 dis-block trans-04 ab-t-l" src="/asset1/images/icons/icon-heart-02.png" alt="ICON">
+                                </a>
+                            </div>
                         </div>
-                        
                     </div>
                 </div>
-            </div>
             <% }) %>
-        
-            <!-- Load More Button -->
-            <div class="flex-c-m flex-w w-full p-t-45">
-                <a href="#" class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04">
-                    Load More
-                </a>
-            </div>
         </div>
-        <div class="flex-c-m flex-w w-full p-t-45">
-    <% if (currentPage > 1) { %>
-        <a href="?page=<%= currentPage - 1 %>&limit=12" class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04">
-            Previous
-        </a>
-    <% } %>
-
-    <% for (let i = 1; i <= totalPages; i++) { %>
-        <a href="?page=<%= i %>&limit=12" 
-           class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 <%= i === currentPage ? 'active' : '' %>">
-            <%= i %>
-        </a>
-    <% } %>
-
-    <% if (currentPage < totalPages) { %>
-        <a href="?page=<%= currentPage + 1 %>&limit=12" class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04">
-            Next
-        </a>
-    <% } %>
-</div>
-</div>
-</div>
-
-
         
+        <!-- Pagination -->
+        <div class="flex-c-m flex-w w-full p-t-45">
+            <% if (totalPages > 1) { %>
+                <% if (currentPage > 1) { %>
+                    <a href="?page=<%= currentPage - 1 %>&search=<%= searchValue %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>&priceRange=<%= selectedPriceRange %>" 
+                       class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 m-r-5">
+                        Previous
+                    </a>
+                <% } %>
+
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <a href="?page=<%= i %>&search=<%= searchValue %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>&priceRange=<%= selectedPriceRange %>" 
+                       class="flex-c-m stext-101 cl5 size-103 <%= i === currentPage ? 'bg1' : 'bg2' %> bor1 hov-btn1 p-lr-15 trans-04 m-lr-3">
+                        <%= i %>
+                    </a>
+                <% } %>
+
+                <% if (currentPage < totalPages) { %>
+                    <a href="?page=<%= currentPage + 1 %>&search=<%= searchValue %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>&priceRange=<%= selectedPriceRange %>" 
+                       class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 m-l-5">
+                        Next
+                    </a>
+                <% } %>
+            <% } %>
+        </div>
+    </div>
+</div>
 
 <%-include("../../views/partials/users/footer.ejs")%>
 
@@ -218,3 +241,65 @@
 });
 
 </script>
+<style>
+    /* Add these custom styles for better offer display */
+    .price-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 3px;
+    }
+    
+    .original-price {
+        text-decoration: line-through;
+        color: #6c757d;
+        margin-right: 8px;
+        font-size: 0.9rem;
+    }
+    
+    .discounted-price {
+        font-weight: bold;
+        color: #28a745;
+        font-size: 1.1rem;
+    }
+    
+    .discount-badge {
+        background-color: #dc3545;
+        color: white;
+        padding: 2px 5px;
+        border-radius: 3px;
+        font-size: 0.75rem;
+    }
+    
+    .savings {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-left: 5px;
+    }
+    
+    .offer-description {
+        font-size: 0.8rem;
+        color: #dc3545;
+        margin-top: 2px;
+    }
+    
+    .offer-type-badge {
+        display: inline-block;
+        margin-bottom: 5px;
+        color: white;
+        font-size: 0.7rem;
+        padding: 1px 5px;
+        border-radius: 3px;
+    }
+    
+    /* Enhanced hover effect for product cards */
+    .block2:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    /* Improve pagination styling */
+    .bg1 {
+        background-color: #717fe0 !important;
+        color: white !important;
+    }
+    </style>

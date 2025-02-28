@@ -46,10 +46,42 @@
         </p>
 
         <!-- Product Prict -->
-        <span class="mtext-106 cl2" style="font-size: 24px; font-weight: bold; color: #4CAF50;">
-            ₹ <%= product.price %>
+       <!-- Product Price -->
+<% if (product.hasDiscount) { %>
+    
+    <!-- Price display with strikethrough -->
+    <div class="price-container">
+        <span class="original-price mtext-106 cl2" style="font-size: 20px; text-decoration: line-through; color: #999;">
+            ₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
         </span>
-
+        <span class="discounted-price mtext-106 cl2" style="font-size: 24px; font-weight: bold; color: #4CAF50; margin-left: 10px;">
+            ₹<%= parseFloat(product.discountedPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+        </span>
+    </div>
+    
+    <!-- Discount information -->
+    <div class="discount-info" style="margin-top: 10px; margin-bottom: 15px;">
+        <span class="discount-badge" style="background-color: #dc3545; color: white; padding: 3px 8px; border-radius: 4px; font-size: 14px;">
+            <% if (product.appliedOffer.discountType === 'percentage') { %>
+                <%= product.appliedOffer.discountValue %>% OFF
+            <% } else { %>
+                ₹<%= product.appliedOffer.discountValue %> OFF
+            <% } %>
+        </span>
+        <span class="savings" style="margin-left: 8px; color: #666; font-size: 14px;">
+            (Save ₹<%= Math.round(product.appliedOffer.discountAmount) %>)
+        </span>
+    </div>
+    
+    <!-- Offer description -->
+    <div class="offer-description" style="margin-top: 5px; color: #666; font-size: 14px; font-style: italic;">
+        <%= product.appliedOffer.description %>
+    </div>
+<% } else { %>
+    <span class="mtext-106 cl2" style="font-size: 24px; font-weight: bold; color: #4CAF50;">
+        ₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+    </span>
+<% } %>
         <!-- Product Description -->
         <p class="stext-102 cl3 p-t-23" style="font-size: 16px; color: #555;">
             <%= product.description %>
@@ -193,6 +225,56 @@
         Categories: Jacket, Men
     </span>
 </div>
+.offer-type-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.price-container {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: #999;
+}
+
+.discounted-price {
+    margin-left: 10px;
+}
+
+.discount-info {
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+
+.discount-badge {
+    background-color: #dc3545;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.savings {
+    margin-left: 8px;
+    color: #666;
+    font-size: 14px;
+}
+
+.offer-description {
+    margin-top: 5px;
+    color: #666;
+    font-size: 14px;
+    font-style: italic;
+}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script src="https://cdn.rawgit.com/elevateweb/elevatezoom/master/jquery.elevateZoom.min.js"></script>
@@ -248,12 +330,10 @@
     }
 });
 
-    // Update quantity controls
    
 
     
 
-    // Update add to cart validation
     document.getElementById('addCart').addEventListener('click', async function(e) {
         e.preventDefault();
 

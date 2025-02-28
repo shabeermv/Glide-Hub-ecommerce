@@ -1,6 +1,5 @@
 <%- include("../../views/partials/admin/header.ejs") %>
 
-
 <section class="sec-product-detail bg0 p-t-65 p-b-60" style="margin-top: 20px;">
     <div class="container">
         <div class="row">
@@ -34,129 +33,128 @@
                     </div>
                 </div>
             </div>
-  
-		<div class="col-md-6 col-lg-5 p-b-30">
-		  <div class="p-r-50 p-t-5 p-lr-0-lg">
-			
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Attribute</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Title</td>
-                        <td><%= product.title || 'Not specified' %></td>
-                    </tr>
-                    <tr>
-                        <td>Description</td>
-                        <td><%= product.description || 'Not specified' %></td>
-                    </tr>
-                    <tr>
-                        <td>Category</td>
-                        <td><%= product.category ? product.category.name : 'Not specified' %></td>
-                    </tr>
-                    
-                    <tr>
-                        <td>Brand</td>
-                        <td><%= product.brandName || 'Not specified' %></td>
-                    </tr>
-                    <tr>
-                        <td>Price</td>
-                        <td><%= product.price %></td>
-                    </tr>
-                    <tr>
-                        <td>Stock</td>
-                        <td><%= product.totalStock %></td>
-                    </tr>
-                    <tr>
-                        <td>Sizes</td>
-                        <td>
-                            <% if (product.sizes && product.sizes.length > 0) { %>
-                                <%= product.sizes.map(s => s.size).join(', ') %>
-                            <% } else { %>
-                                Not available
-                            <% } %>
-                        </td>
+
+            <div class="col-md-6 col-lg-5 p-b-30">
+                <div class="p-r-50 p-t-5 p-lr-0-lg">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Title</td>
+                                <td><%= product.title || 'Not specified' %></td>
+                            </tr>
+                            <tr>
+                                <td>Description</td>
+                                <td><%= product.description || 'Not specified' %></td>
+                            </tr>
+                            <tr>
+                                <td>Category</td>
+                                <td><%= product.category ? product.category.name : 'Not specified' %></td>
+                            </tr>
+                            <tr>
+                                <td>Brand</td>
+                                <td><%= product.brandName || 'Not specified' %></td>
+                            </tr>
+                            <tr>
+                                <td>Price</td>
+                                <td>₹<%= product.price.toFixed(2) %></td>
+                            </tr>
+                            <tr>
+                                <td>Stock</td>
+                                <td><%= product.totalStock %></td>
+                            </tr>
+                            <tr>
+                                <td>Sizes</td>
+                                <td>
+                                    <% if (product.sizes && product.sizes.length > 0) { %>
+                                        <%= product.sizes.map(s => s.size).join(', ') %>
+                                    <% } else { %>
+                                        Not available
+                                    <% } %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Color</td>
+                                <td><%= product.color || 'Not specified' %></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="p-t-20">
+                        <a href="/admin/edit/<%= product._id %>" class="btn btn-primary m-r-10">Edit Product</a>
                         
-                    </tr>
-                    <tr>
-                        <td>Color</td>
-                        <td><%= product.color || 'Not specified' %></td>
-                    </tr>
-                </tbody>
-            </table>
-            
-            
-            <div class="p-t-20">
-                <a href="/admin/edit/<%= product._id %>" class="btn btn-primary m-r-10">Edit Product</a>
-                <a href="#" onclick="deleteProduct('<%= product._id %>')" class="btn btn-danger">Delete Product</a>
+                        <a href="#" 
+                            id="action-btn-<%= product._id %>" 
+                            onclick="toggleProductStatus('<%= product._id %>', <%= product.isDeleted ? 'true' : 'false' %>)"
+                            class="btn <%= product.isDeleted ? 'btn-success' : 'btn-danger' %>">
+                            <%= product.isDeleted ? 'Recover Product' : 'Delete Product' %>
+                        </a>
+                    </div>
 
-                
+                    <!-- Social Media Buttons -->
+                    <div class="flex-w flex-m p-l-100 p-t-40 respon7">
+                        <div class="flex-m bor9 p-r-10 m-r-11">
+                            <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 js-addwish-detail tooltip100" data-tooltip="Add to Wishlist">
+                                <i class="zmdi zmdi-favorite"></i>
+                            </a>
+                        </div>
+
+                        <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Facebook">
+                            <i class="fa fa-facebook"></i>
+                        </a>
+
+                        <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Twitter">
+                            <i class="fa fa-twitter"></i>
+                        </a>
+
+                        <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Google Plus">
+                            <i class="fa fa-google-plus"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
-            
-  
-			<!-- Size and Color Selectors -->
-			
-			 
-			<!-- Social Media Buttons -->
-			<div class="flex-w flex-m p-l-100 p-t-40 respon7">
-			  <div class="flex-m bor9 p-r-10 m-r-11">
-				<a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 js-addwish-detail tooltip100" data-tooltip="Add to Wishlist">
-				  <i class="zmdi zmdi-favorite"></i>
-				</a>
-			  </div>
-  
-			  <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Facebook">
-				<i class="fa fa-facebook"></i>
-			  </a>
-  
-			  <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Twitter">
-				<i class="fa fa-twitter"></i>
-			  </a>
-  
-			  <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Google Plus">
-				<i class="fa fa-google-plus"></i>
-			  </a>
-			</div>
-		  </div>
-		</div>
-	  </div>
-	</div>
-  </section>
-  <%- include("../../views/partials/admin/footer.ejs") %>
+        </div>
+    </div>
+</section>
 
+<%- include("../../views/partials/admin/footer.ejs") %>
 
-  <script>
-  document.querySelector('.btn-danger').addEventListener('click', function (event) {
-    event.preventDefault(); // Prevent the default form submission
+<script>
+    function toggleProductStatus(productId, isDeleted) {
+        event.preventDefault(); 
 
-    const productId = '<%= product._id %>';
-    
-    fetch(`/admin/delete/${productId}`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Product deleted successfully');
-            window.location.href = '/admin/products'; 
-        } else {
-            alert('Error deleting product: ' + data.message);
-        }
-    })
-    .catch(err => console.error('Error:', err));
-});
-
-
-  </script>
-
-  
-
-
-  
+        const newStatus = isDeleted === 'true' ? false : true; // Convert to boolean
+        const url = newStatus ? `/admin/delete/${productId}` : `/admin/recover/${productId}`;
+        
+        fetch(url, {
+            method: 'PUT', // Use PUT to update the status
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                
+                const btn = document.getElementById(`action-btn-${productId}`);
+                
+                // Toggle button text and class dynamically
+                btn.innerHTML = newStatus ? 'Recover Product' : 'Delete Product';
+                btn.className = newStatus ? 'btn btn-success' : 'btn btn-danger';
+                btn.setAttribute("onclick", `toggleProductStatus('${productId}', '${newStatus}')`);
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Failed to update product status.');
+        });
+    }
+</script>

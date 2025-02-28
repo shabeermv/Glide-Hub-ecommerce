@@ -1,0 +1,340 @@
+<%- include("../../views/partials/admin/header.ejs") %>
+
+<main class="main-wrap">
+    <header class="main-header navbar">
+        <div class="col-search">
+            <form class="searchform">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search term" />
+                    <button class="btn btn-light bg" type="button"><i class="material-icons md-search"></i></button>
+                </div>
+            </form>
+        </div>
+    </header>
+
+    <section class="content-main">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>Category Offers</h3>
+            <button id="createOfferBtn" class="btn btn-primary">
+                <i class="material-icons md-add"></i> Create New Offer
+            </button>
+        </div>
+
+        <!-- Create Form Card - Hidden by default -->
+        <div class="card mb-4" id="createFormCard" style="display: none;">
+            <div class="card-header d-flex justify-content-between">
+                <h5 class="card-title mt-2">Create Category Offer</h5>
+                <button type="button" class="btn-close" id="closeCreateFormBtn" aria-label="Close"></button>
+            </div>
+            <div class="card-body">
+                <form id="createOfferForm">
+                    <div class="mb-3">
+                        <label for="create_description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="create_description" name="description" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="create_selectedCategory" class="form-label">Select Category</label>
+                        <select class="form-select" id="create_selectedCategory" name="selectedCategory" required>
+                            <% categories.forEach(category => { %>
+                                <option value="<%= category._id %>"><%= category.name %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="create_discountType" class="form-label">Discount Type</label>
+                        <select class="form-select" id="create_discountType" name="discountType" required>
+                            <option value="percentage">Percentage (%)</option>
+                            <option value="fixed">Fixed Amount (₹)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="create_discountValue" class="form-label">Discount Value</label>
+                        <input type="number" class="form-control" id="create_discountValue" name="discountValue" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="create_startDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="create_startDate" name="startDate" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="create_endDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="create_endDate" name="endDate" required>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Add Offer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Form Card - Hidden by default -->
+        <div class="card mb-4" id="editFormCard" style="display: none;">
+            <div class="card-header d-flex justify-content-between">
+                <h5 class="card-title mt-2">Edit Category Offer</h5>
+                <button type="button" class="btn-close" id="closeEditFormBtn" aria-label="Close"></button>
+            </div>
+            <div class="card-body">
+                <form id="editOfferForm">
+                    <input type="hidden" id="edit_offerId" name="offerId">
+                    
+                    <div class="mb-3">
+                        <label for="edit_description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="edit_description" name="description" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_selectedCategory" class="form-label">Select Category</label>
+                        <select class="form-select" id="edit_selectedCategory" name="selectedCategory" required>
+                            <% categories.forEach(category => { %>
+                                <option value="<%= category._id %>"><%= category.name %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_discountType" class="form-label">Discount Type</label>
+                        <select class="form-select" id="edit_discountType" name="discountType" required>
+                            <option value="percentage">Percentage (%)</option>
+                            <option value="fixed">Fixed Amount (₹)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_discountValue" class="form-label">Discount Value</label>
+                        <input type="number" class="form-control" id="edit_discountValue" name="discountValue" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_startDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="edit_startDate" name="startDate" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_endDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="edit_endDate" name="endDate" required>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Update Offer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Display existing offers as cards -->
+        <div class="row" id="offersContainer">
+            <% if (categoryOffers && categoryOffers.length > 0) { %>
+                <% categoryOffers.forEach(offer => { %>
+                    <div class="col-md-6 col-lg-4 mb-4 offer-card" data-offer='<%= JSON.stringify(offer).replace(/'/g, "&#39;") %>'>
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h5 class="card-title"><%= offer.description %></h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Category:</strong> <%= offer.categoryId.name %></p>
+                                <p><strong>Discount:</strong> 
+                                    <% if (offer.discountType === 'percentage') { %>
+                                        <%= offer.discountValue %>%
+                                    <% } else { %>
+                                        ₹<%= offer.discountValue %>
+                                    <% } %>
+                                </p>
+                                <p><strong>Valid From:</strong> <%= new Date(offer.startDate).toLocaleDateString() %></p>
+                                <p><strong>Valid Until:</strong> <%= new Date(offer.endDate).toLocaleDateString() %></p>
+                                
+                                <div class="d-flex justify-content-between mt-3">
+                                    <button class="btn btn-sm btn-outline-primary edit-offer" data-id="<%= offer._id %>">
+                                        <i class="material-icons md-edit"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger delete-offer" data-id="<%= offer._id %>">
+                                        <i class="material-icons md-delete"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        No category offers available. Click "Create New Offer" to add one.
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </section>
+</main>
+
+<%- include("../../views/partials/admin/footer.ejs") %>
+
+<script>
+    // Toggle create form visibility
+    document.getElementById('createOfferBtn').addEventListener('click', function() {
+        document.getElementById('createFormCard').style.display = 'block';
+        this.style.display = 'none';
+        
+        // Hide edit form if it's visible
+        document.getElementById('editFormCard').style.display = 'none';
+    });
+
+    document.getElementById('closeCreateFormBtn').addEventListener('click', function() {
+        document.getElementById('createFormCard').style.display = 'none';
+        document.getElementById('createOfferBtn').style.display = 'block';
+        // Reset form
+        document.getElementById('createOfferForm').reset();
+    });
+    
+    // Close edit form
+    document.getElementById('closeEditFormBtn').addEventListener('click', function() {
+        document.getElementById('editFormCard').style.display = 'none';
+        document.getElementById('createOfferBtn').style.display = 'block';
+        // Reset form
+        document.getElementById('editOfferForm').reset();
+    });
+
+    // Create form submission
+    document.getElementById('createOfferForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = {
+            description: document.getElementById('create_description').value,
+            selectedCategory: document.getElementById('create_selectedCategory').value,
+            discountType: document.getElementById('create_discountType').value,
+            discountValue: document.getElementById('create_discountValue').value,
+            startDate: document.getElementById('create_startDate').value,
+            endDate: document.getElementById('create_endDate').value
+        };
+
+        fetch('/admin/addCategoryOffer', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            alert('Offer added successfully');
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to add offer');
+        });
+    });
+    
+    // Edit form submission
+    document.getElementById('editOfferForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const offerId = document.getElementById('edit_offerId').value;
+        const formData = {
+            description: document.getElementById('edit_description').value,
+            selectedCategory: document.getElementById('edit_selectedCategory').value,
+            discountType: document.getElementById('edit_discountType').value,
+            discountValue: document.getElementById('edit_discountValue').value,
+            startDate: document.getElementById('edit_startDate').value,
+            endDate: document.getElementById('edit_endDate').value
+        };
+
+        fetch(`/admin/updateCategoryOffer/${offerId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            alert('Offer updated successfully');
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update offer');
+        });
+    });
+
+    // Delete offer functionality
+    document.querySelectorAll('.delete-offer').forEach(button => {
+        button.addEventListener('click', function() {
+            const offerId = this.getAttribute('data-id');
+            if(confirm('Are you sure you want to delete this offer?')) {
+                fetch(`/admin/deleteCategoryOffer/${offerId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Offer deleted successfully');
+                    window.location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to delete offer');
+                });
+            }
+        });
+    });
+
+    // Edit offer functionality - ALTERNATIVE APPROACH
+    document.querySelectorAll('.edit-offer').forEach(button => {
+        button.addEventListener('click', function() {
+            const offerId = this.getAttribute('data-id');
+            
+            // Find the parent offer card element
+            const offerCard = this.closest('.offer-card');
+            
+            // Get the offer data directly from the data attribute
+            let offerData;
+            try {
+                offerData = JSON.parse(offerCard.getAttribute('data-offer'));
+            } catch (err) {
+                console.error('Error parsing offer data:', err);
+                alert('Failed to load offer data. Please refresh the page and try again.');
+                return;
+            }
+            
+            // Hide the create button and create form
+            document.getElementById('createOfferBtn').style.display = 'none';
+            document.getElementById('createFormCard').style.display = 'none';
+            
+            // Show edit form
+            const editForm = document.getElementById('editFormCard');
+            editForm.style.display = 'block';
+            
+            // Populate form with offer data
+            document.getElementById('edit_offerId').value = offerData._id;
+            document.getElementById('edit_description').value = offerData.description;
+            document.getElementById('edit_selectedCategory').value = offerData.categoryId._id || offerData.categoryId;
+            document.getElementById('edit_discountType').value = offerData.discountType;
+            document.getElementById('edit_discountValue').value = offerData.discountValue;
+            
+            // Format dates properly
+            let startDate = offerData.startDate;
+            let endDate = offerData.endDate;
+            
+            // If dates include time component (e.g., "2023-01-01T00:00:00.000Z")
+            if (typeof startDate === 'string' && startDate.includes('T')) {
+                startDate = startDate.split('T')[0];
+            } else if (startDate instanceof Date) {
+                startDate = startDate.toISOString().split('T')[0];
+            }
+            
+            if (typeof endDate === 'string' && endDate.includes('T')) {
+                endDate = endDate.split('T')[0];
+            } else if (endDate instanceof Date) {
+                endDate = endDate.toISOString().split('T')[0];
+            }
+            
+            document.getElementById('edit_startDate').value = startDate;
+            document.getElementById('edit_endDate').value = endDate;
+        });
+    });
+</script>

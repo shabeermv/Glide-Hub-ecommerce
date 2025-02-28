@@ -28,11 +28,11 @@
                                     <tr class="table_row" data-product-id="<%= item.productId._id %>" data-size="<%= item.size %>">
                                         <td class="column-1">
                                             <div class="how-itemcart1">
-                                                <% if (item.productId && item.productId.image && item.productId.image[0]) { %>
-    <img src="/uploads/<%= item.productId.image[0] %>" alt="IMG">
-<% } else { %>
-    <img src="/images/default-product.jpg" alt="No Image Available">
-<% } %>
+                                                <% if (item.productId && item.productId.image && item.productId.image.length > 0) { %>
+                                                    <img src="<%= item.productId.image[0] %>" alt="<%= item.productId.title %>" class="product-image">
+                                                <% } else { %>
+                                                    <img src="/default-image.jpg" alt="No Image Available" class="product-image">
+                                                <% } %>
                                             </div>
                                         </td>
                                         <td class="column-2">
@@ -41,7 +41,19 @@
                                             </a>
                                         </td>
                                         <td class="column-3"><%= item.size %></td>
-                                        <td class="column-4"><%= item.price.toFixed(2) %></td>
+                                        <td class="column-4">
+                                            <% if (item.hasDiscount) { %>
+                                                <div>
+                                                    
+                                                    <span style="color: #4CAF50; font-weight: bold;">
+                                                        ₹<%= item.price.toFixed(2) %>
+                                                    </span>
+                                                </div>
+                                                
+                                            <% } else { %>
+                                                ₹<%= item.price.toFixed(2) %>
+                                            <% } %>
+                                        </td>
                                         <td class="column-5">
                                             <div class="wrap-num-product flex-w m-l-auto m-r-0">
                                                 <button 
@@ -64,9 +76,22 @@
                                                     <i class="fs-16 zmdi zmdi-plus"></i>
                                                 </button>
                                             </div>
+                                            <div class="stock-warning hidden mt-2" style="color: #dc3545; font-size: 12px;">
+                                                <!-- Stock warning message will appear here -->
+                                            </div>
                                         </td>
                                         <td class="column-6">
-                                            <%= item.totalPrice.toFixed(2) %>
+                                            <% if (item.hasDiscount) { %>
+                                                <div>
+                                                    
+                                                    <span style="color: #4CAF50; font-weight: bold;">
+                                                        ₹<%= item.totalPrice.toFixed(2) %>
+                                                    </span>
+                                                </div>
+                                                
+                                            <% } else { %>
+                                                ₹<%= item.totalPrice.toFixed(2) %>
+                                            <% } %>
                                         </td>
                                         <td class="column-7">
                                             <div class="action-buttons">
@@ -124,7 +149,9 @@ document.querySelectorAll('.btn-num-product-up, .btn-num-product-down').forEach(
         const productId = this.getAttribute('data-id');
         const size = this.getAttribute('data-size');
         const action = this.getAttribute('data-action');
+        const row = this.closest('.table_row');
         const quantityInput = this.closest('.wrap-num-product').querySelector('.num-product');
+        const stockWarningElement = this.closest('.column-5').querySelector('.stock-warning');
         
         fetch(`/updateQuantity/${productId}`, {
             method: 'PATCH',
@@ -139,20 +166,44 @@ document.querySelectorAll('.btn-num-product-up, .btn-num-product-down').forEach(
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                // Find the updated item in the returned cart data
                 const cartItem = data.cart.product.find(
                     item => item.productId._id === productId && item.size === size
                 );
                 
                 if (cartItem) {
+                    // Update the quantity input
                     quantityInput.value = cartItem.quantity;
                     
-                    const row = this.closest('.table_row');
+                    // Update the total price cell
                     const totalCell = row.querySelector('.column-6');
                     totalCell.textContent = cartItem.totalPrice.toFixed(2);
                     
+                    // Update cart totals
                     const cartTotalElement = document.querySelector('.cart-totals .size-209 .mtext-110');
                     if (cartTotalElement && data.cart.totalPrice) {
                         cartTotalElement.textContent = data.cart.totalPrice.toFixed(2);
+                    }
+                    
+                    // Check if we need to disable the increase button due to stock limitations
+                    const increaseButton = row.querySelector('.btn-num-product-up');
+                    if (data.stockInfo && data.stockInfo.isMaxed) {
+                        increaseButton.classList.add('disabled');
+                        increaseButton.disabled = true;
+                        
+                        // Show stock warning
+                        stockWarningElement.textContent = `Maximum stock (${data.stockInfo.available}) reached`;
+                        stockWarningElement.classList.remove('hidden');
+                    } else {
+                        increaseButton.classList.remove('disabled');
+                        increaseButton.disabled = false;
+                        stockWarningElement.classList.add('hidden');
+                    }
+                    
+                    // Display any stock warnings from the server
+                    if (data.stockWarning) {
+                        stockWarningElement.textContent = data.stockWarning;
+                        stockWarningElement.classList.remove('hidden');
                     }
                 }
             } else {
@@ -165,6 +216,40 @@ document.querySelectorAll('.btn-num-product-up, .btn-num-product-down').forEach(
         });
     });
 });
+
+// Check initial stock status when page loads
+function checkInitialStockStatus() {
+    document.querySelectorAll('.table_row').forEach(row => {
+        const productId = row.getAttribute('data-product-id');
+        const size = row.getAttribute('data-size');
+        const quantityInput = row.querySelector('.num-product');
+        const currentQuantity = parseInt(quantityInput.value);
+        
+        fetch(`/product/${productId}/stock?size=${size}`, {
+            method: 'GET'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const availableStock = data.stockInfo.available;
+                const increaseButton = row.querySelector('.btn-num-product-up');
+                const stockWarningElement = row.querySelector('.stock-warning');
+                
+                // Disable increase button if at max stock
+                if (currentQuantity >= availableStock) {
+                    increaseButton.classList.add('disabled');
+                    increaseButton.disabled = true;
+                    
+                    stockWarningElement.textContent = `Maximum stock (${availableStock}) reached`;
+                    stockWarningElement.classList.remove('hidden');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error checking stock:', error);
+        });
+    });
+}
 
 document.querySelectorAll('.btn-remove-item').forEach(button => {
     button.addEventListener('click', function(e) {
@@ -201,14 +286,16 @@ document.querySelectorAll('.btn-remove-item').forEach(button => {
     });
 });
 
-
-
 function updateCartTotals(cart) {
     const cartTotalElement = document.querySelector('.cart-totals .size-209 .mtext-110');
     if (cartTotalElement && cart.totalPrice) {
         cartTotalElement.textContent = cart.totalPrice.toFixed(2);
     }
 }
+
+// Optional: Run the initial stock check when the page loads
+// Uncomment if you add the endpoint for checking stock separately
+// document.addEventListener('DOMContentLoaded', checkInitialStockStatus);
 </script>
 
 <style>
@@ -260,6 +347,16 @@ function updateCartTotals(cart) {
     .btn-num-product-up:hover,
     .btn-num-product-down:hover {
         background-color: #e9ecef;
+    }
+    
+    .btn-num-product-up.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: #f0f0f0;
+    }
+    
+    .btn-num-product-up.disabled:hover {
+        background-color: #f0f0f0;
     }
     
     .num-product {
@@ -321,6 +418,16 @@ function updateCartTotals(cart) {
         border-bottom: 1px solid #dee2e6;
         padding-bottom: 1rem;
         margin-bottom: 1rem;
+    }
+    
+    .stock-warning {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+    
+    .hidden {
+        display: none;
     }
     
     @media (max-width: 768px) {

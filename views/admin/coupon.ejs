@@ -1,0 +1,204 @@
+<%- include("../../views/partials/admin/header.ejs") %>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<main class="main-wrap">
+    <header class="main-header navbar">
+      <div class="col-search">
+        <form class="searchform">
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Search term" />
+            <button class="btn btn-light bg" type="button">
+              <i class="material-icons md-search"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </header>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Coupon Management</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCouponModal">
+            <i class="fas fa-plus"></i> Create
+        </button>
+    </div>
+
+    <div class="row">
+        <% coupons.forEach(coupon => { %>
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><%= coupon.name %></h5>
+                        <p class="card-text">
+                            <strong>Code:</strong> <%= coupon.code %><br>
+                            <strong>Discount:</strong> 
+                            <%= coupon.discount === 'percentage' ? coupon.discountValue + '%' : '' + coupon.discountValue %><br>
+                            <strong>Min Purchase:</strong> <%= coupon.minPurchase %><br>
+                            <strong>Expires:</strong> <%= new Date(coupon.expireDate).toLocaleDateString() %>
+                        </p>
+                        <a href="/admin/editCoupon/<%= coupon._id %>" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        
+                        <button class="btn btn-danger btn-sm delete-btn" data-id="<%= coupon._id %>">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        <% }); %>
+    </div>
+    
+
+<!-- Add/Edit Coupon Modal -->
+<div class="modal fade" id="addCouponModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Add New Coupon</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="couponForm">
+                    <input type="hidden" id="couponId">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Coupon Name</label>
+                        <input type="text" class="form-control" id="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="code" class="form-label">Coupon Code</label>
+                        <input type="text" class="form-control" id="code" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="discount" class="form-label">Discount Type</label>
+                        <select class="form-select" id="discount" required>
+                            <option value="percentage">Percentage</option>
+                            <option value="fixed">Fixed Amount</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="discountValue" class="form-label">Discount Value</label>
+                        <input type="number" class="form-control" id="discountValue" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="minPurchase" class="form-label">Minimum Purchase</label>
+                        <input type="number" class="form-control" id="minPurchase" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="expireDate" class="form-label">Expiry Date</label>
+                        <input type="date" class="form-control" id="expireDate" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="submit" >Save Coupon</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+   // Get the modal instance
+// Get the modal instance
+const modal = new bootstrap.Modal(document.getElementById('addCouponModal'));
+
+document.getElementById('submit').addEventListener('click', async function(e) {
+    e.preventDefault();
+    
+    const discountType = document.getElementById('discount').value; // 'percentage' or 'fixed'
+    const discountValue = document.getElementById('discountValue').value;
+
+    const formData = {
+        name: document.getElementById('name').value,
+        code: document.getElementById('code').value,
+        discount: discountType, // Send the type of discount
+        discountValue: parseFloat(discountValue), // Send the actual value
+        minPurchase: document.getElementById('minPurchase').value,
+        expireDate: document.getElementById('expireDate').value
+    };
+
+    try {
+        const response = await fetch('/admin/coupons/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert(data.message);
+            
+            modal.hide();
+            
+            document.getElementById('couponForm').reset();
+            
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to add coupon');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while adding the coupon');
+    }
+});
+
+document.getElementById('discount').addEventListener('change', function() {
+    const discountValueInput = document.getElementById('discountValue');
+    if (this.value === 'percentage') {
+        discountValueInput.setAttribute('max', '100');
+        discountValueInput.setAttribute('min', '0');
+        discountValueInput.setAttribute('placeholder', 'Enter percentage (0-100)');
+    } else {
+        discountValueInput.removeAttribute('max');
+        discountValueInput.setAttribute('min', '0');
+        discountValueInput.setAttribute('placeholder', 'Enter fixed amount');
+    }
+});
+
+    
+
+   
+    // Reset form when modal is closed
+    document.getElementById('addCouponModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('couponForm').reset();
+        document.getElementById('couponId').value = '';
+        document.getElementById('modalTitle').textContent = 'Add New Coupon';
+    });
+
+
+    document.querySelectorAll(".delete-btn").forEach(button => {
+    button.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        const couponId = this.getAttribute("data-id");
+
+        console.log("Coupon ID to delete:", couponId);
+
+        fetch(`/admin/deleteCoupon/${couponId}`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Coupon deleted successfully!");
+                window.location.reload(); // Refresh the page
+            } else {
+                alert("Failed to delete coupon");
+            }
+        })
+        .catch(error => console.error("Error deleting coupon:", error));
+    });
+});
+
+
+</script>
+
+<%- include("../../views/partials/admin/footer.ejs") %>

@@ -1,0 +1,78 @@
+<%- include("../../views/partials/users/header.ejs") %>
+
+    <style>
+        .order-card {
+            background: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .badge-status {
+            background-color: #d4f5e9;
+            color: #28a745;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    </style>
+
+<body>
+   
+    <div class="container mt-9">
+        
+        <h2 class="mb-3">Order Details</h2>
+        <div class="order-card">
+            <h5>Order ID: #<%= order.id %></h5>
+            <p><small><%= order.createdAt %></small></p>
+            <span class="badge-status"><%= order.orderStatus %></span>
+        
+            
+            <h2>Products Ordered</h2>
+    <ul>
+        <% order.products.forEach(product => { %>
+            <li>
+                <img src="<%= product.productId.image %>" alt="<%= product.productId.name %>" width="100">
+                <p><strong>Product:</strong> <%= product.productId.name %></p>
+                <p><strong>Price:</strong> ₹<%= product.productId.price.toFixed(2) %></p>
+                <p><strong>Quantity:</strong> <%= product.quantity %></p>
+                <p><strong>Size:</strong> <%= product.size %></p>
+            </li>
+            <hr>
+        <% }) %>
+    </ul>
+            
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Customer</h5>
+                    <p><strong>Name:</strong> <%= order.userId.username %></p>
+                    <p><strong>Email:</strong> <%= order.userId.email %></p>
+                    <p><strong>Phone:</strong> <%= order.userId.contact %></p>
+
+                </div>
+                <div class="col-md-6">
+                    <h5>Order Info</h5>
+                    <p><strong>Shipping:</strong> <%= order.shipping %></p>
+                    <p><%= order.shippingAddress.fullName %>,<%= order.shippingAddress.address %>,<br><%= order.shippingAddress.city %>,<%= order.shippingAddress.state %>,<%= order.shippingAddress.postalCode %></</</p>
+                    <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
+                    <p><strong>Status:</strong> <%= order.orderStatus%></p>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <h5>Payment Info</h5>
+                    <p><strong>Card:</strong> **** **** **** <%= order.cardLastFour %></p>
+                    <p><strong>Business Name:</strong> <%= order.userId.username %></p>
+                    <p><strong>Phone:</strong> <%= order.userId.contact %></p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Notes</h5>
+                    <textarea class="form-control" placeholder="Type some note..."></textarea>
+                    <button class="btn btn-primary mt-2">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <%- include("../../views/partials/users/footer.ejs") %>
