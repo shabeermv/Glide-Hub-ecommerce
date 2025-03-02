@@ -15,8 +15,14 @@ const loadHome = async (req, res) => {
     const products = await Product.find();
     const category = await Category.find();
 
-    if (req.session.user) {
-      res.render("home", { category, products, user: req.session.user });
+    let user = null;
+
+    if (userId) {
+      user = await User.findById(userId); // Fetch user details from User schema
+    }
+
+    if (user) {
+      res.render("home", { category, products, user });
     } else {
       res.render("userLogin");
     }
@@ -25,6 +31,7 @@ const loadHome = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
+
 
 const loadLogin = async (req, res) => {
   try {

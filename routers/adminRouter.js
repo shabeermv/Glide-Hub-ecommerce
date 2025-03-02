@@ -8,7 +8,6 @@ const customerController = require('../controllers/admin/customerController');
 const categoryController = require('../controllers/admin/categoryControllers');
 const couponController = require('../controllers/admin/couponController');
 const orderController=require('../controllers/admin/orderController');
-const checkoutController = require('../controllers/user/checkoutController')
 const middleware=require('../middleware/middlewares')
 
 
@@ -19,8 +18,8 @@ adminRouter.get('/home', adminController.getHome);
 adminRouter.get('/logoutAdmin',adminController.logoutAdmin);
 adminRouter.get('/downloadOrdersPDF',adminController.downloadOrdersPDF);
 adminRouter.get('/downloadOrdersExcel', adminController.downloadOrdersExcel);
-adminRouter.get('/orders', adminController.getFilteredOrders)
-adminRouter.get('/order/details/:id',checkoutController.viewOrderDetails);
+adminRouter.get('/orderFilterByCategory', adminController.filterCategoryList);
+adminRouter.get('/filterByDate',adminController.getFilterByDate)
 
 
 // Products routes
@@ -60,6 +59,7 @@ adminRouter.put('/updateProductOffer/:id',productController.editProductOffer);
 
 adminRouter.get('/userOrders',orderController.userOrdersInfo);
 adminRouter.post('/orders/update-status',orderController.changeOrderStatus);
+adminRouter.get('/orders/:id',orderController.viewOrderDetails);
 
 
 

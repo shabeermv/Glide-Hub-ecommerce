@@ -4,13 +4,30 @@ const orderSchema = new mongoose.Schema({
     orderId: {
         type: String,
         required: false,
-        unique: true
+        unique: true,
+        sparse: true  // This makes the unique index only apply to non-null values
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: function () {
+            return !this.isGuestCheckout; // Only required if not a guest
+        }
     },
+    cancellationReason:{
+        type:String
+    },
+    isGuestCheckout: {
+        type: Boolean,
+        default: false
+      },
+      guestEmail: {
+        type: String,
+        // Required if it's a guest checkout
+        required: function() {
+          return this.isGuestCheckout === true;
+        }
+      },
     products: [
         {
             productId: {
@@ -35,7 +52,7 @@ const orderSchema = new mongoose.Schema({
     ],
     orderStatus: {
         type: String,
-        enum: ['Pending', 'Shipped', 'Delivered', 'Cancelled'],
+        enum: ['Pending','Confirmed', 'Shipped', 'Delivered', 'Cancelled','Returned'],
         default: 'Pending'
     },
     shippingAddress: {
@@ -53,7 +70,7 @@ const orderSchema = new mongoose.Schema({
     },
     paymentStatus: {
         type: String,
-        enum: ['Pending', 'Completed', 'Failed'],
+        enum: ['Pending', 'completed', 'Failed'],
         default: 'Pending'
     },
     totalAmount: {
@@ -63,7 +80,13 @@ const orderSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    razorpayOrderId: {
+        type: String
+      },
+      razorpayPaymentId: {
+        type: String
+      }
 });
 
 const Order = mongoose.model('Order', orderSchema);

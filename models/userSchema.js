@@ -34,30 +34,49 @@ const userSchema = new Schema(
       sparse: true,
       required: false,
     },
-    address:[ {
-      address: {
-        type: String,
-        required: false,
+    address: [
+      {
+        address: {
+          type: String,
+          required: false,
+        },
+        city: {
+          type: String,
+          required: false,
+        },
+        state: {
+          type: String,
+          required: false,
+        },
+        postCode: {
+          type: String,
+          required: false,
+        },
+        country: {
+          type: String,
+          required: false,
+        },
       },
-      city: {
-        type: String,
-        required: false,
-      },
-      state: {
-        type: String,
-        required: false,
-      },
-      postCode: {
-        type: String,
-        required: false,
-      },
-      country: {
-        type: String,
-        required: false,
-      },
-    }],
+    ],
+   
+  
+   
+   
+    wallet:{
+      type:Number,
+      default:0
   },
-  { timestamps: true }
+  walletHistory:[{
+    date:{
+      type:Date,
+
+    },
+    amount:{
+      type:Number,
+    }
+  }],
+  },
+  { timestamps: true } // ✅ Moved options inside the schema definition
 );
 
 const User = mongoose.model('User', userSchema);

@@ -5,7 +5,7 @@ function searchValue(val) {
     window.location.href = `/shop?${params.toString()}`;
   }
   
-  function categoryFilter(val) {
+function categoryFilter(val) {
     const params = new URLSearchParams(window.location.search);
     
     // Preserve other filters

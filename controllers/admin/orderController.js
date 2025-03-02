@@ -9,8 +9,10 @@ const userOrdersInfo = async (req, res) => {
     const limit = 5; // Number of orders per page
     const skip = (page - 1) * limit; // Calculate the number of orders to skip
 
+    // Fetch total orders count
+    const totalOrders = await Order.countDocuments();
+
     // Fetch orders with pagination
-    const totalOrders = await Order.countDocuments(); // Count total orders
     const orderData = await Order.find({})
       .populate({
         path: "products.productId",
@@ -18,34 +20,46 @@ const userOrdersInfo = async (req, res) => {
       })
       .populate({
         path: "userId",
-        select: "name email",
+        select: "username email",
       })
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean(); // Convert Mongoose documents to plain objects
 
-    // Process orders
-    const processedOrders = orderData.map((order) => {
-      if (!order.orderId) {
-        order.orderId = order._id.toString().slice(-6).toUpperCase();
-      }
-
-      let orderTotal = 0;
-      order.products.forEach((product) => {
-        if (product.productId && product.productId.price) {
-          product.total = product.productId.price * product.quantity;
-          orderTotal += product.total;
+    // Process orders before sending them to EJS
+    const processedOrders = await Promise.all(
+      orderData.map(async (order) => {
+        // Ensure orderId exists
+        if (!order.orderId) {
+          order.orderId = `ORD${order._id.toString().slice(-6).toUpperCase()}`;
+          await Order.findByIdAndUpdate(order._id, { orderId: order.orderId }); // Save orderId
         }
-      });
-      order.totalAmount = orderTotal;
 
-      return order;
-    });
+        // Calculate total amount for the order
+        let orderTotal = 0;
+        order.products.forEach((product) => {
+          if (product.productId && product.productId.price) {
+            product.total = product.productId.price * product.quantity;
+            orderTotal += product.total;
+          }
+        });
 
+        // Ensure totalAmount is saved to the database if missing
+        if (!order.totalAmount || order.totalAmount <= 0) {
+          order.totalAmount = orderTotal;
+          await Order.findByIdAndUpdate(order._id, { totalAmount: orderTotal });
+        }
+
+        return order;
+      })
+    );
+
+    // Render the orders page
     res.render("orders", {
       orderData: processedOrders,
       currentPage: page,
-      totalPages: Math.ceil(totalOrders / limit), // Calculate total pages
+      totalPages: Math.ceil(totalOrders / limit),
       isAdmin: true,
     });
   } catch (error) {
@@ -57,6 +71,7 @@ const userOrdersInfo = async (req, res) => {
     });
   }
 };
+
 
 const changeOrderStatus = async (req, res) => {
   const { orderId, status } = req.body;
@@ -96,7 +111,42 @@ const changeOrderStatus = async (req, res) => {
   }
 };
 
+const viewOrderDetails = async (req, res) => {
+  const id = req.params.id;
+  console.log(id, 'Order ID received');
+
+  try {
+    const order = await Order.findById(id)
+      .populate({
+        path: 'products.productId',
+        select: 'name price image'
+      })
+      .populate({
+        path: 'userId',
+        select: 'username email contact address isBlocked' // Add required fields
+      });
+
+    if (!order) {
+      console.log('Order not found');
+      return res.status(404).render('admin/error', { message: "Order not found" });
+    }
+
+    console.log("Fetched Order:", order);
+
+    res.render('orderDetails', { order });
+  } catch (error) {
+    console.error("Error fetching order:", error.message);
+    res.status(500).render('admin/error', { message: "Internal Server Error" });
+  }
+};
+
+
+
+
+
+
 module.exports = {
   userOrdersInfo,
   changeOrderStatus,
+  viewOrderDetails
 };

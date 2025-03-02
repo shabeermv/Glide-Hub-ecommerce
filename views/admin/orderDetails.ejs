@@ -1,0 +1,129 @@
+<%- include("../../views/partials/admin/header.ejs") %>
+
+<style>
+    .order-card {
+        background: #fff;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .badge-status {
+        background-color: #d4f5e9;
+        color: #28a745;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+    .product-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        border-bottom: 1px solid #ddd;
+        padding: 10px 0;
+    }
+    .product-item img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 5px;
+    }
+    .product-info p {
+        margin: 0;
+    }
+    .customer-info, .order-info, .payment-info, .shipping-info {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 5px;
+    }
+</style>
+
+<main class="main-wrap">
+    <header class="main-header navbar">
+        <div class="col-search">
+            <form class="searchform">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search term" />
+                    <button class="btn btn-light bg" type="button">
+                        <i class="material-icons md-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </header>
+   
+    <div class="container mt-5">
+        <h2 class="mb-3">Order Details</h2>
+        <div class="order-card">
+            <h5>Order ID: #<%= order.orderId %></h5>
+            <p><small>Placed on: <%= new Date(order.createdAt).toLocaleString() %></small></p>
+            <span class="badge-status"><%= order.orderStatus %></span>
+
+            <!-- 🛍️ Products Ordered -->
+            <h3 class="mt-4">Products Ordered</h3>
+            <div class="product-list">
+                <% order.products.forEach(product => { %>
+                    <div class="product-item">
+                        <img src="<%= product.productId.image ? product.productId.image[0] : '/default-image.jpg' %>" 
+                             alt="<%= product.productId.title %>">
+                        <div class="product-info">
+                            <p><strong>Product:</strong> <%= product.productId.title %></p>
+                            <p><strong>Size:</strong> <%= product.size %> | <strong>Quantity:</strong> <%= product.quantity %></p>
+                            <p><strong>Price:</strong> ₹<%= product.productId.price.toFixed(2) %></p>
+                            <p><strong>Total:</strong> ₹<%= (product.productId.price * product.quantity).toFixed(2) %></p>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+
+            <!-- 🧑‍💼 Customer Details & Order Info -->
+            <div class="row mt-4">
+                <div class="col-md-6 customer-info">
+                    <h4>Customer Details</h4>
+                    <p><strong>Name:</strong> <%= order.userId.username %></p>
+                    <p><strong>Email:</strong> <%= order.userId.email %></p>
+                    <p><strong>Phone:</strong> <%= order.userId.contact || "N/A" %></p>
+                </div>
+
+                <div class="col-md-6 order-info">
+                    <h4>Order Summary</h4>
+                    <p><strong>Payment Method:</strong> <%= order.paymentMethod.join(", ") %></p>
+                    <p><strong>Payment Status:</strong> <%= order.paymentStatus %></p>
+                    <p><strong>Order Status:</strong> <%= order.orderStatus %></p>
+                    <p><strong>Total Amount:</strong> ₹<%= order.totalAmount.toFixed(2) %></p>
+                </div>
+            </div>
+
+            <!-- 🚚 Shipping Address -->
+            <div class="shipping-info mt-4">
+                <h4>Shipping Address</h4>
+                <p><%= order.shippingAddress.fullName %></p>
+                <p><%= order.shippingAddress.address %>, <%= order.shippingAddress.city %></p>
+                <p><%= order.shippingAddress.state %>, <%= order.shippingAddress.postalCode %></p>
+                <p><strong>Phone:</strong> <%= order.shippingAddress.phone || "N/A" %></p>
+            </div>
+
+            <!-- 💳 Payment Details -->
+            <div class="payment-info mt-4">
+                <h4>Payment Information</h4>
+                <% if (order.paymentMethod.includes("Credit Card") || order.paymentMethod.includes("Debit Card")) { %>
+                    <p><strong>Card Number:</strong> **** **** **** <%= order.cardLastFour || "XXXX" %></p>
+                <% } else { %>
+                    <p><strong>Payment Type:</strong> <%= order.paymentMethod.join(", ") %></p>
+                <% } %>
+                <p><strong>Transaction ID:</strong> <%= order.razorpayPaymentId || "N/A" %></p>
+            </div>
+
+            <!-- ✏️ Notes Section -->
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <h5>Admin Notes</h5>
+                    <textarea class="form-control" placeholder="Type some note..."></textarea>
+                    <button class="btn btn-primary mt-2">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <%- include("../../views/partials/admin/footer.ejs") %>
+</main>

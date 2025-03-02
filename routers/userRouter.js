@@ -59,11 +59,16 @@ userRouter.delete('/removeWishlistItem/:id',authMiddleware.authMiddleware,wishli
 userRouter.get('/checkout/:id',authMiddleware.authMiddleware,checkoutController.checkoutPageInfo);
 userRouter.get('/cart-checkout', authMiddleware.authMiddleware, checkoutController.cartCheckoutPage);
 userRouter.post('/place-order',authMiddleware.authMiddleware,checkoutController.buyNow);
-// In your routes file where coupon routes are defined
 userRouter.get('/eligible-coupons', couponController.getEligibleCoupons);
 userRouter.post('/apply-coupon', couponController.applyCoupon);
 userRouter.delete('/cancelOrder/:id',authMiddleware.authMiddleware,checkoutController.cancelOrder);
-userRouter.get('/order/details/:id',authMiddleware.authMiddleware,checkoutController.viewOrderDetails);
+userRouter.get('/order/details/:id',authMiddleware.authMiddleware,checkoutController.viewPurchaseDetails);
+userRouter.post('/return-order',checkoutController.returnOrder);
+
+userRouter.post('/create-razorpay-order',checkoutController.razorpayCreation);
+userRouter.post('/verify-razorpay-payment',checkoutController.verifyRazorPay);
+
+userRouter.get('/wallet',checkoutController.userWalletInfo);
 
 
 

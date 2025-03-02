@@ -1,473 +1,514 @@
 <%- include("../../views/partials/users/header.ejs") %>
 
-<div class="page-header text-center" style="background-image: url('/asset3/images/page-header-bg.jpg')">
-    <div class="container">
-        <h1 class="page-title">Your Cart<span>Shop</span></h1>
-    </div>
+<div
+  class="page-header text-center"
+  style="background-image: url('/asset3/images/page-header-bg.jpg')"
+>
+  <div class="container">
+    <h1 class="page-title">Your Cart<span>Shop</span></h1>
+  </div>
 </div>
 
 <form class="bg0 p-t-75 p-b-85">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-10 col-xl-7 m-lr-auto m-b-50">
-                <div class="m-l-25 m-r--38 m-lr-0-xl">
-                    <div class="wrap-table-shopping-cart">
-                        <table class="table-shopping-cart">
-                            <tr class="table_head">
-                                <th class="column-1">Product</th>
-                                <th class="column-2">Title</th>
-                                <th class="column-3">Size</th>
-                                <th class="column-4">Price</th>
-                                <th class="column-5">Quantity</th>
-                                <th class="column-6">Total</th>
-                                <th class="column-7">Actions</th>
-                            </tr>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 col-xl-7 m-lr-auto m-b-50">
+        <div class="m-l-25 m-r--38 m-lr-0-xl">
+          <div class="wrap-table-shopping-cart">
+            <table class="table-shopping-cart">
+              <tr class="table_head">
+                <th class="column-1">Product</th>
+                <th class="column-2">Title</th>
+                <th class="column-3">Size</th>
+                <th class="column-4">Price</th>
+                <th class="column-5">Quantity</th>
+                <th class="column-6">Total</th>
+                <th class="column-7">Actions</th>
+              </tr>
 
-                            <% if (cart && cart.product.length > 0) { %>
-                                <% cart.product.forEach(item => { %>
-                                    <tr class="table_row" data-product-id="<%= item.productId._id %>" data-size="<%= item.size %>">
-                                        <td class="column-1">
-                                            <div class="how-itemcart1">
-                                                <% if (item.productId && item.productId.image && item.productId.image.length > 0) { %>
-                                                    <img src="<%= item.productId.image[0] %>" alt="<%= item.productId.title %>" class="product-image">
-                                                <% } else { %>
-                                                    <img src="/default-image.jpg" alt="No Image Available" class="product-image">
-                                                <% } %>
-                                            </div>
-                                        </td>
-                                        <td class="column-2">
-                                            <a href="/show/<%= item.productId._id %>">
-                                                <%= item.productId.title %>
-                                            </a>
-                                        </td>
-                                        <td class="column-3"><%= item.size %></td>
-                                        <td class="column-4">
-                                            <% if (item.hasDiscount) { %>
-                                                <div>
-                                                    
-                                                    <span style="color: #4CAF50; font-weight: bold;">
-                                                        ₹<%= item.price.toFixed(2) %>
-                                                    </span>
-                                                </div>
-                                                
-                                            <% } else { %>
-                                                ₹<%= item.price.toFixed(2) %>
-                                            <% } %>
-                                        </td>
-                                        <td class="column-5">
-                                            <div class="wrap-num-product flex-w m-l-auto m-r-0">
-                                                <button 
-                                                    class="btn-num-product-down cl8 hov-btn3 trans-04 flex-c-m" 
-                                                    data-id="<%= item.productId._id %>" 
-                                                    data-size="<%= item.size %>"
-                                                    data-action="decrease">
-                                                    <i class="fs-16 zmdi zmdi-minus"></i>
-                                                </button>
-                                                <input 
-                                                    class="mtext-104 cl3 txt-center num-product" 
-                                                    type="number" 
-                                                    value="<%= item.quantity %>" 
-                                                    readonly>
-                                                <button 
-                                                    class="btn-num-product-up cl8 hov-btn3 trans-04 flex-c-m" 
-                                                    data-id="<%= item.productId._id %>" 
-                                                    data-size="<%= item.size %>"
-                                                    data-action="increase">
-                                                    <i class="fs-16 zmdi zmdi-plus"></i>
-                                                </button>
-                                            </div>
-                                            <div class="stock-warning hidden mt-2" style="color: #dc3545; font-size: 12px;">
-                                                <!-- Stock warning message will appear here -->
-                                            </div>
-                                        </td>
-                                        <td class="column-6">
-                                            <% if (item.hasDiscount) { %>
-                                                <div>
-                                                    
-                                                    <span style="color: #4CAF50; font-weight: bold;">
-                                                        ₹<%= item.totalPrice.toFixed(2) %>
-                                                    </span>
-                                                </div>
-                                                
-                                            <% } else { %>
-                                                ₹<%= item.totalPrice.toFixed(2) %>
-                                            <% } %>
-                                        </td>
-                                        <td class="column-7">
-                                            <div class="action-buttons">
-                                                <a href="/checkout/<%= item.productId._id %>" class="btn-buy-now">
-                                                    Buy Now
-                                                </a>
-                                                <button 
-                                                    class="btn-remove-item" 
-                                                    data-id="<%= item.productId._id %>"
-                                                    data-size="<%= item.size %>">
-                                                    Remove
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <% }); %>
-                            <% } else { %>
-                                <tr>
-                                    <td colspan="7" class="text-center">Your cart is empty.</td>
-                                </tr>
-                            <% } %>
-                        </table>
-
-                        <div class="cart-totals mt-4">
-                            <h4 class="mtext-109 cl2 p-b-30">Cart Totals</h4>
-                            <div class="flex-w flex-t bor12 p-b-13">
-                                <div class="size-208">
-                                    <span class="stext-110 cl2">Subtotal:</span>
-                                </div>
-                                <div class="size-209">
-                                    <span class="mtext-110 cl2">
-                                        <%= cart && cart.totalPrice ? cart.totalPrice.toFixed(2) : '0.00' %>
-                                    </span>
-                                </div>
+              <% if (cart && cart.product.length > 0) { %> <%
+              cart.product.forEach(item => { %>
+              <tr
+                class="table_row"
+                data-product-id="<%= item.productId._id %>"
+                data-size="<%= item.size %>"
+              >
+                <td class="column-1">
+                  <div class="how-itemcart1">
+                    <% if (item.productId && item.productId.image &&
+                    item.productId.image.length > 0) { %>
+                    <img
+                      src="<%= item.productId.image[0] %>"
+                      alt="<%= item.productId.title %>"
+                      class="product-image"
+                    />
+                    <% } else { %>
+                    <img
+                      src="/default-image.jpg"
+                      alt="No Image Available"
+                      class="product-image"
+                    />
+                    <% } %>
+                  </div>
+                </td>
+                <td class="column-2">
+                  <a href="/show/<%= item.productId._id %>">
+                    <%= item.productId.title %>
+                  </a>
+                </td>
+                <td class="column-3"><%= item.size %></td>
+                <td class="column-4">
+                    <td class="column-4">
+                        <td class="column-4">
+                            <% if (item.hasDiscount && item.discountedPrice) { %>
+                            <div>
+                              <span style="color: red; text-decoration: line-through;">
+                                ₹<%= item.originalPrice.toFixed(2) %> <!-- Original Price -->
+                              </span>
+                              <br>
+                              <span style="color: #4caf50; font-weight: bold">
+                                ₹<%= item.price.toFixed(2) %> <!-- Discounted Price -->
+                              </span>
                             </div>
-                            <a href="/cart-checkout" 
-                                class="flex-c-m stext-101 cl0 size-116 bg3 bor14 hov-btn3 p-lr-15 trans-04 pointer mt-3 proceed-to-checkout">
-                                 Proceed to Checkout
-                             </a>
-                             
-                        </div>
-                    </div>
+                            <% } else { %>
+                            ₹<%= item.price.toFixed(2) %> <!-- Regular Price -->
+                            <% } %>
+                        </td>
+                        
+                      </td>
+                      
+                </td>
+                <td class="column-5">
+                  <div class="wrap-num-product flex-w m-l-auto m-r-0">
+                    <button
+                      class="btn-num-product-down cl8 hov-btn3 trans-04 flex-c-m"
+                      data-id="<%= item.productId._id %>"
+                      data-size="<%= item.size %>"
+                      data-action="decrease"
+                    >
+                      <i class="fs-16 zmdi zmdi-minus"></i>
+                    </button>
+                    <input
+                      class="mtext-104 cl3 txt-center num-product"
+                      type="number"
+                      value="<%= item.quantity %>"
+                      readonly
+                    />
+                    <button
+                      class="btn-num-product-up cl8 hov-btn3 trans-04 flex-c-m"
+                      data-id="<%= item.productId._id %>"
+                      data-size="<%= item.size %>"
+                      data-action="increase"
+                    >
+                      <i class="fs-16 zmdi zmdi-plus"></i>
+                    </button>
+                  </div>
+                  <div
+                    class="stock-warning hidden mt-2"
+                    style="color: #dc3545; font-size: 12px"
+                  >
+                    <!-- Stock warning message will appear here -->
+                  </div>
+                </td>
+                <td class="column-6">
+                  <% if (item.hasDiscount) { %>
+                  <div>
+                    <span style="color: #4caf50; font-weight: bold">
+                      ₹<%= item.totalPrice.toFixed(2) %>
+                    </span>
+                  </div>
+
+                  <% } else { %> ₹<%= item.totalPrice.toFixed(2) %> <% } %>
+                </td>
+                <td class="column-7">
+                  <div class="action-buttons">
+                    <a
+                      href="/checkout/<%= item.productId._id %>"
+                      class="btn-buy-now"
+                    >
+                      Buy Now
+                    </a>
+                    <button
+                      class="btn-remove-item"
+                      data-id="<%= item.productId._id %>"
+                      data-size="<%= item.size %>"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <% }); %> <% } else { %>
+              <tr>
+                <td colspan="7" class="text-center">Your cart is empty.</td>
+              </tr>
+              <% } %>
+            </table>
+
+            <div class="cart-totals mt-4">
+              <h4 class="mtext-109 cl2 p-b-30">Cart Totals</h4>
+              <div class="flex-w flex-t bor12 p-b-13">
+                <div class="size-208">
+                  <span class="stext-110 cl2">Subtotal:</span>
                 </div>
+                <div class="size-209">
+                  <span class="mtext-110 cl2">
+                    <%= cart && cart.totalPrice ? cart.totalPrice.toFixed(2) :
+                    '0.00' %>
+                  </span>
+                </div>
+              </div>
+              <a
+                href="/cart-checkout"
+                class="flex-c-m stext-101 cl0 size-116 bg3 bor14 hov-btn3 p-lr-15 trans-04 pointer mt-3 proceed-to-checkout"
+              >
+                Proceed to Checkout
+              </a>
             </div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 </form>
 
 <script>
-// Quantity update functionality
-document.querySelectorAll('.btn-num-product-up, .btn-num-product-down').forEach(button => {
-    button.addEventListener('click', function(e) {
+  // Quantity update functionality
+  document
+    .querySelectorAll(".btn-num-product-up, .btn-num-product-down")
+    .forEach((button) => {
+      button.addEventListener("click", function (e) {
         e.preventDefault();
-        
-        const productId = this.getAttribute('data-id');
-        const size = this.getAttribute('data-size');
-        const action = this.getAttribute('data-action');
-        const row = this.closest('.table_row');
-        const quantityInput = this.closest('.wrap-num-product').querySelector('.num-product');
-        const stockWarningElement = this.closest('.column-5').querySelector('.stock-warning');
-        
+
+        const productId = this.getAttribute("data-id");
+        const size = this.getAttribute("data-size");
+        const action = this.getAttribute("data-action");
+        const row = this.closest(".table_row");
+        const quantityInput =
+          this.closest(".wrap-num-product").querySelector(".num-product");
+        const stockWarningElement =
+          this.closest(".column-5").querySelector(".stock-warning");
+
         fetch(`/updateQuantity/${productId}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-                action,
-                size 
-            })
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action,
+            size,
+          }),
         })
-        .then(response => response.json())
-        .then(data => {
+          .then((response) => response.json())
+          .then((data) => {
             if (data.success) {
-                // Find the updated item in the returned cart data
-                const cartItem = data.cart.product.find(
-                    item => item.productId._id === productId && item.size === size
+              // Find the updated item in the returned cart data
+              const cartItem = data.cart.product.find(
+                (item) => item.productId._id === productId && item.size === size
+              );
+
+              if (cartItem) {
+                // Update the quantity input
+                quantityInput.value = cartItem.quantity;
+
+                // Update the total price cell
+                const totalCell = row.querySelector(".column-6");
+                totalCell.textContent = cartItem.totalPrice.toFixed(2);
+
+                // Update cart totals
+                const cartTotalElement = document.querySelector(
+                  ".cart-totals .size-209 .mtext-110"
                 );
-                
-                if (cartItem) {
-                    // Update the quantity input
-                    quantityInput.value = cartItem.quantity;
-                    
-                    // Update the total price cell
-                    const totalCell = row.querySelector('.column-6');
-                    totalCell.textContent = cartItem.totalPrice.toFixed(2);
-                    
-                    // Update cart totals
-                    const cartTotalElement = document.querySelector('.cart-totals .size-209 .mtext-110');
-                    if (cartTotalElement && data.cart.totalPrice) {
-                        cartTotalElement.textContent = data.cart.totalPrice.toFixed(2);
-                    }
-                    
-                    // Check if we need to disable the increase button due to stock limitations
-                    const increaseButton = row.querySelector('.btn-num-product-up');
-                    if (data.stockInfo && data.stockInfo.isMaxed) {
-                        increaseButton.classList.add('disabled');
-                        increaseButton.disabled = true;
-                        
-                        // Show stock warning
-                        stockWarningElement.textContent = `Maximum stock (${data.stockInfo.available}) reached`;
-                        stockWarningElement.classList.remove('hidden');
-                    } else {
-                        increaseButton.classList.remove('disabled');
-                        increaseButton.disabled = false;
-                        stockWarningElement.classList.add('hidden');
-                    }
-                    
-                    // Display any stock warnings from the server
-                    if (data.stockWarning) {
-                        stockWarningElement.textContent = data.stockWarning;
-                        stockWarningElement.classList.remove('hidden');
-                    }
+                if (cartTotalElement && data.cart.totalPrice) {
+                  cartTotalElement.textContent =
+                    data.cart.totalPrice.toFixed(2);
                 }
-            } else {
-                alert(data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while updating quantity');
-        });
-    });
-});
 
-// Check initial stock status when page loads
-function checkInitialStockStatus() {
-    document.querySelectorAll('.table_row').forEach(row => {
-        const productId = row.getAttribute('data-product-id');
-        const size = row.getAttribute('data-size');
-        const quantityInput = row.querySelector('.num-product');
-        const currentQuantity = parseInt(quantityInput.value);
-        
-        fetch(`/product/${productId}/stock?size=${size}`, {
-            method: 'GET'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const availableStock = data.stockInfo.available;
-                const increaseButton = row.querySelector('.btn-num-product-up');
-                const stockWarningElement = row.querySelector('.stock-warning');
-                
-                // Disable increase button if at max stock
-                if (currentQuantity >= availableStock) {
-                    increaseButton.classList.add('disabled');
-                    increaseButton.disabled = true;
-                    
-                    stockWarningElement.textContent = `Maximum stock (${availableStock}) reached`;
-                    stockWarningElement.classList.remove('hidden');
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error checking stock:', error);
-        });
-    });
-}
+                // Check if we need to disable the increase button due to stock limitations
+                const increaseButton = row.querySelector(".btn-num-product-up");
+                if (data.stockInfo && data.stockInfo.isMaxed) {
+                  increaseButton.classList.add("disabled");
+                  increaseButton.disabled = true;
 
-document.querySelectorAll('.btn-remove-item').forEach(button => {
-    button.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        const productId = this.getAttribute('data-id');
-        const size = this.getAttribute('data-size');
-        
-        if (confirm('Are you sure you want to remove this item?')) {
-            fetch(`/deleteCartItem/${productId}`, {
-                method: "DELETE",
-                headers: { 
-                    'Content-Type': 'application/json' 
-                },
-                body: JSON.stringify({ size })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    this.closest('tr').remove();
-                    updateCartTotals(data.cart);
-                    if (document.querySelectorAll('.table_row').length === 0) {
-                        location.reload();
-                    }
+                  // Show stock warning
+                  stockWarningElement.textContent = `Maximum stock (${data.stockInfo.available}) reached`;
+                  stockWarningElement.classList.remove("hidden");
                 } else {
-                    alert('Error: ' + data.message);
+                  increaseButton.classList.remove("disabled");
+                  increaseButton.disabled = false;
+                  stockWarningElement.classList.add("hidden");
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while removing the item');
-            });
-        }
+
+                // Display any stock warnings from the server
+                if (data.stockWarning) {
+                  stockWarningElement.textContent = data.stockWarning;
+                  stockWarningElement.classList.remove("hidden");
+                }
+              }
+            } else {
+              alert(data.message);
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while updating quantity");
+          });
+      });
     });
-});
 
-function updateCartTotals(cart) {
-    const cartTotalElement = document.querySelector('.cart-totals .size-209 .mtext-110');
+  // Check initial stock status when page loads
+  function checkInitialStockStatus() {
+    document.querySelectorAll(".table_row").forEach((row) => {
+      const productId = row.getAttribute("data-product-id");
+      const size = row.getAttribute("data-size");
+      const quantityInput = row.querySelector(".num-product");
+      const currentQuantity = parseInt(quantityInput.value);
+
+      fetch(`/product/${productId}/stock?size=${size}`, {
+        method: "GET",
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            const availableStock = data.stockInfo.available;
+            const increaseButton = row.querySelector(".btn-num-product-up");
+            const stockWarningElement = row.querySelector(".stock-warning");
+
+            // Disable increase button if at max stock
+            if (currentQuantity >= availableStock) {
+              increaseButton.classList.add("disabled");
+              increaseButton.disabled = true;
+
+              stockWarningElement.textContent = `Maximum stock (${availableStock}) reached`;
+              stockWarningElement.classList.remove("hidden");
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Error checking stock:", error);
+        });
+    });
+  }
+
+  document.querySelectorAll(".btn-remove-item").forEach((button) => {
+    button.addEventListener("click", function (e) {
+      e.preventDefault();
+
+      const productId = this.getAttribute("data-id");
+      const size = this.getAttribute("data-size");
+
+      if (confirm("Are you sure you want to remove this item?")) {
+        fetch(`/deleteCartItem/${productId}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ size }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              this.closest("tr").remove();
+              updateCartTotals(data.cart);
+              if (document.querySelectorAll(".table_row").length === 0) {
+                location.reload();
+              }
+            } else {
+              alert("Error: " + data.message);
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while removing the item");
+          });
+      }
+    });
+  });
+
+  function updateCartTotals(cart) {
+    const cartTotalElement = document.querySelector(
+      ".cart-totals .size-209 .mtext-110"
+    );
     if (cartTotalElement && cart.totalPrice) {
-        cartTotalElement.textContent = cart.totalPrice.toFixed(2);
+      cartTotalElement.textContent = cart.totalPrice.toFixed(2);
     }
-}
+  }
 
-// Optional: Run the initial stock check when the page loads
-// Uncomment if you add the endpoint for checking stock separately
-// document.addEventListener('DOMContentLoaded', checkInitialStockStatus);
+  // Optional: Run the initial stock check when the page loads
+  // Uncomment if you add the endpoint for checking stock separately
+  // document.addEventListener('DOMContentLoaded', checkInitialStockStatus);
 </script>
 
 <style>
+  .table-shopping-cart {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+  }
+
+  .table-shopping-cart th,
+  .table-shopping-cart td {
+    padding: 1rem;
+    text-align: center;
+    vertical-align: middle;
+    border-bottom: 1px solid #eee;
+  }
+
+  .table-shopping-cart th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+  }
+
+  .how-itemcart1 img {
+    max-width: 80px;
+    height: auto;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .wrap-num-product {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e6e6e6;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .btn-num-product-up,
+  .btn-num-product-down {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .btn-num-product-up:hover,
+  .btn-num-product-down:hover {
+    background-color: #e9ecef;
+  }
+
+  .btn-num-product-up.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f0f0f0;
+  }
+
+  .btn-num-product-up.disabled:hover {
+    background-color: #f0f0f0;
+  }
+
+  .num-product {
+    width: 50px;
+    height: 40px;
+    text-align: center;
+    border: none;
+    border-left: 1px solid #e6e6e6;
+    border-right: 1px solid #e6e6e6;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+  .btn-buy-now,
+  .btn-remove-item {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+  }
+
+  .btn-buy-now {
+    background-color: #28a745;
+    color: white;
+  }
+
+  .btn-buy-now:hover {
+    background-color: #218838;
+  }
+
+  .btn-remove-item {
+    background-color: #dc3545;
+    color: white;
+  }
+
+  .btn-remove-item:hover {
+    background-color: #c82333;
+  }
+
+  .cart-totals {
+    background-color: #f8f9fa;
+    padding: 2rem;
+    border-radius: 4px;
+    margin-top: 2rem;
+  }
+
+  .cart-totals h4 {
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  .bor12 {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .stock-warning {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
     .table-shopping-cart {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 2rem;
+      font-size: 0.875rem;
     }
-    
-    .table-shopping-cart th,
-    .table-shopping-cart td {
-        padding: 1rem;
-        text-align: center;
-        vertical-align: middle;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .table-shopping-cart th {
-        background-color: #f8f9fa;
-        font-weight: 600;
-    }
-    
+
     .how-itemcart1 img {
-        max-width: 80px;
-        height: auto;
-        object-fit: cover;
-        border-radius: 4px;
+      max-width: 60px;
     }
-    
-    .wrap-num-product {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid #e6e6e6;
-        border-radius: 4px;
-        overflow: hidden;
-    }
-    
-    .btn-num-product-up,
-    .btn-num-product-down {
-        width: 40px;
-        height: 40px;
-        border: none;
-        background-color: #f8f9fa;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-    
-    .btn-num-product-up:hover,
-    .btn-num-product-down:hover {
-        background-color: #e9ecef;
-    }
-    
-    .btn-num-product-up.disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        background-color: #f0f0f0;
-    }
-    
-    .btn-num-product-up.disabled:hover {
-        background-color: #f0f0f0;
-    }
-    
-    .num-product {
-        width: 50px;
-        height: 40px;
-        text-align: center;
-        border: none;
-        border-left: 1px solid #e6e6e6;
-        border-right: 1px solid #e6e6e6;
-    }
-    
-    .action-buttons {
-        display: flex;
-        gap: 0.5rem;
-        justify-content: center;
-    }
-    
+
     .btn-buy-now,
     .btn-remove-item {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 0.875rem;
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8125rem;
     }
-    
-    .btn-buy-now {
-        background-color: #28a745;
-        color: white;
+
+    .wrap-num-product {
+      transform: scale(0.9);
     }
-    
-    .btn-buy-now:hover {
-        background-color: #218838;
-    }
-    
-    .btn-remove-item {
-        background-color: #dc3545;
-        color: white;
-    }
-    
-    .btn-remove-item:hover {
-        background-color: #c82333;
-    }
-    
+
     .cart-totals {
-        background-color: #f8f9fa;
-        padding: 2rem;
-        border-radius: 4px;
-        margin-top: 2rem;
+      padding: 1rem;
     }
-    
-    .cart-totals h4 {
-        margin-bottom: 1rem;
-        font-weight: 600;
+  }
+
+  @media (max-width: 576px) {
+    .table-shopping-cart th,
+    .table-shopping-cart td {
+      padding: 0.5rem;
     }
-    
-    .bor12 {
-        border-bottom: 1px solid #dee2e6;
-        padding-bottom: 1rem;
-        margin-bottom: 1rem;
+
+    .action-buttons {
+      flex-direction: column;
     }
-    
-    .stock-warning {
-        color: #dc3545;
-        font-size: 12px;
-        margin-top: 5px;
+
+    .how-itemcart1 img {
+      max-width: 50px;
     }
-    
-    .hidden {
-        display: none;
-    }
-    
-    @media (max-width: 768px) {
-        .table-shopping-cart {
-            font-size: 0.875rem;
-        }
-    
-        .how-itemcart1 img {
-            max-width: 60px;
-        }
-    
-        .btn-buy-now,
-        .btn-remove-item {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.8125rem;
-        }
-    
-        .wrap-num-product {
-            transform: scale(0.9);
-        }
-    
-        .cart-totals {
-            padding: 1rem;
-        }
-    }
-    
-    @media (max-width: 576px) {
-        .table-shopping-cart th,
-        .table-shopping-cart td {
-            padding: 0.5rem;
-        }
-    
-        .action-buttons {
-            flex-direction: column;
-        }
-    
-        .how-itemcart1 img {
-            max-width: 50px;
-        }
-    }
+  }
 </style>
 
 <%- include("../../views/partials/users/footer.ejs") %>

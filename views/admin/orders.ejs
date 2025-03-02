@@ -69,7 +69,7 @@
                                     </div>
                                 <% }) %>
                             </td>
-                            <td><strong><%= order.totalAmount.toFixed(2) %></strong></td>
+                            <td><strong><%= order.totalAmount %></strong></td>
                             <td>
                                 <span class="badge bg-warning ">
                                     <%= order.paymentMethod %>
@@ -91,10 +91,10 @@
                                             onclick="updateOrderStatus('<%= order._id %>', '<%= order.orderStatus %>')">
                                         Update Status
                                     </button>
-                                    <button class="btn btn-sm btn-info" 
-                                            onclick="viewOrderDetails('<%= order._id %>')">
+                                    <a href="/admin/orders/<%= order._id %>" class="btn btn-sm btn-info">
                                         View Details
-                                    </button>
+                                    </a>
+                                    
                                 </div>
                             </td>
                         </tr>
