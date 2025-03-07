@@ -1,176 +1,206 @@
 <%- include("../../views/partials/users/header.ejs") %>
 
-<div
-  class="page-header text-center"
-  style="background-image: url('/asset3/images/page-header-bg.jpg')"
->
-  <div class="container">
-    <h1 class="page-title">Your Cart<span>Shop</span></h1>
-  </div>
-</div>
-
-<form class="bg0 p-t-75 p-b-85">
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-10 col-xl-7 m-lr-auto m-b-50">
-        <div class="m-l-25 m-r--38 m-lr-0-xl">
-          <div class="wrap-table-shopping-cart">
-            <table class="table-shopping-cart">
-              <tr class="table_head">
-                <th class="column-1">Product</th>
-                <th class="column-2">Title</th>
-                <th class="column-3">Size</th>
-                <th class="column-4">Price</th>
-                <th class="column-5">Quantity</th>
-                <th class="column-6">Total</th>
-                <th class="column-7">Actions</th>
-              </tr>
-
-              <% if (cart && cart.product.length > 0) { %> <%
-              cart.product.forEach(item => { %>
-              <tr
-                class="table_row"
-                data-product-id="<%= item.productId._id %>"
-                data-size="<%= item.size %>"
-              >
-                <td class="column-1">
-                  <div class="how-itemcart1">
-                    <% if (item.productId && item.productId.image &&
-                    item.productId.image.length > 0) { %>
-                    <img
-                      src="<%= item.productId.image[0] %>"
-                      alt="<%= item.productId.title %>"
-                      class="product-image"
-                    />
-                    <% } else { %>
-                    <img
-                      src="/default-image.jpg"
-                      alt="No Image Available"
-                      class="product-image"
-                    />
-                    <% } %>
-                  </div>
-                </td>
-                <td class="column-2">
-                  <a href="/show/<%= item.productId._id %>">
-                    <%= item.productId.title %>
-                  </a>
-                </td>
-                <td class="column-3"><%= item.size %></td>
-                <td class="column-4">
-                    <td class="column-4">
-                        <td class="column-4">
-                            <% if (item.hasDiscount && item.discountedPrice) { %>
-                            <div>
-                              <span style="color: red; text-decoration: line-through;">
-                                ₹<%= item.originalPrice.toFixed(2) %> <!-- Original Price -->
-                              </span>
-                              <br>
-                              <span style="color: #4caf50; font-weight: bold">
-                                ₹<%= item.price.toFixed(2) %> <!-- Discounted Price -->
-                              </span>
-                            </div>
-                            <% } else { %>
-                            ₹<%= item.price.toFixed(2) %> <!-- Regular Price -->
-                            <% } %>
-                        </td>
-                        
-                      </td>
-                      
-                </td>
-                <td class="column-5">
-                  <div class="wrap-num-product flex-w m-l-auto m-r-0">
-                    <button
-                      class="btn-num-product-down cl8 hov-btn3 trans-04 flex-c-m"
-                      data-id="<%= item.productId._id %>"
-                      data-size="<%= item.size %>"
-                      data-action="decrease"
-                    >
-                      <i class="fs-16 zmdi zmdi-minus"></i>
-                    </button>
-                    <input
-                      class="mtext-104 cl3 txt-center num-product"
-                      type="number"
-                      value="<%= item.quantity %>"
-                      readonly
-                    />
-                    <button
-                      class="btn-num-product-up cl8 hov-btn3 trans-04 flex-c-m"
-                      data-id="<%= item.productId._id %>"
-                      data-size="<%= item.size %>"
-                      data-action="increase"
-                    >
-                      <i class="fs-16 zmdi zmdi-plus"></i>
-                    </button>
-                  </div>
-                  <div
-                    class="stock-warning hidden mt-2"
-                    style="color: #dc3545; font-size: 12px"
-                  >
-                    <!-- Stock warning message will appear here -->
-                  </div>
-                </td>
-                <td class="column-6">
-                  <% if (item.hasDiscount) { %>
-                  <div>
-                    <span style="color: #4caf50; font-weight: bold">
-                      ₹<%= item.totalPrice.toFixed(2) %>
-                    </span>
-                  </div>
-
-                  <% } else { %> ₹<%= item.totalPrice.toFixed(2) %> <% } %>
-                </td>
-                <td class="column-7">
-                  <div class="action-buttons">
-                    <a
-                      href="/checkout/<%= item.productId._id %>"
-                      class="btn-buy-now"
-                    >
-                      Buy Now
-                    </a>
-                    <button
-                      class="btn-remove-item"
-                      data-id="<%= item.productId._id %>"
-                      data-size="<%= item.size %>"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <% }); %> <% } else { %>
-              <tr>
-                <td colspan="7" class="text-center">Your cart is empty.</td>
-              </tr>
-              <% } %>
-            </table>
-
-            <div class="cart-totals mt-4">
-              <h4 class="mtext-109 cl2 p-b-30">Cart Totals</h4>
-              <div class="flex-w flex-t bor12 p-b-13">
-                <div class="size-208">
-                  <span class="stext-110 cl2">Subtotal:</span>
-                </div>
-                <div class="size-209">
-                  <span class="mtext-110 cl2">
-                    <%= cart && cart.totalPrice ? cart.totalPrice.toFixed(2) :
-                    '0.00' %>
-                  </span>
-                </div>
-              </div>
-              <a
-                href="/cart-checkout"
-                class="flex-c-m stext-101 cl0 size-116 bg3 bor14 hov-btn3 p-lr-15 trans-04 pointer mt-3 proceed-to-checkout"
-              >
-                Proceed to Checkout
-              </a>
-            </div>
-          </div>
+<main class="main">
+    <div class="page-header text-center" style="background-image: url('/asset3/images/page-header-bg.jpg')">
+        <div class="container">
+            <h1 class="page-title">Shopping Cart<span>Shop</span></h1>
         </div>
-      </div>
     </div>
-  </div>
-</form>
+
+    <nav aria-label="breadcrumb" class="breadcrumb-nav">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item"><a href="#">Shop</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Shopping Cart</li>
+            </ol>
+        </div>
+    </nav>
+
+    <div class="page-content">
+        <div class="cart">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-9">
+                        <table class="table table-cart table-mobile">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Size</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <% if (cart && cart.product.length > 0) { %>
+                                <% cart.product.forEach(item => { %>
+                                <tr class="table_row" data-product-id="<%= item.productId._id %>" data-size="<%= item.size %>">
+                                    <td class="product-col">
+                                        <div class="product">
+                                            <figure class="product-media">
+                                                <a href="/show/<%= item.productId._id %>">
+                                                    <% if (item.productId && item.productId.image && item.productId.image.length > 0) { %>
+                                                    <img src="<%= item.productId.image[0] %>" alt="<%= item.productId.title %>" class="product-image">
+                                                    <% } else { %>
+                                                    <img src="/default-image.jpg" alt="No Image Available" class="product-image">
+                                                    <% } %>
+                                                </a>
+                                            </figure>
+
+                                            <h3 class="product-title">
+                                                <a href="/show/<%= item.productId._id %>"><%= item.productId.title %></a>
+                                            </h3>
+                                        </div>
+                                    </td>
+                                    <td class="price-col">
+                                        <% if (item.hasDiscount && item.discountedPrice) { %>
+                                        <div>
+                                            <span class="old-price">₹<%= item.originalPrice.toFixed(2) %></span>
+                                            <span class="new-price">₹<%= item.price.toFixed(2) %></span>
+                                        </div>
+                                        <% } else { %>
+                                        ₹<%= item.price.toFixed(2) %>
+                                        <% } %>
+                                    </td>
+                                    <td class="size-col"><%= item.size %></td>
+                                    <td class="quantity-col">
+                                        <div class="cart-product-quantity">
+                                            <div class="input-group quantity-group">
+                                                <div class="input-group-prepend">
+                                                    <button class="btn-num-product-down" 
+                                                            data-id="<%= item.productId._id %>" 
+                                                            data-size="<%= item.size %>" 
+                                                            data-action="decrease">
+                                                        <i class="icon-minus"></i>
+                                                    </button>
+                                                </div>
+                                                <input type="number" class="form-control num-product" value="<%= item.quantity %>" readonly>
+                                                <div class="input-group-append">
+                                                    <button class="btn-num-product-up" 
+                                                            data-id="<%= item.productId._id %>" 
+                                                            data-size="<%= item.size %>" 
+                                                            data-action="increase">
+                                                        <i class="icon-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="stock-warning hidden mt-2"></div>
+                                        </div>
+                                    </td>
+                                    <td class="total-col">
+                                        <% if (item.hasDiscount) { %>
+                                        <span class="discount-price">₹<%= item.totalPrice.toFixed(2) %></span>
+                                        <% } else { %>
+                                        ₹<%= item.totalPrice.toFixed(2) %>
+                                        <% } %>
+                                    </td>
+                                    <td class="remove-col">
+                                      <div class="d-flex">
+                                          <a href="/checkout/<%= item.productId._id %>" class="btn-buy-now mb-2">
+                                              <i class="icon-shopping-cart"></i> Buy
+                                          </a>
+                                          <button class="btn-remove" 
+                                                  data-id="<%= item.productId._id %>" 
+                                                  data-size="<%= item.size %>">
+                                              <i class="icon-close"></i>
+                                          </button>
+                                      </div>
+                                  </td>
+                                </tr>
+                                <% }); %>
+                                <% } else { %>
+                                <tr>
+                                    <td colspan="6" class="text-center">Your cart is empty.</td>
+                                </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+
+                        <div class="cart-bottom">
+                            <div class="cart-discount">
+                                <form action="#">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" required placeholder="coupon code">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-primary-2" type="submit"><i class="icon-long-arrow-right"></i></button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <button href="#" class="btn btn-outline-dark-2"><span>UPDATE CART</span><i class="icon-refresh"></i></button>
+                        </div>
+                    </div>
+
+                    <aside class="col-lg-3">
+                        <div class="summary summary-cart">
+                            <h3 class="summary-title">Cart Total</h3>
+
+                            <table class="table table-summary">
+                                <tbody>
+                                    <tr class="summary-subtotal">
+                                        <td>Subtotal:</td>
+                                        <td>₹<%= cart && cart.totalPrice ? cart.totalPrice.toFixed(2) : '0.00' %></td>
+                                    </tr>
+                                    <tr class="summary-shipping">
+                                        <td>Shipping:</td>
+                                        <td>&nbsp;</td>
+                                    </tr>
+
+                                    <tr class="summary-shipping-row">
+                                        <td>
+                                            <div class="custom-control custom-radio">
+                                                <input type="radio" id="free-shipping" name="shipping" class="custom-control-input" checked>
+                                                <label class="custom-control-label" for="free-shipping">Free Shipping</label>
+                                            </div>
+                                        </td>
+                                        <td>₹0.00</td>
+                                    </tr>
+
+                                    <tr class="summary-shipping-row">
+                                        <td>
+                                            <div class="custom-control custom-radio">
+                                                <input type="radio" id="standart-shipping" name="shipping" class="custom-control-input">
+                                                <label class="custom-control-label" for="standart-shipping">Standard:</label>
+                                            </div>
+                                        </td>
+                                        <td>₹49.00</td>
+                                    </tr>
+
+                                    <tr class="summary-shipping-row">
+                                        <td>
+                                            <div class="custom-control custom-radio">
+                                                <input type="radio" id="express-shipping" name="shipping" class="custom-control-input">
+                                                <label class="custom-control-label" for="express-shipping">Express:</label>
+                                            </div>
+                                        </td>
+                                        <td>₹99.00</td>
+                                    </tr>
+
+                                    <tr class="summary-shipping-estimate">
+                                        <td>Estimate for Your Location<br> <a href="#">Change address</a></td>
+                                        <td>&nbsp;</td>
+                                    </tr>
+
+                                    <tr class="summary-total">
+                                        <td>Total:</td>
+                                        <td>₹<%= cart && cart.totalPrice ? cart.totalPrice.toFixed(2) : '0.00' %></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <a href="/cart-checkout" class="btn btn-outline-primary-2 btn-order btn-block proceed-to-checkout">PROCEED TO CHECKOUT</a>
+                        </div>
+
+                        <a href="/" class="btn btn-outline-dark-2 btn-block mb-3"><span>CONTINUE SHOPPING</span><i class="icon-refresh"></i></a>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
 
 <script>
   // Quantity update functionality
@@ -184,10 +214,8 @@
         const size = this.getAttribute("data-size");
         const action = this.getAttribute("data-action");
         const row = this.closest(".table_row");
-        const quantityInput =
-          this.closest(".wrap-num-product").querySelector(".num-product");
-        const stockWarningElement =
-          this.closest(".column-5").querySelector(".stock-warning");
+        const quantityInput = this.closest(".quantity-group").querySelector(".num-product");
+        const stockWarningElement = this.closest(".quantity-col").querySelector(".stock-warning");
 
         fetch(`/updateQuantity/${productId}`, {
           method: "PATCH",
@@ -212,16 +240,19 @@
                 quantityInput.value = cartItem.quantity;
 
                 // Update the total price cell
-                const totalCell = row.querySelector(".column-6");
-                totalCell.textContent = cartItem.totalPrice.toFixed(2);
+                const totalCell = row.querySelector(".total-col");
+                totalCell.innerHTML = cartItem.hasDiscount ? 
+                  `<span class="discount-price">₹${cartItem.totalPrice.toFixed(2)}</span>` : 
+                  `₹${cartItem.totalPrice.toFixed(2)}`;
 
                 // Update cart totals
-                const cartTotalElement = document.querySelector(
-                  ".cart-totals .size-209 .mtext-110"
-                );
-                if (cartTotalElement && data.cart.totalPrice) {
-                  cartTotalElement.textContent =
-                    data.cart.totalPrice.toFixed(2);
+                const cartSubtotalElement = document.querySelector(".summary-subtotal td:last-child");
+                const cartTotalElement = document.querySelector(".summary-total td:last-child");
+                
+                if (cartSubtotalElement && cartTotalElement && data.cart.totalPrice) {
+                  const formattedTotal = `₹${data.cart.totalPrice.toFixed(2)}`;
+                  cartSubtotalElement.textContent = formattedTotal;
+                  cartTotalElement.textContent = formattedTotal;
                 }
 
                 // Check if we need to disable the increase button due to stock limitations
@@ -290,7 +321,8 @@
     });
   }
 
-  document.querySelectorAll(".btn-remove-item").forEach((button) => {
+  // Remove item functionality
+  document.querySelectorAll(".btn-remove").forEach((button) => {
     button.addEventListener("click", function (e) {
       e.preventDefault();
 
@@ -326,187 +358,291 @@
   });
 
   function updateCartTotals(cart) {
-    const cartTotalElement = document.querySelector(
-      ".cart-totals .size-209 .mtext-110"
-    );
-    if (cartTotalElement && cart.totalPrice) {
-      cartTotalElement.textContent = cart.totalPrice.toFixed(2);
+    const cartSubtotalElement = document.querySelector(".summary-subtotal td:last-child");
+    const cartTotalElement = document.querySelector(".summary-total td:last-child");
+    
+    if (cartSubtotalElement && cartTotalElement && cart.totalPrice) {
+      const formattedTotal = `₹${cart.totalPrice.toFixed(2)}`;
+      cartSubtotalElement.textContent = formattedTotal;
+      cartTotalElement.textContent = formattedTotal;
     }
   }
 
   // Optional: Run the initial stock check when the page loads
-  // Uncomment if you add the endpoint for checking stock separately
-  // document.addEventListener('DOMContentLoaded', checkInitialStockStatus);
+  document.addEventListener('DOMContentLoaded', checkInitialStockStatus);
 </script>
 
 <style>
-  .table-shopping-cart {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 2rem;
-  }
+  /* Add these CSS rules to your existing styles */
 
-  .table-shopping-cart th,
-  .table-shopping-cart td {
-    padding: 1rem;
-    text-align: center;
-    vertical-align: middle;
-    border-bottom: 1px solid #eee;
-  }
+/* Center the quantity input in the td */
+/* Add these CSS rules to your existing styles */
 
-  .table-shopping-cart th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-  }
+/* Center the quantity input in the td but with left offset */
+.quantity-col {
+  vertical-align: middle;
+}
 
-  .how-itemcart1 img {
+.cart-product-quantity {
+  width: 100px;
+  margin: 0 auto 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-15px); /* This moves the quantity input to the left */
+}
+
+/* Adjust the layout for the Buy and Remove buttons */
+.remove-col .d-flex {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.btn-buy-now {
+  margin-right: 0;
+  margin-bottom: 10px;
+  width: 100%;
+  text-align: center;
+}
+
+/* For mobile responsiveness */
+@media (max-width: 767px) {
+  .cart-product-quantity {
+    margin: 0 auto;
+    transform: translateX(0); /* Reset the offset on mobile */
+  }
+  
+  .remove-col .d-flex {
+    position: static;
+    margin-top: 1rem;
+  }
+}
+  .product-media {
+    position: relative;
+    margin: 0;
+    margin-right: 2rem;
+    flex-shrink: 0;
+    float: left;
+  }
+  
+  .product-media img {
     max-width: 80px;
     height: auto;
     object-fit: cover;
-    border-radius: 4px;
   }
-
-  .wrap-num-product {
+  
+  .product-title {
+    font-weight: 400;
+    font-size: 1.6rem;
+    line-height: 1.25;
+    letter-spacing: -.01em;
+    color: #333;
+    margin-bottom: .5rem;
+  }
+  
+  .product-title a {
+    color: inherit;
+  }
+  
+  .cart-product-quantity {
+    width: 100px;
+    margin: 0 auto;
+  }
+  
+  .quantity-group {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #e6e6e6;
-    border-radius: 4px;
-    overflow: hidden;
+    border: 1px solid #ddd;
+    border-radius: 3px;
   }
-
+  
   .btn-num-product-up,
   .btn-num-product-down {
-    width: 40px;
+    width: 30px;
     height: 40px;
     border: none;
-    background-color: #f8f9fa;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+    background-color: #f9f9f9;
+    color: #333;
+    transition: all .3s;
   }
-
+  
   .btn-num-product-up:hover,
   .btn-num-product-down:hover {
-    background-color: #e9ecef;
+    background-color: #fcb941;
+    color: #fff;
   }
-
+  
   .btn-num-product-up.disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background-color: #f0f0f0;
+    background-color: #f9f9f9;
   }
-
-  .btn-num-product-up.disabled:hover {
-    background-color: #f0f0f0;
-  }
-
+  
   .num-product {
-    width: 50px;
     height: 40px;
+    width: 40px;
     text-align: center;
+    font-weight: 400;
+    font-size: 1.4rem;
     border: none;
-    border-left: 1px solid #e6e6e6;
-    border-right: 1px solid #e6e6e6;
   }
-
-  .action-buttons {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
+  
+  .old-price {
+    text-decoration: line-through;
+    color: #ccc;
+    display: block;
   }
-
-  .btn-buy-now,
-  .btn-remove-item {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.875rem;
+  
+  .new-price, 
+  .discount-price {
+    color: #4caf50;
+    font-weight: bold;
   }
-
+  
   .btn-buy-now {
-    background-color: #28a745;
-    color: white;
+    background-color: #fcb941;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    transition: all .3s;
   }
-
+  
   .btn-buy-now:hover {
-    background-color: #218838;
+    background-color: #ffa900;
+    color: #fff;
   }
-
-  .btn-remove-item {
+  
+  .btn-remove {
+    width: 30px;
+    height: 30px;
+    border: none;
     background-color: #dc3545;
-    color: white;
+    color: #fff;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .3s;
   }
-
-  .btn-remove-item:hover {
+  
+  .btn-remove:hover {
     background-color: #c82333;
   }
-
-  .cart-totals {
-    background-color: #f8f9fa;
-    padding: 2rem;
-    border-radius: 4px;
-    margin-top: 2rem;
+  
+  .cart-bottom {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4rem;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    border-top: 1px solid #ebebeb;
   }
-
-  .cart-totals h4 {
-    margin-bottom: 1rem;
-    font-weight: 600;
+  
+  .cart-discount form {
+    max-width: 340px;
   }
-
-  .bor12 {
-    border-bottom: 1px solid #dee2e6;
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
-  }
-
+  
   .stock-warning {
     color: #dc3545;
     font-size: 12px;
     margin-top: 5px;
   }
-
+  
   .hidden {
     display: none;
   }
-
-  @media (max-width: 768px) {
-    .table-shopping-cart {
-      font-size: 0.875rem;
-    }
-
-    .how-itemcart1 img {
-      max-width: 60px;
-    }
-
-    .btn-buy-now,
-    .btn-remove-item {
-      padding: 0.375rem 0.75rem;
-      font-size: 0.8125rem;
-    }
-
-    .wrap-num-product {
-      transform: scale(0.9);
-    }
-
-    .cart-totals {
-      padding: 1rem;
-    }
+  
+  .summary-cart {
+    margin-bottom: 2rem;
+    padding: 2.5rem 3rem 3rem;
+    border: 1px solid #ebebeb;
+  }
+  
+  .summary-title {
+    font-weight: 500;
+    font-size: 1.6rem;
+    letter-spacing: -.01em;
+    margin-bottom: 1.7rem;
+  }
+  
+  .table-summary td {
+    padding: 10px 5px;
+    vertical-align: top;
+    border-bottom: 1px solid #ebebeb;
+  }
+  
+  .summary-shipping-row label {
+    font-size: 1.4rem;
+    text-transform: capitalize;
+  }
+  
+  .summary-shipping-estimate a {
+    color: #777;
+    text-decoration: underline;
   }
 
-  @media (max-width: 576px) {
-    .table-shopping-cart th,
-    .table-shopping-cart td {
-      padding: 0.5rem;
-    }
-
-    .action-buttons {
+  @media (max-width: 991px) {
+    .cart-bottom {
       flex-direction: column;
     }
-
-    .how-itemcart1 img {
-      max-width: 50px;
+    
+    .cart-discount {
+      margin-bottom: 2rem;
+    }
+  }
+  
+  @media (max-width: 767px) {
+    .table-mobile, 
+    .table-mobile tbody, 
+    .table-mobile tr, 
+    .table-mobile td {
+      display: block;
+      width: 100%;
+    }
+    
+    .table-mobile thead {
+      display: none;
+    }
+    
+    .table-mobile tr {
+      position: relative;
+      padding: 2rem 0;
+      border-bottom: 1px solid #ebebeb;
+    }
+    
+    .table-mobile td {
+      text-align: center;
+      padding: 0.5rem;
+      border: none;
+    }
+    
+    .table-mobile .product-col {
+      text-align: center;
+    }
+    
+    .table-mobile .product-media {
+      display: inline-block;
+      float: none;
+      margin-right: 0;
+      margin-bottom: 1rem;
+    }
+    
+    .product-title {
+      text-align: center;
+    }
+    
+    .table-mobile .quantity-col {
+      display: flex;
+      justify-content: center;
+      padding: 1rem 0;
+    }
+    
+    .remove-col {
+      position: absolute;
+      right: 0;
+      top: 1rem;
     }
   }
 </style>

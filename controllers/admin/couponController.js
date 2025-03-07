@@ -2,13 +2,12 @@ const Coupon = require('../../models/couponSchema');
 
 const couponPageInfo = async (req, res) => {
     try {
-        // Use find() instead of findOne() to get all coupons
         const coupons = await Coupon.find({});
-        res.render('coupon', { coupons }); // Make sure the path matches your view structure
+        res.render('coupon', { coupons });
     } catch (error) {
         console.error('Error fetching coupons:', error);
-        res.status(500).render('error', { message: 'Error loading coupons' });
-    }
+        next(error)
+        }
 };
 
 
@@ -27,7 +26,6 @@ const addCoupon = async (req, res) => {
             return res.status(400).json({ message: "Invalid discount or minPurchase value!" });
         }
 
-        // Validate discount value based on type
         if (discount === 'percentage' && (parsedDiscountValue < 0 || parsedDiscountValue > 100)) {
             return res.status(400).json({ message: "Percentage discount must be between 0 and 100!" });
         }
@@ -39,7 +37,7 @@ const addCoupon = async (req, res) => {
         const couponData = new Coupon({
             name,
             code,
-            discount, // 'percentage' or 'fixed'
+            discount, 
             discountValue: parsedDiscountValue,
             expireDate: new Date(expireDate),
             minPurchase: parsedMinPurchase
@@ -52,20 +50,20 @@ const addCoupon = async (req, res) => {
         res.status(201).json({ message: "Coupon added successfully!", data: couponData });
     } catch (error) {
         console.error("Error adding coupon:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
+        next(error)
+        }
 };
 
 
 const deleteCoupon = async (req, res) => {
-    const couponId = req.params.id; // Fix: Use 'id' (not 'Id')
+    const couponId = req.params.id; 
 
     console.log("Coupon ID (Backend):", couponId);
 
     try {
-        const coupon = await Coupon.findByIdAndDelete(couponId); // Fix: Remove {}
+        const coupon = await Coupon.findByIdAndDelete(couponId); 
 
-        if (!coupon) { // Fix: Check for 'null' instead of returning on success
+        if (!coupon) { 
             return res.status(404).json({ success: false, message: "Coupon not found" });
         }
 
@@ -73,21 +71,22 @@ const deleteCoupon = async (req, res) => {
 
     } catch (error) {
         console.error("Error deleting coupon:", error);
-        return res.status(500).json({ success: false, message: "Internal server error" });
-    }
+        next(error)    }
 };
 
 const editCouponDetails=async(req,res)=>{
    const couponId=req.params.id;
    try {
     const coupon=await Coupon.findById(couponId);
-    if(!coupon){
-        alert('coupon not found')
+    if (!coupon) { 
+        res.status(404); // ✅ Set status before calling next()
+        return next(new Error("Coupon not found"));
     }
     res.render('editCoupon',{coupon})
     
    } catch (error) {
     console.log(error.message);
+    next(error)
    }
 }
 
@@ -143,8 +142,8 @@ const editCoupon = async (req, res) => {
 
     } catch (error) {
         console.error("Error updating coupon:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
+        next(error)
+        }
 };
 
 const getEligibleCoupons = async (req, res) => {
@@ -156,7 +155,6 @@ const getEligibleCoupons = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid cart total" });
         }
         
-        // Find all valid coupons where minPurchase <= cart total and not expired
         const eligibleCoupons = await Coupon.find({
             minPurchase: { $lte: total },
             expireDate: { $gt: new Date() }
@@ -165,11 +163,10 @@ const getEligibleCoupons = async (req, res) => {
         res.status(200).json({ success: true, coupons: eligibleCoupons });
     } catch (error) {
         console.error("Error fetching eligible coupons:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
-    }
+        next(error)
+        }
 };
 
-// New function to apply a coupon to the cart
 const applyCoupon = async (req, res) => {
     try {
         const { code, cartTotal } = req.body;
@@ -184,7 +181,6 @@ const applyCoupon = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid cart total" });
         }
         
-        // Find the coupon with the given code
         const coupon = await Coupon.findOne({ 
             code: code,
             expireDate: { $gt: new Date() }
@@ -194,7 +190,6 @@ const applyCoupon = async (req, res) => {
             return res.status(404).json({ success: false, message: "Invalid or expired coupon" });
         }
         
-        // Check if cart total meets minimum purchase requirement
         if (total < coupon.minPurchase) {
             return res.status(400).json({ 
                 success: false, 
@@ -202,7 +197,6 @@ const applyCoupon = async (req, res) => {
             });
         }
         
-        // Calculate discount
         let discountAmount = 0;
         if (coupon.discount === 'percentage') {
             discountAmount = (total * coupon.discountValue) / 100;
@@ -210,10 +204,8 @@ const applyCoupon = async (req, res) => {
             discountAmount = coupon.discountValue;
         }
         
-        // Calculate new total
         const newTotal = total - discountAmount;
         
-        // Return the results
         res.status(200).json({
             success: true,
             coupon: {
@@ -228,8 +220,8 @@ const applyCoupon = async (req, res) => {
         
     } catch (error) {
         console.error("Error applying coupon:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
-    }
+        next(error)
+        }
 };
 
 

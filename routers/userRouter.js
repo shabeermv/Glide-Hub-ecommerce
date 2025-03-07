@@ -68,15 +68,16 @@ userRouter.post('/return-order',checkoutController.returnOrder);
 userRouter.post('/create-razorpay-order',checkoutController.razorpayCreation);
 userRouter.post('/verify-razorpay-payment',checkoutController.verifyRazorPay);
 
-userRouter.get('/wallet',checkoutController.userWalletInfo);
 
 
 
 userRouter.get('/blog',userController.blogInfo);
 
 userRouter.get('/contact',userController.contactInfo);
+userRouter.post('/send-email',userController.sendMessage)
 
 userRouter.get('/about',userController.aboutInfo);
+
 
 
 module.exports=userRouter;

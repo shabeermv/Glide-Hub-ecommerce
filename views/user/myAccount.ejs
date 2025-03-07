@@ -1,11 +1,7 @@
 <%-include("../../views/partials/users/header.ejs")%>
 
-
-
 <body>
     <div class="page-wrapper">
-        
-
         <main class="main">
         	<div class="page-header text-center" style="background-image: url('/asset3/images/page-header-bg.jpg')">
         		<div class="container">
@@ -35,14 +31,14 @@
 								        <a class="nav-link" id="tab-orders-link" data-toggle="tab" href="#tab-orders" role="tab" aria-controls="tab-orders" aria-selected="false">Orders</a>
 								    </li>
 								    <li class="nav-item">
-                                        <a class="nav-link" id="tab-wallet-link" data-toggle="tab" href="#tab-wallet" role="tab" aria-controls="tab-wallet" aria-selected="false">Wallet</a>								    </li>
+                                        <a class="nav-link" id="tab-wallet-link" data-toggle="tab" href="#tab-wallet" role="tab" aria-controls="tab-wallet" aria-selected="false">Wallet</a>
+                                    </li>
 								    <li class="nav-item">
 								        <a class="nav-link" id="tab-address-link" data-toggle="tab" href="#tab-address" role="tab" aria-controls="tab-address" aria-selected="false">Adresses</a>
 								    </li>
                                     <li class="nav-item">
-								        <a class="nav-link" id="tab-address-link" data-toggle="tab" href="#tab-address" role="tab" aria-controls="tab-address" aria-selected="false">Coupons & Offers</a>
+								        <a class="nav-link" id="tab-coupons-link" data-toggle="tab" href="#tab-coupons" role="tab" aria-controls="tab-coupons" aria-selected="false">Coupons & Offers</a>
 								    </li>
-								    
 								    <li class="nav-item">
 								        <a class="nav-link" href="/logout">Sign Out</a>
 								    </li>
@@ -51,21 +47,28 @@
 
 	                		<div class="col-md-8 col-lg-9">
 	                			<div class="tab-content">
-								    
-                                    <div style="margin-top: 30px;">
-                                        <!-- My Cart Button -->
-                                        <a href="/cart" class="btn btn-success" style="margin-right: 10px;">
-                                            My Cart
-                                        </a>
-                                        <!-- My Wishlist Button -->
-                                        <a href="/wishlist" class="btn btn-primary"style="margin-right: 10px;">
-                                            My Wishlist
-                                        </a>
-                                        <a href="/resetPassword" class="btn btn-secondary">
-                                            Reset Password
-                                        </a>
-                                    </div><!-- .End .tab-pane -->
+                                    <!-- Dashboard Tab -->
+                                    <div class="tab-pane fade show active" id="tab-dashboard" role="tabpanel" aria-labelledby="tab-dashboard-link">
+                                        <div style="margin-top: 30px;">
+                                            <!-- My Cart Button -->
+                                            <a href="/cart" class="btn btn-success" style="margin-right: 10px;">
+                                                My Cart
+                                            </a>
+                                            <!-- My Wishlist Button -->
+                                            <a href="/wishlist" class="btn btn-primary"style="margin-right: 10px;">
+                                                My Wishlist
+                                            </a>
+                                            <a href="/resetPassword" class="btn btn-secondary">
+                                                Reset Password
+                                            </a>
+                                        </div>
+                                        
+                                        <div class="mt-4">
+                                            <a href="/shop" class="btn btn-outline-primary-2"><span>GO SHOP</span><i class="icon-long-arrow-right"></i></a>
+                                        </div>
+                                    </div><!-- End .tab-pane -->
 
+                                    <!-- Orders Tab -->
                                     <div class="tab-pane fade" id="tab-orders" role="tabpanel" aria-labelledby="tab-orders-link">
                                         <div class="container">
                                             <h3 class="mb-4">Your Orders</h3>
@@ -134,35 +137,77 @@
                                                 </div>
                                             <% } %>
                                         </div>
-                                    
-                                        <!-- Order Details Modal -->
-                                        <div class="modal fade" id="orderDetailsModal" tabindex="-1" role="dialog" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
-                                            <div class="modal-dialog modal-lg" role="document">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
-                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                            <span aria-hidden="true">&times;</span>
-                                                        </button>
-                                                    </div>
-                                                    <div class="modal-body" id="orderDetailsContent">
-                                                        <!-- Content will be dynamically loaded here -->
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    </div><!-- End .tab-pane -->
+
+                                    <!-- Wallet Tab -->
+                                    <div class="tab-pane fade" id="tab-wallet" role="tabpanel" aria-labelledby="tab-wallet-link">
+                                        <div class="container">
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <div class="card card-dashboard">
+                                                        <div class="card-body">
+                                                            <h3 class="card-title">Wallet Balance</h3>
+                                                            <div class="wallet-balance-section mb-4">
+                                                                <h2 class="text-primary">₹<%= user.wallet ? user.wallet.toFixed(2) : '0.00' %></h2>
+                                                                <p class="text-muted">Available Balance</p>
+                                                            </div>
+
+                                                            <div class="wallet-actions mb-4">
+                                                                <button class="btn btn-primary mr-2" data-toggle="modal" data-target="#addMoneyModal">
+                                                                    <i class="icon-plus"></i> Add Money
+                                                                </button>
+                                                                <button class="btn btn-outline-primary" data-toggle="modal" data-target="#withdrawModal">
+                                                                    <i class="icon-minus"></i> Withdraw
+                                                                </button>
+                                                            </div>
+
+                                                            <div class="wallet-transactions">
+                                                                <h4 class="mb-3">Recent Transactions</h4>
+                                                                <% if (user.walletTransactions && user.walletTransactions.length > 0) { %>
+                                                                    <div class="table-responsive">
+                                                                        <table class="table">
+                                                                            <thead>
+                                                                                <tr>
+                                                                                    <th>Date</th>
+                                                                                    <th>Type</th>
+                                                                                    <th>Amount</th>
+                                                                                    <th>Status</th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                                <% user.walletTransactions.forEach(transaction => { %>
+                                                                                    <tr>
+                                                                                        <td><%= new Date(transaction.date).toLocaleDateString() %></td>
+                                                                                        <td><%= transaction.type %></td>
+                                                                                        <td class="<%= transaction.type === 'credit' ? 'text-success' : 'text-danger' %>">
+                                                                                            <%= transaction.type === 'credit' ? '+' : '-' %>$<%= transaction.amount.toFixed(2) %>
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            <span class="badge badge-<%= transaction.status === 'completed' ? 'success' : 'warning' %>">
+                                                                                                <%= transaction.status %>
+                                                                                            </span>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                <% }); %>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                <% } else { %>
+                                                                    <div class="alert alert-info">
+                                                                        No transactions yet.
+                                                                    </div>
+                                                                <% } %>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                   
-                                    
-								    	<a href="/shop" class="btn btn-outline-primary-2"><span>GO SHOP</span><i class="icon-long-arrow-right"></i></a>
-								    </div><!-- .End .tab-pane -->
+                                    </div><!-- End .tab-pane -->
 
-								   
-								    <div class="tab-pane fade" id="tab-address" role="tabpanel" aria-labelledby="tab-address-link">
-								    	<p>The following addresses will be used on the checkout page by default.</p>
+                                    <!-- Address Tab -->
+                                    <div class="tab-pane fade" id="tab-address" role="tabpanel" aria-labelledby="tab-address-link">
+                                        <p>The following addresses will be used on the checkout page by default.</p>
                                         <div class="row">
                                             <% user.address.forEach(function(address, index) { %>
                                                 <div class="col-lg-6">
@@ -180,7 +225,7 @@
                                                                 <%= address.postCode %><br>
                                                                 <%= address.country %><br>
                                                                 <a href="/editProfile/<%= address._id %>">Edit <i class="icon-edit"></i></a>
-                                                                <button type="submit"  class="btn btn-danger" data-address-id="<%= address._id %>">Delete</button>
+                                                                <button type="submit" class="btn btn-danger" data-address-id="<%= address._id %>">Delete</button>
                                                             </p>
                                                         </div><!-- End .card-body -->
                                                     </div><!-- End .card-dashboard -->
@@ -193,29 +238,28 @@
                                                 <i class="icon-plus"></i>
                                             </a>
                                         </div>
-                                       
                                         
-                                            <form action="#" id="colorfulAddressForm" style="background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); width: 50vw; max-width: 600px; margin-top: 40px;">
-                                        
+                                        <div id="addressFormContainer" class="mt-4">
+                                            <form action="#" id="colorfulAddressForm" style="background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); width: 100%; max-width: 600px; margin-top: 40px;">
                                                 <h2 style="text-align: center; color: #3a3b3d; margin-bottom: 20px;">Add Address</h2>
                                         
                                                 <label for="fullName" style="color: #343a40; font-weight: bold;">Full Name *</label>
-                                                <input type="text" id="fullName" name="fullName" class="form-control"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                                <input type="text" id="fullName" name="fullName" class="form-control" style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
                                         
                                                 <label for="address" style="color: #343a40; font-weight: bold;">Address *</label>
-                                                <input type="text" id="address" name="address" class="form-control"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                                <input type="text" id="address" name="address" class="form-control" style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
                                         
                                                 <label for="city" style="color: #343a40; font-weight: bold;">City *</label>
-                                                <input type="text" id="city" name="city" class="form-control"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                                <input type="text" id="city" name="city" class="form-control" style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
                                         
                                                 <label for="state" style="color: #343a40; font-weight: bold;">State *</label>
-                                                <input type="text" id="state" name="state" class="form-control"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                                <input type="text" id="state" name="state" class="form-control" style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
                                         
                                                 <label for="postCode" style="color: #3a3b3d; font-weight: bold;">Post Code *</label>
-                                                <input type="text" id="postCode" name="postCode" class="form-control"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                                <input type="text" id="postCode" name="postCode" class="form-control" style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
                                         
                                                 <label for="country" style="color: #3a3b3d; font-weight: bold;">Country *</label>
-                                                <input type="text" id="country" name="country" class="form-control"  style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                                <input type="text" id="country" name="country" class="form-control" style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
                                         
                                                 <button id="confirm" type="submit" class="btn btn-block" style="background-color: #3a3b3d; color: #fff; font-weight: bold; padding: 15px; border-radius: 8px; width: 100%; font-size: 1.2rem;">
                                                     SAVE CHANGES
@@ -224,217 +268,187 @@
                                                 <div id="response-message" class="mt-3" style="text-align: center;"></div>
                                             </form>
                                         </div>
-                                        <div class="tab-pane fade" id="tab-wallet" role="tabpanel" aria-labelledby="tab-wallet-link">
-    <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <div class="card card-dashboard">
-                    <div class="card-body">
-                        <h3 class="card-title">Wallet Balance</h3>
-                        <div class="wallet-balance-section mb-4">
-                            <h2 class="text-primary">$<%= user.walletBalance ? user.walletBalance.toFixed(2) : '0.00' %></h2>
-                            <p class="text-muted">Available Balance</p>
+                                    </div><!-- End .tab-pane -->
+                                    
+                                    <!-- Coupons & Offers Tab -->
+                                    <div class="tab-pane fade" id="tab-coupons" role="tabpanel" aria-labelledby="tab-coupons-link">
+                                        <div class="container">
+                                            <h3 class="mb-4">Your Coupons & Offers</h3>
+                                            <div class="alert alert-info">
+                                                <p class="mb-0">You don't have any active coupons or offers at the moment.</p>
+                                            </div>
+                                        </div>
+                                    </div><!-- End .tab-pane -->
+                                </div><!-- End .tab-content -->
+	                		</div><!-- End .col-lg-9 -->
+	                	</div><!-- End .row -->
+	                </div><!-- End .container -->
+                </div><!-- End .dashboard -->
+            </div><!-- End .page-content -->
+        </main><!-- End .main -->
+
+        <!-- Add Money Modal -->
+        <div class="modal fade" id="addMoneyModal" tabindex="-1" role="dialog" aria-labelledby="addMoneyModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addMoneyModalLabel">Add Money to Wallet</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form id="addMoneyForm" action="/wallet/add-money" method="POST">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="amount">Amount ($)</label>
+                                <input type="number" class="form-control" id="amount" name="amount" min="1" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="paymentMethod">Payment Method</label>
+                                <select class="form-control" id="paymentMethod" name="paymentMethod" required>
+                                    <option value="card">Credit/Debit Card</option>
+                                    <option value="bank">Bank Transfer</option>
+                                </select>
+                            </div>
                         </div>
-
-                        <div class="wallet-actions mb-4">
-                            <button class="btn btn-primary mr-2" data-toggle="modal" data-target="#addMoneyModal">
-                                <i class="icon-plus"></i> Add Money
-                            </button>
-                            <button class="btn btn-outline-primary" data-toggle="modal" data-target="#withdrawModal">
-                                <i class="icon-minus"></i> Withdraw
-                            </button>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add Money</button>
                         </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-                        <div class="wallet-transactions">
-                            <h4 class="mb-3">Recent Transactions</h4>
-                            <% if (user.walletTransactions && user.walletTransactions.length > 0) { %>
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Date</th>
-                                                <th>Type</th>
-                                                <th>Amount</th>
-                                                <th>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <% user.walletTransactions.forEach(transaction => { %>
-                                                <tr>
-                                                    <td><%= new Date(transaction.date).toLocaleDateString() %></td>
-                                                    <td><%= transaction.type %></td>
-                                                    <td class="<%= transaction.type === 'credit' ? 'text-success' : 'text-danger' %>">
-                                                        <%= transaction.type === 'credit' ? '+' : '-' %>$<%= transaction.amount.toFixed(2) %>
-                                                    </td>
-                                                    <td>
-                                                        <span class="badge badge-<%= transaction.status === 'completed' ? 'success' : 'warning' %>">
-                                                            <%= transaction.status %>
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            <% }); %>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            <% } else { %>
-                                <div class="alert alert-info">
-                                    No transactions yet.
-                                </div>
-                            <% } %>
+        <!-- Withdraw Modal -->
+        <div class="modal fade" id="withdrawModal" tabindex="-1" role="dialog" aria-labelledby="withdrawModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="withdrawModalLabel">Withdraw Money</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form id="withdrawForm" action="/wallet/withdraw" method="POST">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="withdrawAmount">Amount ($)</label>
+                                <input type="number" class="form-control" id="withdrawAmount" name="amount" min="1" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="withdrawMethod">Withdrawal Method</label>
+                                <select class="form-control" id="withdrawMethod" name="withdrawMethod" required>
+                                    <option value="bank">Bank Account</option>
+                                    <option value="card">Credit/Debit Card</option>
+                                </select>
+                            </div>
                         </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Withdraw</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Details Modal -->
+        <div class="modal fade" id="orderDetailsModal" tabindex="-1" role="dialog" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="orderDetailsContent">
+                        <!-- Content will be dynamically loaded here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Add Money Modal -->
-<div class="modal fade" id="addMoneyModal" tabindex="-1" role="dialog" aria-labelledby="addMoneyModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addMoneyModalLabel">Add Money to Wallet</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form id="addMoneyForm" action="/wallet/add-money" method="POST">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="amount">Amount ($)</label>
-                        <input type="number" class="form-control" id="amount" name="amount" min="1" step="0.01" required>
+        <!-- Success Modal -->
+        <div id="successModal" class="modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Success</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label for="paymentMethod">Payment Method</label>
-                        <select class="form-control" id="paymentMethod" name="paymentMethod" required>
-                            <option value="card">Credit/Debit Card</option>
-                            <option value="bank">Bank Transfer</option>
-                        </select>
+                    <div class="modal-body">
+                        <p id="modalMessage">Address added successfully!</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Money</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Withdraw Modal -->
-<div class="modal fade" id="withdrawModal" tabindex="-1" role="dialog" aria-labelledby="withdrawModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="withdrawModalLabel">Withdraw Money</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form id="withdrawForm" action="/wallet/withdraw" method="POST">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="withdrawAmount">Amount ($)</label>
-                        <input type="number" class="form-control" id="withdrawAmount" name="amount" min="1" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="withdrawMethod">Withdrawal Method</label>
-                        <select class="form-control" id="withdrawMethod" name="withdrawMethod" required>
-                            <option value="bank">Bank Account</option>
-                            <option value="card">Credit/Debit Card</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Withdraw</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Add this to your existing styles -->
-<style>
-.wallet-balance-section {
-    background-color: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.wallet-balance-section h2 {
-    font-size: 2.5rem;
-    margin-bottom: 5px;
-}
-
-.wallet-actions {
-    text-align: center;
-}
-
-.wallet-transactions {
-    margin-top: 30px;
-}
-
-.table td, .table th {
-    vertical-align: middle;
-}
-</style>
-                                        
-                                        <!-- Modal -->
-<!-- Modal -->
-<div id="successModal" class="modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Success</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p id="modalMessage">Address added successfully!</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
-    </div>
-</div>
-<style>
-    .modal-dialog {
-    max-width: 600px;
-    margin: 30px auto;
-}
 
-/* Ensure that the modal content takes up the full width */
-.modal-content {
-    width: 100%;
-}
-.table thead th {
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-}
-
-.table td, .table th {
-    vertical-align: middle;
-}
-
-.badge {
-    font-size: 0.9rem;
-    padding: 8px 12px;
-}
-
-.btn-group .btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-}
-
-.modal-lg {
-    max-width: 800px;
-}
-</style>
+        <style>
+            /* Wallet styles */
+            .wallet-balance-section {
+                background-color: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                text-align: center;
+            }
+            
+            .wallet-balance-section h2 {
+                font-size: 2.5rem;
+                margin-bottom: 5px;
+            }
+            
+            .wallet-actions {
+                text-align: center;
+            }
+            
+            .wallet-transactions {
+                margin-top: 30px;
+            }
+            
+            /* Table styles */
+            .table td, .table th {
+                vertical-align: middle;
+            }
+            
+            .table thead th {
+                background-color: #f8f9fa;
+                border-bottom: 2px solid #dee2e6;
+            }
+            
+            .badge {
+                font-size: 0.9rem;
+                padding: 8px 12px;
+            }
+            
+            .btn-group .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+            
+            /* Modal styles */
+            .modal-dialog {
+                max-width: 600px;
+                margin: 30px auto;
+            }
+            
+            .modal-content {
+                width: 100%;
+            }
+            
+            .modal-lg {
+                max-width: 800px;
+            }
+        </style>
 <!-- End .row -->
                                         
 

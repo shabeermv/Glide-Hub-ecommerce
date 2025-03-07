@@ -210,7 +210,7 @@
 							</div>
 								
 							<div class="layer-slick1 animated visible-false" data-appear="zoomIn" data-delay="1600">
-								<a href="product.html" class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04">
+								<a href="/shop" class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04">
 									Shop Now
 								</a>
 							</div>
@@ -234,7 +234,7 @@
 							</div>
 								
 							<div class="layer-slick1 animated visible-false" data-appear="slideInUp" data-delay="1600">
-								<a href="product.html" class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04">
+								<a href="/shop" class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04">
 									Shop Now
 								</a>
 							</div>
@@ -258,7 +258,7 @@
 							</div>
 								
 							<div class="layer-slick1 animated visible-false" data-appear="rotateIn" data-delay="1600">
-								<a href="product.html" class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04">
+								<a href="/shop" class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04">
 									Shop Now
 								</a>
 							</div>
@@ -597,44 +597,81 @@
 				</div>
 			</div>
 
-			<div class="row isotope-grid">
-				<% products.forEach(product => { %>
-				  <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item <%= products?.category?.name.toLowerCase() || 'uncategorized' %>">
-					<!-- Block2 -->
-					<div class="block2">
-					  <div class="block2-pic hov-img0">
-						<!-- Use a placeholder image if product.images is empty or undefined -->
-						<img 
-						src="<%= product.image && product.image.length > 0 ? product.image[0] : '/images/placeholder.jpg' %>"
-							alt="<%= product.title %>">
-			  
-						<a href="/show/<%= product._id %>" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04">
-							Quick View
-						</a>
-					  </div>
-			  
-					  <div class="block2-txt flex-w flex-t p-t-14">
-						<div class="block2-txt-child1 flex-col-l">
-						  <a href="product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-							  <%= product.title %>
-						  </a>
-			  
-						  <span class="stext-105 cl3">
-							₹<%= product.price %>
-						  </span>
-						</div>
-			  
-						<div class="block2-txt-child2 flex-r p-t-3">
-						  <a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-							<img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-							<img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-						  </a>
-						</div>
-					  </div>
-					</div>
-				  </div>
-				<% }); %>
-			  </div>
+			<!-- Other HTML content above -->
+<div class="row flex-wrap">
+	<% updatedProducts.forEach(product => { %>
+	  <div class="col-sm-6 col-md-6 col-lg-3 p-b-35 isotope-item women">
+		<div class="block2">
+		  <div class="block2-pic hov-img0">
+			<img 
+			  src="<%= product.image && product.image.length > 0 ? product.image[0] : '/images/placeholder.jpg' %>"
+			  alt="<%= product.title %>"
+			  class="img-fluid"
+			/>
+			<a href="/show/<%= product._id %>" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04">
+			  Quick View
+			</a>
+		  </div>
+  
+		  <div class="block2-txt flex-w flex-t p-t-14">
+			<div class="block2-txt-child1 flex-col-l">
+			  <a href="/show/<%= product._id %>" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
+				<%= product.title %>
+			  </a>
+  
+			  <% if (product.hasDiscount) { %>
+				<!-- Discount badge - show offer type -->
+				<div class="offer-type-badge" style="background-color: <%= product.offerType === 'category' ? '#6c42f5' : '#dc3545' %>;">
+				  <%= product.offerType === 'category' ? 'CATEGORY OFFER' : 'PRODUCT OFFER' %>
+				</div>
+				
+				<!-- Price display with strikethrough -->
+				<div class="price-container">
+				  <span class="original-price">
+					₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+				  </span>
+				  <span class="discounted-price">
+					₹<%= parseFloat(product.discountedPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+				  </span>
+				</div>
+				
+				<!-- Discount information -->
+				<div class="discount-info">
+				  <span class="discount-badge">
+					<% if (product.appliedOffer.discountType === 'percentage') { %>
+					  <%= product.appliedOffer.discountValue %>% OFF
+					<% } else { %>
+					  ₹<%= product.appliedOffer.discountValue %> OFF
+					<% } %>
+				  </span>
+				  <span class="savings">
+					(Save ₹<%= Math.round(product.appliedOffer.discountAmount) %>)
+				  </span>
+				</div>
+				
+				<!-- Offer description -->
+				<div class="offer-description">
+				  <%= product.appliedOffer.description %>
+				</div>
+			  <% } else { %>
+				<p class="price" style="font-weight: bold; font-size: 1rem;">
+				  ₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+				</p>
+			  <% } %>
+			</div>
+			
+			<div class="block2-txt-child2 flex-r p-t-3">
+			  <a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
+				<img class="icon-heart1 dis-block trans-04" src="/images/icons/icon-heart-01.png" alt="ICON">
+				<img class="icon-heart2 dis-block trans-04 ab-t-l" src="/images/icons/icon-heart-02.png" alt="ICON">
+			  </a>
+			</div>
+		  </div>
+		</div>
+	  </div>
+	<% }); %>
+  </div>
+  <!-- Other HTML content below -->
 			  
 				
 

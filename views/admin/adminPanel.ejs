@@ -73,7 +73,7 @@
                                 <span class="icon icon-sm rounded-circle bg-primary-light"><i class="text-primary material-icons md-monetization_on"></i></span>
                                 <div class="text">
                                     <h6 class="mb-1 card-title">Revenue</h6>
-                                    <span>$13,456.5</span>
+                                    <span>13,456.5</span>
                                     <span class="text-sm"> Shipping fees are not included </span>
                                 </div>
                             </article>
@@ -101,7 +101,7 @@
                                 <div class="text">
                                     <h6 class="mb-1 card-title">Products</h6>
                                     <span><%= productCount %></span> 
-                                    <span class="text-sm"> In 19 Categories </span>
+                                    <span class="text-sm"> In 7 Categories </span>
                                 </div>
                             </article>
                         </div>
@@ -112,7 +112,7 @@
                                 <span class="icon icon-sm rounded-circle bg-info-light"><i class="text-info material-icons md-shopping_basket"></i></span>
                                 <div class="text">
                                     <h6 class="mb-1 card-title">Monthly Earning</h6>
-                                    <span>$6,982</span>
+                                    <span>6,982</span>
                                     <span class="text-sm"> Based in your local time. </span>
                                 </div>
                             </article>
@@ -322,7 +322,6 @@
                             <div class="col-md-2 col-12">
                                 <div class="custom_select">
                                     <select class="form-select select-nice">
-                                        <option selected>Status</option>
                                         <option>All</option>
                                         <% orderStatuses.forEach(status => { %>
                                             <option value="<%= status %>"><%= status %></option>
@@ -337,6 +336,16 @@
                     
                     <div id="ordersTableContainer" class="card-body">
                         <div class="table-responsive">
+                            <!-- Align buttons to the right -->
+                            <div class="d-flex justify-content-end gap-2 mb-3">
+                                <a href="/admin/downloadOrdersPDF" class="btn btn-primary">
+                                    <i class="material-icons md-file_download"></i> Download PDF
+                                </a>
+                                <a href="/admin/downloadOrdersExcel" class="btn btn-success">
+                                    <i class="material-icons md-table_view"></i> Download Excel
+                                </a>
+                            </div>
+                    
                             <div class="table-responsive">
                                 <table class="table align-middle table-nowrap mb-0">
                                     <thead class="table-light">
@@ -366,10 +375,16 @@
                                                             <label class="form-check-label" for="transactionCheck<%= index + 2 %>"></label>
                                                         </div>
                                                     </td>
-                                                    <td><a href="/admin/order/<%= order._id %>" class="fw-bold">#<%= order.orderId || order._id.toString().slice(-6).toUpperCase() %></a></td>
-                                                    <td><%= order.userId ? order.userId.name || (order.shippingAddress && order.shippingAddress.fullName ? order.shippingAddress.fullName : 'Unknown') : 'Unknown' %></td>
-                                                    <td><%= new Date(order.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
-                                                    <td>$<%= order.totalAmount ? order.totalAmount.toFixed(2) : '0.00' %></td>
+                                                    <td>
+                                                        <a href="/admin/orders/<%= order._id %>" class="fw-bold"><%= order.orderId || order._id.toString().slice(-6).toUpperCase() %></a>
+                                                    </td>
+                                                    <td>
+                                                        <%= order.userId ? order.userId.name || (order.shippingAddress && order.shippingAddress.fullName ? order.shippingAddress.fullName : 'Unknown') : 'Unknown' %>
+                                                    </td>
+                                                    <td>
+                                                        <%= new Date(order.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }) %>
+                                                    </td>
+                                                    <td><%= order.totalAmount ? order.totalAmount.toFixed(2) : '0.00' %></td>
                                                     <td>
                                                         <% if (order.paymentStatus === 'Completed') { %>
                                                             <span class="badge badge-pill badge-success">Paid</span>
@@ -381,10 +396,13 @@
                                                             <span class="badge badge-pill badge-warning">Pending</span>
                                                         <% } %>
                                                     </td>
-                                                    <td><i class="material-icons md-payment font-xxl text-muted mr-5"></i> <%= order.paymentMethod && order.paymentMethod.length > 0 ? order.paymentMethod[0] : 'Unknown' %></td>
                                                     <td>
-                                                        <a href="/admin/order/details/<%= order._id %>" class="btn btn-xs"> View details</a>
+                                                        <i class="material-icons md-payment font-xxl text-muted mr-5"></i> <%= order.paymentMethod && order.paymentMethod.length > 0 ? order.paymentMethod[0] : 'Unknown' %>
                                                     </td>
+                                                    <td>
+                                                        <a href="/admin/orders/<%= order._id %>" class="btn btn-sm btn-info">
+                                                            View Details
+                                                        </a>                                                    </td>
                                                 </tr>
                                             <% }); %>
                                         <% } else { %>
@@ -396,8 +414,8 @@
                                 </table>
                             </div>
                         </div>
-                        
                     </div>
+                    
                 </div>
                 <div class="pagination-area mt-30 mb-50">
                     <nav aria-label="Page navigation">

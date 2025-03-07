@@ -75,8 +75,7 @@ const addProductWishlist = async (req, res) => {
         res.status(200).json({ success: true, message: "Product added to wishlist" });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: "Internal server error" });
-    }
+        next(error)    }
 };
 
 const removeWishlistItem = async (req, res) => {
@@ -114,10 +113,7 @@ const removeWishlistItem = async (req, res) => {
         });
     } catch (error) {
         console.error('Backend Error:', error.message); 
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error. Please try again later.',
-        });
+        next(error)
     }
 };
 

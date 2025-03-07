@@ -23,7 +23,7 @@ const getCategory = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        res.redirect('/pageerr');
+        next(error)
     }
 };
 
@@ -49,8 +49,8 @@ const addCategory = async (req, res) => {
         return res.json({ success: true, message: 'Category added successfully' });
     } catch (error) {
         console.error('Error adding category:', error.message);
-        return res.status(500).json({ success: false, message: error.message });
-    }
+        next(error)
+        }
 };
 
 
@@ -72,12 +72,11 @@ const renderEditCategory = async (req,res) => {
         res.render('editCategory', { category });
     } catch (error) {
         console.error('Error while rendering edit category page:', error.message);
-        res.status(500).json({message:"internal server eerror"});
-    }
+        next(error)
+        }
 };
 
 
-// Update category
 const updateCategory = async (req, res) => {
     try {
         console.log('ivde ethi......');
@@ -98,11 +97,9 @@ const updateCategory = async (req, res) => {
         res.status(200).json({ success: true, message: 'Category updated successfully', category: updatedCategory });
     } catch (error) {
         console.error('Error updating category:', error.message);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-    }
+        next(error)    }
 };
 
-// Delete category
 const deleteCategory = async (req, res) => {
     try {
         const { id } = req.params;
@@ -121,8 +118,7 @@ const deleteCategory = async (req, res) => {
         res.status(200).json({ success: true, message: 'Category soft deleted successfully' });
     } catch (error) {
         console.error('Error soft deleting category:', error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-    }
+        next(error)    }
 };
 const toggleCategoryStatus = async (req, res) => {
     try {
@@ -145,15 +141,14 @@ const toggleCategoryStatus = async (req, res) => {
       });
     } catch (error) {
       console.error('Error toggling category status:', error);
-      res.status(500).json({ success: false, message: 'Internal server error' });
-    }
+      next(error)    }
   };
 
 
   const viewCategoryOfferInfo = async (req, res) => {
     try {
         const categories = await Category.find();
-        const categoryOffers = await categoryOffer.find().populate('categoryId'); // Populate category details
+        const categoryOffers = await categoryOffer.find().populate('categoryId'); 
         
         if (!categories) {
             return res.status(404).json({ success: false, message: 'Categories not found' });
@@ -165,8 +160,7 @@ const toggleCategoryStatus = async (req, res) => {
         });
     } catch (error) {
         console.log(error.message, 'have an error in category offer');
-        res.status(500).render('error', { message: 'Server error' });
-    }
+        next(error)    }
 };
 
 const addCategoryOffer = async (req, res) => {
@@ -179,12 +173,10 @@ const addCategoryOffer = async (req, res) => {
             return res.status(400).json({ success: false, message: 'All fields are required' });
         }
 
-        // Validate discountType
         if (!['percentage', 'fixed'].includes(discountType)) {
             return res.status(400).json({ success: false, message: 'Invalid discount type' });
         }
 
-        // Create a new category offer
         const offerCategory = new categoryOffer({
             description,
             discountType,
@@ -194,15 +186,15 @@ const addCategoryOffer = async (req, res) => {
             categoryId: selectedCategory
         });
 
-        await offerCategory.save(); // Save to MongoDB
+        await offerCategory.save(); 
         console.log('offer saved',offerCategory);
         
 
         return res.status(200).json({ success: true, message: 'Saved successfully.' });
     } catch (error) {
         console.error('Error in addCategoryOffer:', error);
-        return res.status(500).json({ success: false, message: 'Internal server error on addCategoryOffer' });
-    }
+        next(error)
+        }
 };
 
 const deleteCategoryOffer=async(req,res)=>{
@@ -218,8 +210,7 @@ const deleteCategoryOffer=async(req,res)=>{
     } catch (error) {
         console.log(error.message,'this is the error message');
 
-        return res.status(500).json({success:false,message:"internal server error in delete categoty offer"});
-        
+        next(error)        
     }
     
 
@@ -230,7 +221,6 @@ const updateCategoryOffer = async (req, res) => {
         const { id } = req.params;
         const { description, selectedCategory, discountType, discountValue, startDate, endDate } = req.body;
         
-        // Validate discount value based on type
         if (discountType === 'percentage' && (discountValue <= 0 || discountValue > 100)) {
             return res.status(400).json({ 
                 success: false, 
@@ -245,7 +235,6 @@ const updateCategoryOffer = async (req, res) => {
             });
         }
         
-        // Check for date validity
         const start = new Date(startDate);
         const end = new Date(endDate);
         
@@ -256,14 +245,13 @@ const updateCategoryOffer = async (req, res) => {
             });
         }
         
-        // Check if another offer exists for this category with overlapping dates
         const existingOffer = await categoryOffer.findOne({
-            _id: { $ne: id }, // Exclude current offer
+            _id: { $ne: id }, 
             categoryId: selectedCategory,
             $or: [
-                { startDate: { $lte: start }, endDate: { $gte: start } }, // New offer starts during existing offer
-                { startDate: { $lte: end }, endDate: { $gte: end } }, // New offer ends during existing offer
-                { startDate: { $gte: start }, endDate: { $lte: end } } // New offer completely contains existing offer
+                { startDate: { $lte: start }, endDate: { $gte: start } },
+                { startDate: { $lte: end }, endDate: { $gte: end } }, 
+                { startDate: { $gte: start }, endDate: { $lte: end } } 
             ]
         });
         
@@ -274,7 +262,6 @@ const updateCategoryOffer = async (req, res) => {
             });
         }
         
-        // Update the offer
         const updatedOffer = await categoryOffer.findByIdAndUpdate(
             id,
             {
@@ -299,8 +286,7 @@ const updateCategoryOffer = async (req, res) => {
         });
     } catch (error) {
         console.error('Error updating category offer:', error);
-        res.status(500).json({ success: false, message: 'Failed to update category offer' });
-    }
+        next(error)    }
 };
 
 module.exports = {
@@ -313,5 +299,5 @@ module.exports = {
     viewCategoryOfferInfo,
     addCategoryOffer,
     deleteCategoryOffer,
-    updateCategoryOffer // Removed the extra comma here
+    updateCategoryOffer 
 };

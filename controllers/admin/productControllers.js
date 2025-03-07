@@ -38,8 +38,8 @@ const productsInfo = async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching products:', error);
-        res.status(500).send('Server error');
-    }
+        next(error)
+        }
 };
 
 const addProductInfo = async (req, res) => {
@@ -48,8 +48,7 @@ const addProductInfo = async (req, res) => {
         res.render('productAdd', { categories });
     } catch (error) {
         console.error('Error fetching categories:', error);
-        res.status(500).send('Internal Server Error');
-    }
+        next(error)    }
 };
 
 
@@ -128,8 +127,7 @@ const productAdd = async (req, res) => {
         res.status(200).json({ success: true, message: 'Product saved successfully.' });
     } catch (error) {
         console.error('Error adding product:', error);
-        res.status(500).send('Internal Server Error');
-    }
+        next(error)    }
 };
 
 
@@ -174,8 +172,7 @@ const renderEditProduct = async (req, res) => {
 
     } catch (error) {
         console.error('Error in renderEditProduct:', error);
-        res.status(500).send('Internal Server Error');
-    }
+        next(error)    }
 };
 
 const updateProduct = async (req, res) => {
@@ -307,11 +304,7 @@ const updateProduct = async (req, res) => {
                 }
             }
         }
-        res.status(500).json({ 
-            success: false, 
-            message: 'Internal server error',
-            error: error.message 
-        });
+        next(error)
     }
 };
 
@@ -337,8 +330,7 @@ const softDeleteProduct = async (req, res) => {
         res.json({ success: true, message: 'Product soft deleted successfully' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
+        next(error)    }
 };
 
 const recoverProduct = async (req, res) => {
@@ -358,8 +350,7 @@ const recoverProduct = async (req, res) => {
         res.json({ success: true, message: 'Product recovered successfully' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
+        next(error)    }
 };
 
 
@@ -368,29 +359,25 @@ const recoverProduct = async (req, res) => {
 
 const viewProductOfferInfo = async (req, res) => {
     try {
-        // Fetch all product offers and populate the product details
         const productOffers = await ProductOffer.find()
-            .populate({ path: 'productId', select: 'title' }) // Ensure product title is fetched
-            .lean(); // Convert to plain objects for EJS rendering
+            .populate({ path: 'productId', select: 'title' })
+            .lean(); 
 
-        // Fetch all products for adding new offers
         const products = await Product.find({}, 'title').lean();
 
         res.render('productOffer', {
-            productOffers, // Pass product offers to EJS
-            products, // Pass product list for dropdown selection
+            productOffers, 
+            products, 
         });
     } catch (error) {
         console.error('Error fetching product offers:', error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-    }
+        next(error)    }
 };
 
 
 
 
 
- // Ensure correct import
 
 const addProductOffer = async (req, res) => {
     const { description, selectedProduct, discountType, discountValue, startDate, endDate } = req.body;
@@ -402,24 +389,20 @@ const addProductOffer = async (req, res) => {
             return res.status(400).json({ success: false, message: 'All fields are required' });
         }
 
-        // Validate discountType
         if (!['percentage', 'fixed'].includes(discountType)) {
             return res.status(400).json({ success: false, message: 'Invalid discount type' });
         }
 
-        // Check if the product exists before adding the offer
         const productExists = await Product.findById(selectedProduct);
         if (!productExists) {
             return res.status(404).json({ success: false, message: 'Product not found' });
         }
 
-        // Check if an offer already exists for the product
         const existingOffer = await ProductOffer.findOne({ productId: selectedProduct });
         if (existingOffer) {
             return res.status(400).json({ success: false, message: 'An offer already exists for this product' });
         }
 
-        // Create a new product offer
         const offerProduct = new ProductOffer({
             description,
             discountType,
@@ -429,13 +412,12 @@ const addProductOffer = async (req, res) => {
             productId: selectedProduct
         });
 
-        await offerProduct.save(); // Save to MongoDB
+        await offerProduct.save(); 
 
         return res.status(200).json({ success: true, message: 'Product offer saved successfully.' });
     } catch (error) {
         console.error('Error in addProductOffer:', error);
-        return res.status(500).json({ success: false, message: 'Internal server error on addProductOffer' });
-    }
+        next(error)    }
 };
 const deleteProductOffer=async(req,res)=>{
     try {
@@ -444,8 +426,7 @@ const deleteProductOffer=async(req,res)=>{
         res.json({ success: true, message: "Offer deleted successfully." });
     } catch (error) {
         console.error("Error deleting offer:", error);
-        res.status(500).json({ success: false, message: "Failed to delete offer." });
-    }
+        next(error)    }
 
 }
 const editProductOffer=async(req,res)=>{
@@ -462,8 +443,7 @@ const editProductOffer=async(req,res)=>{
         res.json({ success: true, message: "Offer updated successfully.", offer: updatedOffer });
     } catch (error) {
         console.error("Error updating offer:", error);
-        res.status(500).json({ success: false, message: "Failed to update offer." });
-    }
+        next(error)    }
 }
 
     

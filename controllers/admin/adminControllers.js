@@ -27,12 +27,10 @@ const getHome = async (req, res) => {
             const categories = await Category.find();
             const orderStatuses = await Order.distinct('orderStatus');
 
-            // Pagination setup
             const page = parseInt(req.query.page) || 1;
-            const limit = 5; // Number of items per page
+            const limit = 5;
             const skip = (page - 1) * limit;
 
-            // Fetch paginated orders
             const recentOrders = await Order.find()
                 .populate('userId', 'name email')
                 .populate('products.productId', 'title price')
@@ -51,7 +49,7 @@ const getHome = async (req, res) => {
                 orderStatuses,
                 currentPage: page,
                 totalPages,
-                selectedCategory: 'All Categories' // Set default selected category
+                selectedCategory: 'All Categories' 
             });
         }
         res.render('adminLogin');
@@ -64,19 +62,16 @@ const getHome = async (req, res) => {
     }
 };
 
-// Filter by category controller - fixed to handle AJAX requests
 const filterCategoryList = async(req, res) => {
     try {
         const { categoryId } = req.query;
         const isAjaxRequest = req.xhr || req.headers.accept.indexOf('json') > -1;
         
-        // Default values
         let orderCount = await Order.countDocuments();
         let productCount = await Products.countDocuments();
         let categories = await Category.find();
         let orderStatuses = ['Pending', 'Shipped', 'Delivered', 'Cancelled', 'Returned'];
         
-        // Set up pagination
         const page = parseInt(req.query.page) || 1;
         const limit = 5;
         const skip = (page - 1) * limit;
@@ -85,17 +80,13 @@ const filterCategoryList = async(req, res) => {
         let recentOrders = [];
         let totalOrders = 0;
         
-        // If not "All Categories", filter by category
         if (categoryId && categoryId !== 'All Categories') {
-            // Find products in the selected category
             const products = await Products.find({ category: categoryId });
             const productIds = products.map(product => product._id);
             
-            // Set up query to find orders with products in the category
             query = { 'products.productId': { $in: productIds } };
         }
         
-        // Get filtered orders with pagination
         recentOrders = await Order.find(query)
             .populate('userId', 'name email')
             .populate('products.productId', 'title price')
@@ -103,11 +94,9 @@ const filterCategoryList = async(req, res) => {
             .skip(skip)
             .limit(limit);
             
-        // Count total filtered orders for pagination
         totalOrders = await Order.countDocuments(query);
         const totalPages = Math.ceil(totalOrders / limit);
         
-        // For AJAX requests, return JSON
         if (isAjaxRequest) {
             return res.json({
                 recentOrders,
@@ -116,7 +105,6 @@ const filterCategoryList = async(req, res) => {
             });
         }
         
-        // For regular requests, render the full page
         return res.render('adminPanel', {
             orderCount,
             productCount,
@@ -131,15 +119,11 @@ const filterCategoryList = async(req, res) => {
     } catch (error) {
         console.error('Error filtering orders by category:', error);
         
-        // Handle different response types based on request type
         if (req.xhr || req.headers.accept.indexOf('json') > -1) {
             return res.status(500).json({ error: 'Server error while filtering orders' });
         }
         
-        return res.status(500).render('error', {
-            message: 'Server error while filtering orders by category',
-            error
-        });
+        next(error)
     }
 };
 
@@ -185,7 +169,6 @@ const getFilterByDate=async(req,res)=>{
                 return res.status(400).json({ success: false, message: "Invalid filter type" });
         }
 
-        // Fetch orders within the selected date range
         const orders = await Order.find({
             createdAt: { $gte: start, $lte: end }
         })
@@ -196,8 +179,7 @@ const getFilterByDate=async(req,res)=>{
         res.json({ success: true, orders });
     } catch (error) {
         console.error("Error fetching orders by date:", error);
-        res.status(500).json({ success: false, message: "Server error while filtering orders" });
-    }
+        next(error)    }
 }
 
 const postAdmin = async (req, res) => {
@@ -229,8 +211,7 @@ const postAdmin = async (req, res) => {
 
     } catch (error) {
         console.error(error.message);
-        return res.status(500).json({ success: false, message: "Internal server error" });
-    }
+        next(error)    }
 };
 
 const logoutAdmin = (req, res) => {
@@ -249,21 +230,17 @@ const logoutAdmin = (req, res) => {
   };
   const downloadOrdersPDF = async (req, res) => {
     try {
-        const orders = await Order.find().populate('userId'); // Fetch orders with user details
+        const orders = await Order.find().populate('userId');
 
-        // Create a new PDF document
         const doc = new PDFDocument({ margin: 30 });
 
-        // Set response headers for PDF download
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename="orders.pdf"');
 
-        doc.pipe(res); // Send PDF to response
+        doc.pipe(res); 
 
-        // Add Title
         doc.fontSize(20).text('Order Details Report', { align: 'center' }).moveDown(2);
 
-        // Table Headers
         doc.fontSize(12).text('Order ID', 50, doc.y, { continued: true })
             .text('Customer', 150, doc.y, { continued: true })
             .text('Total Amount', 300, doc.y, { continued: true })
@@ -271,9 +248,8 @@ const logoutAdmin = (req, res) => {
             .text('Date', 500, doc.y)
             .moveDown();
 
-        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke(); // Draw a line
+        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke(); 
 
-        // Loop through orders and add details
         orders.forEach(order => {
             const orderId = order.orderId || order._id.toString().slice(-6).toUpperCase();
             const customerName = order.userId ? order.userId.name || order.shippingAddress?.fullName || 'Unknown' : 'Unknown';
@@ -289,7 +265,7 @@ const logoutAdmin = (req, res) => {
                 .text(orderDate, 500, doc.y);
         });
 
-        doc.end(); // Finalize the document
+        doc.end(); 
     } catch (error) {
         console.error('Error generating PDF:', error);
         if (!res.headersSent) {
@@ -300,13 +276,11 @@ const logoutAdmin = (req, res) => {
 
 const downloadOrdersExcel = async (req, res) => {
     try {
-        const orders = await Order.find().populate('userId'); // Fetch orders with user details
+        const orders = await Order.find().populate('userId'); 
 
-        // Create a new workbook and worksheet
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Orders Report');
 
-        // Define columns
         worksheet.columns = [
             { header: 'Order ID', key: 'orderId', width: 20 },
             { header: 'Customer Name', key: 'customer', width: 25 },
@@ -315,7 +289,6 @@ const downloadOrdersExcel = async (req, res) => {
             { header: 'Date', key: 'orderDate', width: 20 },
         ];
 
-        // Add rows with order details
         orders.forEach(order => {
             worksheet.addRow({
                 orderId: order.orderId || order._id.toString().slice(-6).toUpperCase(),
@@ -326,14 +299,12 @@ const downloadOrdersExcel = async (req, res) => {
             });
         });
 
-        // Set response headers for Excel file download
         res.setHeader(
             'Content-Type',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         );
         res.setHeader('Content-Disposition', 'attachment; filename=orders.xlsx');
 
-        // Send the Excel file as a response
         await workbook.xlsx.write(res);
         res.end();
     } catch (error) {
@@ -377,8 +348,7 @@ const getFilteredOrders = async (req, res) => {
         res.json(orders);
     } catch (error) {
         console.error("Error fetching filtered orders:", error);
-        res.status(500).json({ message: "Server Error" });
-    }
+        next(error)    }
 };
 
 module.exports = {

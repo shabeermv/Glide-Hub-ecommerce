@@ -7,10 +7,7 @@ const ProductOffer = require("../../models/productOffer");
 const cartPageInfo = async (req, res, next) => {
   try {
     const userId = req.session.userId;
-    if (!userId) {
-      return res.redirect("/login");
-    }
-
+   
     const cartData = await Cart.findOne({ userId }).populate(
       "product.productId"
     );
@@ -31,7 +28,6 @@ const cartPageInfo = async (req, res, next) => {
         let finalDiscountedPrice = product.price;
         let appliedOffer = null;
 
-        // 🔹 **Check for Product Offer**
         const productOffer = await ProductOffer.findOne({
           productId: product._id,
           startDate: { $lte: currentDate },
@@ -48,7 +44,6 @@ const cartPageInfo = async (req, res, next) => {
           appliedOffer = `Product Offer: ${productOffer.description}`;
         }
 
-        // 🔹 **Check for Category Offer (if no product offer or category discount is better)**
         if (product.category) {
           const categoryOffer = await CategoryOffer.findOne({
             categoryId: product.category,
@@ -66,7 +61,6 @@ const cartPageInfo = async (req, res, next) => {
                 product.price - categoryOffer.discountValue;
             }
 
-            // 🔹 **Apply the best discount**
             if (categoryDiscountedPrice < finalDiscountedPrice) {
               finalDiscountedPrice = categoryDiscountedPrice;
               appliedOffer = `Category Offer: ${categoryOffer.description}`;
@@ -74,7 +68,6 @@ const cartPageInfo = async (req, res, next) => {
           }
         }
 
-        // ✅ Apply the best discount found
         if (finalDiscountedPrice < product.price) {
           item.price = finalDiscountedPrice;
           item.hasDiscount = true;
@@ -83,11 +76,9 @@ const cartPageInfo = async (req, res, next) => {
           item.price = product.price;
         }
 
-        // ✅ Update total price for this item
         item.totalPrice = item.price * item.quantity;
       }
 
-      // ✅ Update total cart price
       cartData.totalPrice = cartData.product.reduce(
         (acc, item) => acc + item.totalPrice,
         0
@@ -97,8 +88,8 @@ const cartPageInfo = async (req, res, next) => {
 
     res.render("userCart", { cart: cartData });
   } catch (error) {
-    next(error);
-  }
+    console.log('this is the internal server error');
+    next(error)  }
 };
 
 const addProductCart = async (req, res) => {
@@ -119,7 +110,6 @@ const addProductCart = async (req, res) => {
   }
 
   try {
-    // Find product and check if it exists
     const product = await Product.findById(productId);
     if (!product) {
       return res
@@ -127,8 +117,6 @@ const addProductCart = async (req, res) => {
         .json({ success: false, message: "Product not found" });
     }
 
-    // Check if the requested size exists and has stock
-    // Compare with string value instead of number
     const sizeData = product.sizes.find((s) => s.size === size);
     if (!sizeData) {
       return res.status(400).json({
@@ -144,7 +132,6 @@ const addProductCart = async (req, res) => {
       });
     }
 
-    // Find or create cart
     let cart = await Cart.findOne({ userId });
     if (!cart) {
       cart = new Cart({
@@ -154,13 +141,11 @@ const addProductCart = async (req, res) => {
       });
     }
 
-    // Check if product with same size exists in cart
     const existingProduct = cart.product.find(
-      (p) => p.productId.toString() === productId.toString() && p.size === size // Compare with string value
+      (p) => p.productId.toString() === productId.toString() && p.size === size 
     );
 
     if (existingProduct) {
-      // Check if increasing quantity exceeds available stock
       if (existingProduct.quantity + quantity > sizeData.stock) {
         return res.status(400).json({
           success: false,
@@ -168,33 +153,28 @@ const addProductCart = async (req, res) => {
         });
       }
 
-      // Update existing product quantity and price
       existingProduct.quantity += quantity;
       existingProduct.totalPrice =
         existingProduct.price * existingProduct.quantity;
     } else {
-      // Add new product to cart
       cart.product.push({
         productId,
-        size: size, // Use string size
+        size: size, 
         quantity,
         price: product.price,
         totalPrice: product.price * quantity,
       });
     }
 
-    // Update product stock
     sizeData.stock -= quantity;
     await product.save();
 
-    // Update cart total price
     cart.totalPrice = cart.product.reduce(
       (acc, item) => acc + item.totalPrice,
       0
     );
     await cart.save();
 
-    // Update session cart if needed
     if (!req.session.cart) {
       req.session.cart = [];
       req.session.cart.push({ productId });
@@ -210,9 +190,7 @@ const addProductCart = async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding product to cart:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    next(error)
   }
 };
 
@@ -281,9 +259,7 @@ const addProductToCartFromWishlist = async (req, res) => {
       .json({ success: true, message: "Product added to cart successfully" });
   } catch (error) {
     console.error("Error adding product to cart:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    next(error);
   }
 };
 
@@ -320,37 +296,34 @@ const updateProductQuantity = async (req, res) => {
         message: "Product not found",
       });
     }
-
-    // Find the stock information for the specific size
-    const sizeStock = product.sizes.find((s) => s.size === size);
-    if (!sizeStock) {
+    
+    // Find the size object inside the sizes array
+    const sizeIndex = product.sizes.findIndex((s) => s.size === size);
+    if (sizeIndex === -1) {
       return res.status(400).json({
         success: false,
         message: `Size ${size} not available for this product`,
       });
     }
-
-    // Get current availability
-    const availableStock = sizeStock.stock;
+    
+    const availableStock = product.sizes[sizeIndex].stock;
     let updatedQuantity = cartItem.quantity;
     let stockWarning = null;
-
+    
     if (action === "increase") {
-      // Check if we're at the maximum available stock
       if (updatedQuantity >= availableStock) {
         stockWarning = `Only ${availableStock} items available in size ${size}`;
-        // Don't increase quantity, but don't return an error - just warn the user
       } else {
         updatedQuantity++;
+        product.sizes[sizeIndex].stock--; // Decrease stock count
       }
     } else if (action === "decrease" && updatedQuantity > 1) {
       updatedQuantity--;
+      product.sizes[sizeIndex].stock++; // Increase stock count when decreasing quantity
     }
 
-    // Update cart item quantity and total price
     cartItem.quantity = updatedQuantity;
 
-    // Check if product has discount and update prices accordingly
     if (product.hasDiscount) {
       cartItem.hasDiscount = true;
       cartItem.originalPrice = product.originalPrice;
@@ -360,7 +333,6 @@ const updateProductQuantity = async (req, res) => {
 
     cartItem.totalPrice = cartItem.price * updatedQuantity;
 
-    // Recalculate total cart price
     cart.totalPrice = cart.product.reduce(
       (total, item) => total + item.totalPrice,
       0
@@ -380,10 +352,7 @@ const updateProductQuantity = async (req, res) => {
     });
   } catch (error) {
     console.error("Update quantity error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    next(error)
   }
 };
 
@@ -400,7 +369,6 @@ const deleteProductCart = async (req, res) => {
       });
     }
 
-    // Get the cart before removing the item to access quantity info
     const cart = await Cart.findOne({ userId });
     if (!cart) {
       return res.status(404).json({
@@ -409,7 +377,6 @@ const deleteProductCart = async (req, res) => {
       });
     }
 
-    // Find the item to be removed to get its quantity
     const itemToRemove = cart.product.find(
       (item) => item.productId.toString() === productId && item.size === size
     );
@@ -421,14 +388,12 @@ const deleteProductCart = async (req, res) => {
       });
     }
 
-    // Remove the item using $pull
     const updatedCart = await Cart.findOneAndUpdate(
       { userId },
       { $pull: { product: { productId, size } } },
       { new: true }
     );
 
-    // Recalculate total price
     if (updatedCart) {
       updatedCart.totalPrice = updatedCart.product.reduce(
         (total, item) => total + item.totalPrice,
@@ -444,10 +409,7 @@ const deleteProductCart = async (req, res) => {
     });
   } catch (error) {
     console.error(error.message, "internal server error....");
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-    });
+    next(error)
   }
 };
 

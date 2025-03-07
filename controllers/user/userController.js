@@ -3,34 +3,137 @@ const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const env = require("dotenv").config();
 const Cart = require("../../models/cartSchema");
+// const errorHandler = require('../middleware/errorHandler');
 const Wishlist = require("../../models/wishlistSchema");
 const Category = require("../../models/categorySchema");
-
+const ProductOffer = require('../../models/productOffer');
+const CategoryOffer = require('../../models/categoryOffer')
 const Product = require("../../models/productSchema");
 const Order = require("../../models/orderSchema");
+
+
 
 const loadHome = async (req, res) => {
   try {
     const userId = req.session.userId;
     const products = await Product.find();
     const category = await Category.find();
+    const productOffer = await ProductOffer.find();
+    const categoryOffer = await CategoryOffer.find();
 
     let user = null;
 
     if (userId) {
-      user = await User.findById(userId); // Fetch user details from User schema
+      user = await User.findById(userId); // Fetch user details if logged in
     }
+    
+    const categoryIds = [...new Set(products.map((p) => p.category?._id?.toString()).filter(Boolean))];
+    const productIds = products.map((p) => p._id);
+    
+    const categoryOffers = await CategoryOffer.find({
+      categoryId: { $in: categoryIds },
+      startDate: { $lte: new Date() },
+      endDate: { $gte: new Date() }
+    }).lean();
 
-    if (user) {
-      res.render("home", { category, products, user });
-    } else {
-      res.render("userLogin");
-    }
+    const productOffers = await ProductOffer.find({
+      productId: { $in: productIds },
+      startDate: { $lte: new Date() },
+      endDate: { $gte: new Date() }
+    }).lean();
+
+    const updatedProducts = products.map((product) => {
+      // Convert Mongoose document to plain JavaScript object
+      const plainProduct = product.toObject ? product.toObject() : product;
+      
+      let discountedPrice = plainProduct.price;
+      let appliedOffer = null;
+      let offerType = null;
+    
+      if (!plainProduct._id) {
+        return {
+          ...plainProduct,
+          image: plainProduct.image || [],
+          originalPrice: plainProduct.price,
+          discountedPrice: plainProduct.price,
+          hasDiscount: false,
+          appliedOffer: null,
+          offerType: null
+        };
+      }
+    
+      const productOffer = productOffers.find(
+        (offer) => offer.productId.toString() === plainProduct._id.toString()
+      );
+    
+      let categoryOffer = null;
+      if (plainProduct.category && plainProduct.category._id) {
+        categoryOffer = categoryOffers.find(
+          (offer) => offer.categoryId.toString() === plainProduct.category._id.toString()
+        );
+      }
+    
+      let productDiscountAmount = 0;
+      let categoryDiscountAmount = 0;
+    
+      if (productOffer) {
+        if (productOffer.discountType === "percentage") {
+          productDiscountAmount = (plainProduct.price * productOffer.discountValue) / 100;
+        } else if (productOffer.discountType === "fixed") {
+          productDiscountAmount = productOffer.discountValue;
+        }
+      }
+    
+      if (categoryOffer) {
+        if (categoryOffer.discountType === "percentage") {
+          categoryDiscountAmount = (plainProduct.price * categoryOffer.discountValue) / 100;
+        } else if (categoryOffer.discountType === "fixed") {
+          categoryDiscountAmount = categoryOffer.discountValue;
+        }
+      }
+    
+      if (productDiscountAmount > 0 || categoryDiscountAmount > 0) {
+        if (productDiscountAmount >= categoryDiscountAmount) {
+          discountedPrice = plainProduct.price - productDiscountAmount;
+          appliedOffer = {
+            discountType: productOffer.discountType,
+            discountValue: productOffer.discountValue,
+            discountAmount: productDiscountAmount,
+            description: productOffer.description
+          };
+          offerType = "product";
+        } else {
+          discountedPrice = plainProduct.price - categoryDiscountAmount;
+          appliedOffer = {
+            discountType: categoryOffer.discountType,
+            discountValue: categoryOffer.discountValue,
+            discountAmount: categoryDiscountAmount,
+            description: categoryOffer.description || `${plainProduct.category.name} Category Offer`
+          };
+          offerType = "category";
+        }
+    
+        if (discountedPrice < 1) discountedPrice = 1;
+      }
+      
+      return {
+        ...plainProduct,
+        originalPrice: plainProduct.price,
+        discountedPrice: discountedPrice,
+        hasDiscount: !!appliedOffer,
+        appliedOffer: appliedOffer,
+        offerType: offerType
+      };
+    });
+    
+    // Only pass updatedProducts to the template, not both products and updatedProducts
+    res.render("home", { category, updatedProducts, user });
   } catch (error) {
     console.log("Home page not found", error);
-    res.status(500).send("Server error");
+    next(error);
   }
 };
+
 
 
 const loadLogin = async (req, res) => {
@@ -565,11 +668,46 @@ const blogInfo = async (req, res) => {
 };
 
 const contactInfo = async (req, res) => {
-  res.render("404");
+  res.render("contact");
 };
+const sendMessage = async(req,res)=>{
+  const { email, message } = req.body;
+
+    if (!email || !message) {
+        return res.status(400).json({ message: "All fields are required" });
+    }
+
+    try {
+        // Configure the email transporter (using Gmail SMTP)
+        let transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              user: process.env.NODEMAILER_EMAIL,
+              pass: process.env.NODEMAILER_PASSWORD,
+            }
+        });
+
+        let mailOptions = {
+            from: email,
+            to: "glidehub.sales@gmail.com",
+            subject: "New Contact Form Submission",
+            text: `You have a new message from: ${email}\n\nMessage: ${message}`
+        };
+
+        await transporter.sendMail(mailOptions);
+        res.json({ message: "Email sent successfully!" });
+
+    } catch (error) {
+        console.error(error);
+        next(error)
+    }
+
+}
 
 const aboutInfo = async (req, res) => {
-  res.render("404");
+  const categories = await Category.find({});
+  const products = await Product.find({});
+  res.render("about",{categories,products});
 };
 
 module.exports = {
@@ -596,5 +734,6 @@ module.exports = {
   postResetPassword,
   blogInfo,
   contactInfo,
+  sendMessage,
   aboutInfo,
 };

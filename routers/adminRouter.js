@@ -60,6 +60,7 @@ adminRouter.put('/updateProductOffer/:id',productController.editProductOffer);
 adminRouter.get('/userOrders',orderController.userOrdersInfo);
 adminRouter.post('/orders/update-status',orderController.changeOrderStatus);
 adminRouter.get('/orders/:id',orderController.viewOrderDetails);
+adminRouter.get('/invoice/:id',orderController.getInvoice);
 
 
 

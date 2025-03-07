@@ -1,6 +1,13 @@
 <%-include("../../views/partials/users/header.ejs")%>
-
-<div class="bg0 m-t-103 p-b-140">
+<nav aria-label="breadcrumb" class="breadcrumb-nav m-t-73" >
+    <div class="container">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/shop">Shop</a></li>
+        </ol>
+    </div>
+</nav>
+<div class="bg0 m-t-73 p-b-140">
     <div class="container">
         <div class="flex-w flex-sb-m p-b-52">
             <div class="flex-w flex-l-m filter-tope-group m-tb-10">
@@ -10,7 +17,7 @@
                 
                 <% categories.forEach(category => { %>
                     <button 
-                        class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5" 
+                        class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5"
                         onclick="categoryFilter('<%= category.name %>')">
                         <%= category.name %>
                     </button>
@@ -40,17 +47,17 @@
                     </button>
 
                     <input 
-                    class="mtext-107 cl2 size-114 plh2 p-r-15" 
-                    type="text" 
-                    name="search-product" 
+                    class="mtext-107 cl2 size-114 plh2 p-r-15"
+                    type="text"
+                    name="search-product"
                     placeholder="Search"
                     value="<%= searchValue %>"
                     onchange="searchValue(this.value)"
-                >                    
+                >
 
         <!-- Apply Button -->
         
-                </div>	
+                </div>
             </div>
 
             <!-- Filter -->
@@ -66,7 +73,7 @@
 
                             <li class="p-b-6">
                                 <a href="#" class="filter-link stext-106 trans-04 <%= selectedSort === '' ? 'filter-link-active' : '' %>"
-                                   onclick="sortByPrice('')">
+                                  onclick="sortByPrice('')">
                                     Default
                                 </a>
                             </li>
@@ -108,7 +115,7 @@
 
         <div class="row flex-wrap">
             <% updatedProducts.forEach(product => { %>
-                <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item women">
+                <div class="col-sm-6 col-md-6 col-lg-3 p-b-35 isotope-item women">
                     <div class="block2">
                         <div class="block2-pic hov-img0">
                             <img 

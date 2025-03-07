@@ -25,84 +25,163 @@
                         <label for="checkout-discount-input" class="text-truncate">Have a coupon? <span>Click here to enter your code</span></label>
                     </form>
                 </div><!-- End .checkout-discount -->
+                
+                <!-- Toggle Button for Address Form -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <button type="button" id="toggle-address-btn" class="btn btn-outline-primary-2">
+                            <span id="btn-text">Add New Address</span>
+                        </button>
+                    </div>
+                </div>
+                
                 <form id="checkout-form">
                     <div class="row">
                         <div class="col-lg-9">
-                            <h2 class="checkout-title">Billing Details</h2>
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <label>First Name *</label>
-                                    <input type="text" class="form-control" id="fName" required 
-                                        value="<%= user.username ? user.username.split(' ')[0] : '' %>" style="height: 50px;">
+                            <!-- Billing Details Section -->
+                            <div id="billing-details-section">
+                                <h2 class="checkout-title">Billing Details</h2>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <label>First Name *</label>
+                                        <input type="text" class="form-control" id="fName" required 
+                                            value="<%= user.username ? user.username.split(' ')[0] : '' %>" style="height: 50px;">
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <label>Last Name *</label>
+                                        <input type="text" class="form-control" id="lName" required 
+                                            value="<%= user.username ? user.username.split(' ')[1] || '' : '' %>" style="height: 50px;">
+                                    </div>
                                 </div>
 
-                                <div class="col-sm-6">
-                                    <label>Last Name *</label>
-                                    <input type="text" class="form-control" id="lName" required 
-                                        value="<%= user.username ? user.username.split(' ')[1] || '' : '' %>" style="height: 50px;">
+                                <label>Company Name (Optional)</label>
+                                <input type="text" class="form-control" id="cName" style="height: 50px;">
+
+                                <label>Country *</label>
+                                <input type="text" class="form-control" id="country" required
+                                    value="<%= user.address ? user.address.country : '' %>" style="height: 50px;">
+
+                                <label>Street address *</label>
+                                <input type="text" class="form-control" 
+                                    placeholder="House number and Street name" id="sAddress" required 
+                                    value="<%= user.address ? user.address.address : '' %>" style="height: 50px;">
+
+                                <label>Land mark *</label>
+                                <input type="text" id="lMark" class="form-control" style="height: 50px;" 
+                                    placeholder="Apartments, suite, unit etc ..." required>
+
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <label>Town / City *</label>
+                                        <input type="text" class="form-control" id="city" required 
+                                            value="<%= user.address ? user.address.city : '' %>" style="height: 50px;">
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <label>State / County *</label>
+                                        <input type="text" class="form-control" id="state" required 
+                                            value="<%= user.address ? user.address.state : '' %>" style="height: 50px;">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <label>Postcode / ZIP *</label>
+                                        <input type="text" class="form-control" id="pCode" required 
+                                            value="<%= user.address ? user.address.postCode : '' %>" style="height: 50px;">
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <label>Phone *</label>
+                                        <input type="tel" class="form-control" id="mobile" required 
+                                            value="<%= user.contact || '' %>" style="height: 50px;">
+                                    </div>
+                                </div>
+
+                                <label>Email address *</label>
+                                <input type="email" class="form-control" id="email" required 
+                                    value="<%= user.email || '' %>" style="height: 50px;">
+
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="checkout-create-acc">
+                                    <label class="custom-control-label" for="checkout-create-acc">Create an account?</label>
+                                </div><!-- End .custom-checkbox -->
+
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="checkout-diff-address">
+                                    <label class="custom-control-label" for="checkout-diff-address">Ship to a different address?</label>
+                                </div><!-- End .custom-checkbox -->
+
+                                <label>Order notes (optional)</label>
+                                <textarea class="form-control" id="orderNote" cols="30" rows="4" placeholder="Notes about your order, e.g. special notes for delivery"></textarea>
+                            </div>
+                            
+                            <!-- New Address Form (Initially Hidden) -->
+                            <div id="new-address-form" style="display: none;">
+                                <h2 class="checkout-title">Add New Address</h2>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <label>First Name *</label>
+                                        <input type="text" class="form-control" id="new-fName" required style="height: 50px;">
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <label>Last Name *</label>
+                                        <input type="text" class="form-control" id="new-lName" required style="height: 50px;">
+                                    </div>
+                                </div>
+
+                                <label>Company Name (Optional)</label>
+                                <input type="text" class="form-control" id="new-cName" style="height: 50px;">
+
+                                <label>Country *</label>
+                                <input type="text" class="form-control" id="new-country" required style="height: 50px;">
+
+                                <label>Street address *</label>
+                                <input type="text" class="form-control" 
+                                    placeholder="House number and Street name" id="new-sAddress" required style="height: 50px;">
+
+                                <label>Land mark *</label>
+                                <input type="text" id="new-lMark" class="form-control" style="height: 50px;" 
+                                    placeholder="Apartments, suite, unit etc ..." required>
+
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <label>Town / City *</label>
+                                        <input type="text" class="form-control" id="new-city" required style="height: 50px;">
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <label>State / County *</label>
+                                        <input type="text" class="form-control" id="new-state" required style="height: 50px;">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <label>Postcode / ZIP *</label>
+                                        <input type="text" class="form-control" id="new-pCode" required style="height: 50px;">
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <label>Phone *</label>
+                                        <input type="tel" class="form-control" id="new-mobile" required style="height: 50px;">
+                                    </div>
+                                </div>
+
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <button type="button" id="save-address-btn" class="btn btn-outline-primary-2">
+                                            Save New Address
+                                        </button>
+                                        <button type="button" id="cancel-address-btn" class="btn btn-outline-secondary ml-2">
+                                            Cancel
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
-                            <label>Company Name (Optional)</label>
-                            <input type="text" class="form-control" id="cName" style="height: 50px;">
-
-                            <label>Country *</label>
-                            <input type="text" class="form-control" id="country" required
-                                value="<%= user.address ? user.address.country : '' %>" style="height: 50px;">
-
-                            <label>Street address *</label>
-                            <input type="text" class="form-control" 
-                                placeholder="House number and Street name" id="sAddress" required 
-                                value="<%= user.address ? user.address.address : '' %>" style="height: 50px;">
-
-                            <label>Land mark *</label>
-                            <input type="text" id="lMark" class="form-control" style="height: 50px;" 
-                                placeholder="Apartments, suite, unit etc ..." required>
-
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <label>Town / City *</label>
-                                    <input type="text" class="form-control" id="city" required 
-                                        value="<%= user.address ? user.address.city : '' %>" style="height: 50px;">
-                                </div>
-
-                                <div class="col-sm-6">
-                                    <label>State / County *</label>
-                                    <input type="text" class="form-control" id="state" required 
-                                        value="<%= user.address ? user.address.state : '' %>" style="height: 50px;">
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <label>Postcode / ZIP *</label>
-                                    <input type="text" class="form-control" id="pCode" required 
-                                        value="<%= user.address ? user.address.postCode : '' %>" style="height: 50px;">
-                                </div>
-
-                                <div class="col-sm-6">
-                                    <label>Phone *</label>
-                                    <input type="tel" class="form-control" id="mobile" required 
-                                        value="<%= user.contact || '' %>" style="height: 50px;">
-                                </div>
-                            </div>
-
-                            <label>Email address *</label>
-                            <input type="email" class="form-control" id="email" required 
-                                value="<%= user.email || '' %>" style="height: 50px;">
-
-                            <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="checkout-create-acc">
-                                <label class="custom-control-label" for="checkout-create-acc">Create an account?</label>
-                            </div><!-- End .custom-checkbox -->
-
-                            <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="checkout-diff-address">
-                                <label class="custom-control-label" for="checkout-diff-address">Ship to a different address?</label>
-                            </div><!-- End .custom-checkbox -->
-
-                            <label>Order notes (optional)</label>
-                            <textarea class="form-control" id="orderNote" cols="30" rows="4" placeholder="Notes about your order, e.g. special notes for delivery"></textarea>
                         </div><!-- End .col-lg-9 -->
                         <aside class="col-lg-3">
                             <div class="summary">
@@ -206,20 +285,23 @@
                                         </div><!-- End .collapse -->
                                     </div><!-- End .card -->
 
-                                    <div class="card">
-                                        <div class="card-header" id="heading-3">
-                                            <h2 class="card-title">
-                                                <a class="collapsed" role="button" data-toggle="collapse" href="#collapse-3" aria-expanded="false" aria-controls="collapse-3">
-                                                    Cash on delivery
-                                                </a>
-                                            </h2>
-                                        </div><!-- End .card-header -->
-                                        <div id="collapse-3" class="collapse" aria-labelledby="heading-3" data-parent="#accordion-payment">
-                                            <div class="card-body">Quisque volutpat mattis eros. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec odio. Quisque volutpat mattis eros. 
-                                            </div><!-- End .card-body -->
-                                        </div><!-- End .collapse -->
-                                    </div><!-- End .card -->
-
+                                    <% if (subtotal > 1000) { %>
+                                        <div class="card">
+                                            <div class="card-header" id="heading-3">
+                                                <h2 class="card-title">
+                                                    <a class="collapsed" role="button" data-toggle="collapse" href="#collapse-3" aria-expanded="false" aria-controls="collapse-3">
+                                                        Cash on delivery
+                                                    </a>
+                                                </h2>
+                                            </div><!-- End .card-header -->
+                                            <div id="collapse-3" class="collapse" aria-labelledby="heading-3" data-parent="#accordion-payment">
+                                                <div class="card-body">
+                                                    Quisque volutpat mattis eros. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec odio. Quisque volutpat mattis eros. 
+                                                </div><!-- End .card-body -->
+                                            </div><!-- End .collapse -->
+                                        </div><!-- End .card -->
+                                    <% } %>
+                                    
                                     <div class="card">
                                         <div class="card-header" id="heading-4">
                                             <h2 class="card-title">
@@ -389,11 +471,87 @@
     padding: 20px;
     border-radius: 10px;
 }
+
+/* Button animation */
+.btn-outline-primary-2 {
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary-2:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
 </style>
 
 <!-- Add this script tag in your header or before the closing body tag -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const toggleAddressBtn = document.getElementById('toggle-address-btn');
+    const billingDetailsSection = document.getElementById('billing-details-section');
+    const newAddressForm = document.getElementById('new-address-form');
+    const saveAddressBtn = document.getElementById('save-address-btn');
+    const cancelAddressBtn = document.getElementById('cancel-address-btn');
+    
+    // Toggle between existing address and new address form
+    toggleAddressBtn.addEventListener('click', function() {
+        if (billingDetailsSection.style.display !== 'none') {
+            billingDetailsSection.style.display = 'none';
+            newAddressForm.style.display = 'block';
+            toggleAddressBtn.querySelector('#btn-text').textContent = 'Use Existing Address';
+        } else {
+            billingDetailsSection.style.display = 'block';
+            newAddressForm.style.display = 'none';
+            toggleAddressBtn.querySelector('#btn-text').textContent = 'Add New Address';
+        }
+    });
+    
+    // Handle save new address button
+    saveAddressBtn.addEventListener('click', function() {
+        // Here you would typically validate the form and save the address
+        // For this example, we'll just switch back to the original form
+        const newFName = document.getElementById('new-fName').value;
+        const newLName = document.getElementById('new-lName').value;
+        const newCountry = document.getElementById('new-country').value;
+        const newAddress = document.getElementById('new-sAddress').value;
+        const newCity = document.getElementById('new-city').value;
+        const newState = document.getElementById('new-state').value;
+        const newPostCode = document.getElementById('new-pCode').value;
+        const newMobile = document.getElementById('new-mobile').value;
+        
+        // Validate required fields
+        if (!newFName || !newLName || !newCountry || !newAddress || !newCity || !newState || !newPostCode || !newMobile) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        // You would typically send this data to the server to save
+        // For now, let's just update the existing form with this data
+        document.getElementById('fName').value = newFName;
+        document.getElementById('lName').value = newLName;
+        document.getElementById('country').value = newCountry;
+        document.getElementById('sAddress').value = newAddress;
+        document.getElementById('city').value = newCity;
+        document.getElementById('state').value = newState;
+        document.getElementById('pCode').value = newPostCode;
+        document.getElementById('mobile').value = newMobile;
+        
+        // Switch back to the billing form
+        billingDetailsSection.style.display = 'block';
+        newAddressForm.style.display = 'none';
+        toggleAddressBtn.querySelector('#btn-text').textContent = 'Add New Address';
+        
+        // Show success message
+        alert('New address saved successfully!');
+    });
+    
+    // Handle cancel button
+    cancelAddressBtn.addEventListener('click', function() {
+        billingDetailsSection.style.display = 'block';
+        newAddressForm.style.display = 'none';
+        toggleAddressBtn.querySelector('#btn-text').textContent = 'Add New Address';
+    });
+});
 // Modify the existing script that handles the place order button
 document.getElementById('btn-place-order').addEventListener('click', function(e) {
     e.preventDefault();
@@ -545,7 +703,7 @@ function verifyPayment(paymentData) {
 
             // Redirect to the order details page after a delay
             setTimeout(() => {
-                window.location.href = '/';
+                window.location.href = '/shop';
             }, 5000);
         } else {
             alert(data.message || 'Payment verification failed. Please contact support.');

@@ -41,8 +41,7 @@ const userInfo = async (req, res) => {
         });
     } catch (error) {
         console.error('Error in userInfo:', error);
-        res.status(500).send('An error occurred while fetching user data');
-    }
+        next(error)    }
 };
 
 const toggleBlockStatus = async (req, res) => {
@@ -65,8 +64,7 @@ const toggleBlockStatus = async (req, res) => {
         res.status(200).json({ success: true, message: `User ${isBlocked ? 'blocked' : 'unblocked'} successfully.` });
     } catch (error) {
         console.error('Error updating user status:', error);
-        res.status(500).json({ success: false, message: 'An error occurred while updating the user status' });
-    }
+        next(error)    }
 };
 
 

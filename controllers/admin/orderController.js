@@ -5,14 +5,12 @@ const Order = require("../../models/orderSchema");
 
 const userOrdersInfo = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1; // Get the page number from query, default to 1
-    const limit = 5; // Number of orders per page
-    const skip = (page - 1) * limit; // Calculate the number of orders to skip
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5; 
+    const skip = (page - 1) * limit; 
 
-    // Fetch total orders count
     const totalOrders = await Order.countDocuments();
 
-    // Fetch orders with pagination
     const orderData = await Order.find({})
       .populate({
         path: "products.productId",
@@ -25,18 +23,15 @@ const userOrdersInfo = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .lean(); // Convert Mongoose documents to plain objects
+      .lean(); 
 
-    // Process orders before sending them to EJS
     const processedOrders = await Promise.all(
       orderData.map(async (order) => {
-        // Ensure orderId exists
         if (!order.orderId) {
           order.orderId = `ORD${order._id.toString().slice(-6).toUpperCase()}`;
           await Order.findByIdAndUpdate(order._id, { orderId: order.orderId }); // Save orderId
         }
 
-        // Calculate total amount for the order
         let orderTotal = 0;
         order.products.forEach((product) => {
           if (product.productId && product.productId.price) {
@@ -45,7 +40,6 @@ const userOrdersInfo = async (req, res) => {
           }
         });
 
-        // Ensure totalAmount is saved to the database if missing
         if (!order.totalAmount || order.totalAmount <= 0) {
           order.totalAmount = orderTotal;
           await Order.findByIdAndUpdate(order._id, { totalAmount: orderTotal });
@@ -55,7 +49,6 @@ const userOrdersInfo = async (req, res) => {
       })
     );
 
-    // Render the orders page
     res.render("orders", {
       orderData: processedOrders,
       currentPage: page,
@@ -107,8 +100,8 @@ const changeOrderStatus = async (req, res) => {
       });
   } catch (error) {
     console.log(error.message, "feeling error in order");
-    res.status(500).json({ message: "Internal server error" });
-  }
+    next(error)
+    }
 };
 
 const viewOrderDetails = async (req, res) => {
@@ -123,7 +116,7 @@ const viewOrderDetails = async (req, res) => {
       })
       .populate({
         path: 'userId',
-        select: 'username email contact address isBlocked' // Add required fields
+        select: 'username email contact address isBlocked' 
       });
 
     if (!order) {
@@ -136,9 +129,35 @@ const viewOrderDetails = async (req, res) => {
     res.render('orderDetails', { order });
   } catch (error) {
     console.error("Error fetching order:", error.message);
-    res.status(500).render('admin/error', { message: "Internal Server Error" });
-  }
+    next(error)
+    }
 };
+
+const getInvoice = async(req,res)=>{
+  const id = req.params.id;
+
+  try {
+    const order = await Order.findById(id)
+      .populate({
+        path: 'products.productId',
+        select: 'title price image'
+      })
+      .populate({
+        path: 'userId',
+        select: 'username email contact address'
+      });
+
+    if (!order) {
+      return res.status(404).render('admin/error', { message: "Order not found" });
+    }
+
+    res.render('invoice', { order });
+
+  } catch (error) {
+    console.error("Error fetching invoice:", error.message);
+    next(error)  }
+
+}
 
 
 
@@ -148,5 +167,6 @@ const viewOrderDetails = async (req, res) => {
 module.exports = {
   userOrdersInfo,
   changeOrderStatus,
-  viewOrderDetails
+  viewOrderDetails,
+  getInvoice
 };

@@ -138,10 +138,32 @@
         </div>
     </section>
 </main>
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="green" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check-circle">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <h4 class="mb-3">Product Added Successfully!</h4>
+                <p class="text-muted">Your product has been added to the catalog.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
 
 <style>
+      .modal-dialog-centered {
+        display: flex;
+        align-items: center;
+        min-height: calc(100% - 1rem);
+    }
     .image-wrapper {
         position: relative;
         display: inline-block;
@@ -343,11 +365,18 @@ fetch('/admin/addProduct', {
 .then(response => response.json())
 .then(data => {
     if (data.success) {
-        alert('Product added successfully!');
-        window.location.href = '/admin/products';
-    } else {
-        alert('Error adding product: ' + data.message);
-    }
+                // Show Bootstrap Modal
+                const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                successModal.show();
+
+                // Automatically hide modal and redirect after 2 seconds
+                setTimeout(() => {
+                    successModal.hide();
+                    window.location.href = '/admin/products';
+                }, 2000);
+            } else {
+                alert('Error adding product: ' + data.message);
+            }
 })
 .catch(err => {
     console.error('Error:', err);

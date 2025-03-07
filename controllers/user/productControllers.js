@@ -47,7 +47,6 @@ const shopInfo = async (req, res) => {
 
     const totalProducts = await Product.countDocuments(query);
 
-    // Fetch products along with category details
     const products = await Product.find(query)
       .sort(sortOption)
       .skip(skip)
@@ -57,33 +56,27 @@ const shopInfo = async (req, res) => {
 
     const categories = await Category.find({ isDeleted: false });
 
-    // Get unique category IDs from products
     const categoryIds = [...new Set(products.map((p) => p.category?._id?.toString()).filter(Boolean))];
 
-    // Get all product IDs
     const productIds = products.map((p) => p._id);
 
-    // Fetch only relevant category offers
     const categoryOffers = await CategoryOffer.find({
       categoryId: { $in: categoryIds },
       startDate: { $lte: new Date() },
       endDate: { $gte: new Date() }
     }).lean();
 
-    // Fetch product offers
     const productOffers = await ProductOffer.find({
       productId: { $in: productIds },
       startDate: { $lte: new Date() },
       endDate: { $gte: new Date() }
     }).lean();
 
-    // Apply discounts to products based on their category and product offers
     const updatedProducts = products.map((product) => {
       let discountedPrice = product.price;
       let appliedOffer = null;
       let offerType = null;
     
-      // Ensure the product has all necessary properties
       if (!product._id) {
         return {
           ...product,
@@ -96,12 +89,10 @@ const shopInfo = async (req, res) => {
         };
       }
     
-      // Check for product-specific offer
       const productOffer = productOffers.find(
         (offer) => offer.productId.toString() === product._id.toString()
       );
     
-      // Check for category offer (only if product has a category)
       let categoryOffer = null;
       if (product.category && product.category._id) {
         categoryOffer = categoryOffers.find(
@@ -109,11 +100,9 @@ const shopInfo = async (req, res) => {
         );
       }
     
-      // Calculate discounts for both offer types
       let productDiscountAmount = 0;
       let categoryDiscountAmount = 0;
     
-      // Calculate product offer discount
       if (productOffer) {
         if (productOffer.discountType === "percentage") {
           productDiscountAmount = (product.price * productOffer.discountValue) / 100;
@@ -122,7 +111,6 @@ const shopInfo = async (req, res) => {
         }
       }
     
-      // Calculate category offer discount
       if (categoryOffer) {
         if (categoryOffer.discountType === "percentage") {
           categoryDiscountAmount = (product.price * categoryOffer.discountValue) / 100;
@@ -131,7 +119,6 @@ const shopInfo = async (req, res) => {
         }
       }
     
-      // Apply the better offer (higher discount)
       if (productDiscountAmount > 0 || categoryDiscountAmount > 0) {
         if (productDiscountAmount >= categoryDiscountAmount) {
           discountedPrice = product.price - productDiscountAmount;
@@ -153,7 +140,6 @@ const shopInfo = async (req, res) => {
           offerType = "category";
         }
     
-        // Ensure minimum price of ₹1
         if (discountedPrice < 1) discountedPrice = 1;
       }
     
@@ -189,8 +175,7 @@ const shopInfo = async (req, res) => {
     });
   } catch (error) {
     console.error("shopInfo error:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
+    next(error)  }
 };
 
 const getDetailInfo = async (req, res) => {
@@ -206,33 +191,27 @@ const getDetailInfo = async (req, res) => {
     const availableSizes = product.sizes.filter(size => size.stock > 0);
     const categories = await Category.find({ isDeleted: false });
     
-    // Get category ID for fetching offers
     const categoryId = product.category?._id;
     
-    // Fetch relevant category offer
     const categoryOffer = categoryId ? await CategoryOffer.findOne({
       categoryId: categoryId,
       startDate: { $lte: new Date() },
       endDate: { $gte: new Date() }
     }).lean() : null;
     
-    // Fetch product offer
     const productOffer = await ProductOffer.findOne({
       productId: productId,
       startDate: { $lte: new Date() },
       endDate: { $gte: new Date() }
     }).lean();
     
-    // Apply discount calculation logic
     let discountedPrice = product.price;
     let appliedOffer = null;
     let offerType = null;
     
-    // Calculate discounts for both offer types
     let productDiscountAmount = 0;
     let categoryDiscountAmount = 0;
     
-    // Calculate product offer discount
     if (productOffer) {
       if (productOffer.discountType === "percentage") {
         productDiscountAmount = (product.price * productOffer.discountValue) / 100;
@@ -241,7 +220,6 @@ const getDetailInfo = async (req, res) => {
       }
     }
     
-    // Calculate category offer discount
     if (categoryOffer) {
       if (categoryOffer.discountType === "percentage") {
         categoryDiscountAmount = (product.price * categoryOffer.discountValue) / 100;
@@ -250,7 +228,6 @@ const getDetailInfo = async (req, res) => {
       }
     }
     
-    // Apply the better offer (higher discount)
     if (productDiscountAmount > 0 || categoryDiscountAmount > 0) {
       if (productDiscountAmount >= categoryDiscountAmount) {
         discountedPrice = product.price - productDiscountAmount;
@@ -272,11 +249,9 @@ const getDetailInfo = async (req, res) => {
         offerType = "category";
       }
       
-      // Ensure minimum price of ₹1
       if (discountedPrice < 1) discountedPrice = 1;
     }
     
-    // Add discount information to product
     const enrichedProduct = {
       ...product._doc,
       originalPrice: product.price,
@@ -301,8 +276,8 @@ const getDetailInfo = async (req, res) => {
       totalStock
     });
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
-    console.error("Detail page error:", error);
+    next(error)
+        console.error("Detail page error:", error);
   }
 };
 module.exports = {
