@@ -127,10 +127,10 @@ const loadHome = async (req, res) => {
     });
     
     // Only pass updatedProducts to the template, not both products and updatedProducts
-    res.render("home", { category, updatedProducts, user });
+    res.render("home", { category, updatedProducts: updatedProducts.slice(0, 4), user });
   } catch (error) {
     console.log("Home page not found", error);
-    next(error);
+    return res.json({message:'interal server error'})
   }
 };
 
@@ -144,7 +144,7 @@ const loadLogin = async (req, res) => {
       res.render("userLogin");
     }
   } catch (error) {
-    next(error)
+    return res.json({message:'interal server error'})
   }
 };
 
@@ -178,7 +178,7 @@ const postLogin = async (req, res) => {
     res.json({ success: true, message: "Login successful" });
   } catch (error) {
     console.error("Login error:", error);
-    next(error)
+    return res.json({message:'interal server error'})
   }
 };
 
@@ -187,7 +187,7 @@ const loadSignUp = async (req, res) => {
     res.render("userSignUp");
   } catch (error) {
     console.log("Facing error on signup page", error.message);
-    next(error)
+    return res.json({message:'interal server error'})
   }
 };
 
@@ -503,7 +503,7 @@ const userProfileInfo = async (req, res) => {
       res.render("myAccount", { user, orders });
   } catch (error) {
       console.error('Error in userProfileInfo:', error);
-      next(error)
+      return res.json({message:'interal server error'})
       }
 };
 const addAccountDetails = async (req, res) => {

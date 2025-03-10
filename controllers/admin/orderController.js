@@ -158,7 +158,35 @@ const getInvoice = async(req,res)=>{
     next(error)  }
 
 }
+const approveReturn = async (req, res, next) => {
+  try {
+      const { orderId, action } = req.body; 
 
+      const order = await Order.findById(orderId);
+      if (!order) {
+          return res.status(404).json({ success: false, message: 'Order not found' });
+      }
+
+      if (order.orderStatus !== 'Return Requested') {
+          return res.status(400).json({ success: false, message: 'No pending return request' });
+      }
+
+      if (action === 'approve') {
+          order.orderStatus = 'Returned';
+      } else if (action === 'reject') {
+          order.orderStatus = 'Rejected';
+      } else {
+          return res.status(400).json({ success: false, message: 'Invalid action' });
+      }
+
+      await order.save();
+      return res.status(200).json({ success: true, message: `Return request ${action}d successfully` });
+
+  } catch (error) {
+      console.log('Error approving return request:', error);
+      next(error);
+  }
+};
 
 
 
@@ -168,5 +196,6 @@ module.exports = {
   userOrdersInfo,
   changeOrderStatus,
   viewOrderDetails,
-  getInvoice
+  getInvoice,
+  approveReturn
 };

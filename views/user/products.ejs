@@ -1,12 +1,5 @@
 <%-include("../../views/partials/users/header.ejs")%>
-<nav aria-label="breadcrumb" class="breadcrumb-nav m-t-73" >
-    <div class="container">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/">Home</a></li>
-            <li class="breadcrumb-item"><a href="/shop">Shop</a></li>
-        </ol>
-    </div>
-</nav>
+
 <div class="bg0 m-t-73 p-b-140">
     <div class="container">
         <div class="flex-w flex-sb-m p-b-52">
@@ -127,13 +120,13 @@
                                 Quick View
                             </a>
                         </div>
-
+        
                         <div class="block2-txt flex-w flex-t p-t-14">
                             <div class="block2-txt-child1 flex-col-l">
                                 <a href="/show/<%= product._id %>" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
                                     <%= product.title %>
                                 </a>
-
+        
                                 <% if (product.hasDiscount) { %>
                                     <!-- Discount badge - show offer type -->
                                     <div class="offer-type-badge" style="background-color: <%= product.offerType === 'category' ? '#6c42f5' : '#dc3545' %>;">
@@ -143,10 +136,10 @@
                                     <!-- Price display with strikethrough -->
                                     <div class="price-container">
                                         <span class="original-price">
-                                            ₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            ₹<%= Math.round(product.originalPrice).toLocaleString('en-IN') %>
                                         </span>
                                         <span class="discounted-price">
-                                            ₹<%= parseFloat(product.discountedPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                            ₹<%= Math.round(product.discountedPrice).toLocaleString('en-IN') %>
                                         </span>
                                     </div>
                                     
@@ -154,9 +147,9 @@
                                     <div class="discount-info">
                                         <span class="discount-badge">
                                             <% if (product.appliedOffer.discountType === 'percentage') { %>
-                                                <%= product.appliedOffer.discountValue %>% OFF
+                                                <%= Math.round(product.appliedOffer.discountValue) %>% OFF
                                             <% } else { %>
-                                                ₹<%= product.appliedOffer.discountValue %> OFF
+                                                ₹<%= Math.round(product.appliedOffer.discountValue) %> OFF
                                             <% } %>
                                         </span>
                                         <span class="savings">
@@ -170,7 +163,7 @@
                                     </div>
                                 <% } else { %>
                                     <p class="price" style="font-weight: bold; font-size: 1rem;">
-                                        ₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                                        ₹<%= Math.round(product.originalPrice).toLocaleString('en-IN') %>
                                     </p>
                                 <% } %>
                             </div>
@@ -186,6 +179,7 @@
                 </div>
             <% }) %>
         </div>
+        
         
         <!-- Pagination -->
         <div class="flex-c-m flex-w w-full p-t-45">

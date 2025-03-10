@@ -143,7 +143,8 @@ const checkoutPageInfo = async (req, res) => {
         
     } catch (error) {
         console.error('Error fetching checkout data:', error);
-        next(error)    }
+        return res.status(500).json({success:false,message:'internal server error'})
+    }
 };
 
 
@@ -154,7 +155,14 @@ const cartCheckoutPage = async (req, res) => {
         const user = await User.findById(userId);
 
         const cart = await Cart.findOne({ userId })
-            .populate('product.productId', 'title price image hasDiscount originalPrice discountedPrice');
+            .populate({
+                path: 'product.productId',
+                select: 'title price image category hasDiscount originalPrice discountedPrice',
+                populate: {
+                    path: 'category',
+                    select: '_id'
+                }
+            });
 
         if (!cart || !cart.product || cart.product.length === 0) {
             return res.status(400).render('checkout', { 
@@ -171,24 +179,52 @@ const cartCheckoutPage = async (req, res) => {
         }
 
         let totalPrice = 0;
-        const products = cart.product.map(item => {
-            const originalPrice = item.productId.originalPrice || item.productId.price || 0;
-            const discountedPrice = item.productId.hasDiscount ? item.productId.discountedPrice : originalPrice;
-            const totalItemPrice = discountedPrice * item.quantity;
+        const products = await Promise.all(cart.product.map(async (item) => {
+            const product = item.productId;
+            const originalPrice = product.originalPrice || product.price || 0;
+            
+            // Check for product and category offers
+            const productOffer = await ProductOffer.findOne({ productId: product._id });
+            const categoryOffer = await CategoryOffer.findOne({ categoryId: product.category._id });
+            
+            let finalPrice = originalPrice;
+            let appliedOffer = null;
+
+            // Apply product offer if available
+            if (productOffer) {
+                finalPrice = productOffer.discountType === 'percentage' 
+                    ? originalPrice - (originalPrice * productOffer.discountValue / 100)
+                    : originalPrice - productOffer.discountValue;
+                appliedOffer = productOffer;
+            } 
+            // Apply category offer if no product offer and category offer exists
+            else if (categoryOffer) {
+                finalPrice = categoryOffer.discountType === 'percentage' 
+                    ? originalPrice - (originalPrice * categoryOffer.discountValue / 100)
+                    : originalPrice - categoryOffer.discountValue;
+                appliedOffer = categoryOffer;
+            }
+            // If no offers found, use the default discounted price if hasDiscount is true
+            else if (product.hasDiscount) {
+                finalPrice = product.discountedPrice;
+            }
+            
+            const totalItemPrice = finalPrice * item.quantity;
             totalPrice += totalItemPrice;
 
             return {
-                productId: item.productId._id,
-                title: item.productId.title,
-                hasDiscount: item.productId.hasDiscount,
+                productId: product._id,
+                title: product.title,
+                hasDiscount: appliedOffer !== null || product.hasDiscount,
                 originalPrice: originalPrice.toFixed(2),
-                discountedPrice: discountedPrice.toFixed(2),
+                discountedPrice: finalPrice.toFixed(2),
+                appliedOffer,
                 quantity: item.quantity,
                 size: item.size,
                 totalPrice: totalItemPrice.toFixed(2),
-                image: item.productId.image?.[0] || 'default-product.jpg'
+                image: product.image?.[0] || 'default-product.jpg'
             };
-        });
+        }));
 
         const defaultAddress = user.address?.length > 0 ? user.address[0] : null;
 
@@ -206,10 +242,10 @@ const cartCheckoutPage = async (req, res) => {
 
     } catch (error) {
         console.error('Error fetching cart checkout data:', error);
-        next(error)
+        return res.status(500).json({success:false,message:'internal server error'})
+
     }
 };
-
 
 
 const generateOrderId = () => {
@@ -265,7 +301,7 @@ const buyNow = async (req, res) => {
             orderId: generateOrderId(),
             userId: userId,
             products: orderProducts,
-            orderStatus: 'Pending',
+            orderStatus: 'Confirmed',
             shippingAddress: shippingAddress,
             paymentMethod: [mapPaymentMethod(formData.paymentMethod)],
             paymentStatus: 'Pending',
@@ -275,9 +311,11 @@ const buyNow = async (req, res) => {
         await newOrder.save();
 
         for (const item of cart.product) {
+            
             const product = await Product.findById(item.productId._id);
         
             if (product) {
+                
                 const sizeIndex = product.sizes.findIndex(sizeObj => sizeObj.size === item.size);
         
                 if (sizeIndex !== -1) {
@@ -285,7 +323,10 @@ const buyNow = async (req, res) => {
                 } else {
                     console.warn(`Size ${item.size} not found for product ${product._id}`);
                 }
-        
+
+                // ✅ Increase `saleCount` by the ordered quantity
+                product.saleCount = (product.saleCount || 0) + item.quantity;
+
                 await product.save();
             }
         }
@@ -304,7 +345,7 @@ const buyNow = async (req, res) => {
 
     } catch (error) {
         console.error('Error in buyNow controller:', error);
-        next(error)
+        return res.status(500).json({success:false,message:'internal server error'})
     }
 };
 
@@ -326,6 +367,7 @@ const cancelOrder = async (req, res) => {
             const product = await Product.findById(item.productId);
 
             if (product) {
+                product.saleCount-=1;
                 if (!Array.isArray(product.sizes)) {
                     console.warn(`Product ${product._id} has no sizes array`);
                     continue;
@@ -373,7 +415,7 @@ const cancelOrder = async (req, res) => {
 
     } catch (error) {
         console.error('Error in cancelOrder:', error);
-        next(error)
+        return res.status(500).json({success:false,message:'internal server error'})
     }
 };
 
@@ -408,7 +450,8 @@ const viewPurchaseDetails = async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching order details:', error);
-        next(error)
+        return res.status(500).json({success:false,message:'internal server error'})
+
     }
 };
 
@@ -462,7 +505,7 @@ const razorpayCreation = async (req, res) => {
             email: user ? user.email : formData.email || "",
             phone: user ? user.contact || formData.phone || "" : formData.phone || "",
             address: (user?.address?.length > 0 && user.address[0]?.address) ? 
-                user.address[0].address : formData.streetAddress || "",
+            user.address[0].address : formData.streetAddress || "",
             city: formData.city || (user?.address?.length > 0 ? user.address[0].city || "" : ""),
             state: formData.state || (user?.address?.length > 0 ? user.address[0].state || "" : ""),
             postalCode: formData.postCode || (user?.address?.length > 0 ? user.address[0].postCode || "" : ""),
@@ -495,8 +538,8 @@ const razorpayCreation = async (req, res) => {
             isGuestCheckout: !userId,
             products: orderProducts,  
             totalAmount: subtotal,
-            paymentStatus: "Pending",
-            paymentMethod: ["Credit Card"],
+            paymentStatus: "completed",
+            paymentMethod: ["RazorPay"],
             shippingAddress
         });
 
@@ -531,7 +574,8 @@ const razorpayCreation = async (req, res) => {
 
     } catch (error) {
         console.error("Error creating Razorpay order:", error);
-        next(error)
+        return res.status(500).json({success:false,message:'internal server error'})
+
     }
 };
 
@@ -579,7 +623,7 @@ const verifyRazorPay = async (req, res) => {
             const product = await Product.findById(item.productId);
             
             if (product) {
-                // Find the size index in the product's sizes array
+                product.saleCount+=1;
                 const sizeIndex = product.sizes.findIndex(sizeObj => 
                     sizeObj.size === item.size
                 );
@@ -590,6 +634,7 @@ const verifyRazorPay = async (req, res) => {
                         0, 
                         product.sizes[sizeIndex].stock - item.quantity
                     );
+                    
                 } else {
                     console.warn(`Size ${item.size} not found for product ${product._id}`);
                 }
@@ -618,7 +663,8 @@ const verifyRazorPay = async (req, res) => {
 
     } catch (error) {
         console.error("Error verifying payment:", error);
-        next(error)
+        return res.status(500).json({success:false,message:'internal server error'})
+
     }
 };
 
@@ -627,28 +673,76 @@ const verifyRazorPay = async (req, res) => {
 
 
 
-const returnOrder=async(req,res)=>{
-    const { orderId, reason, customReason } = req.body; 
-    console.log('reason van',req.body)
-    const order=await Order.findById(orderId);
+const returnOrder = async (req, res) => {
     try {
-        if(order.orderStatus==='Returned'){
-            console.log('order already returned...')
-            return res.status(400).json({success:false,message:'order already cancelled'})
+        const { orderId, reason, customReason } = req.body;
+        console.log('Return request received:', req.body);
+
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
         }
-        order.orderStatus = 'Returned';
+
+        if (order.orderStatus === 'Returned') {
+            return res.status(400).json({ success: false, message: 'Order already returned' });
+        }
+
+        if (order.orderStatus === 'Return Requested') {
+            return res.status(400).json({ success: false, message: 'Return already requested' });
+        }
+
+        // Mark as return requested
+        order.orderStatus = 'Return Requested';
+        order.paymentStatus='Refunded';
         order.cancellationReason = reason ? reason : customReason;
 
-        await order.save()
-        console.log('order return process successful...')
-        return res.status(200).json({success:true,message:'order successfully return process completed'})
-        
-    } catch (error) {
-        console.log('error on return order');
-        next(error)
-        }
-}
+        await order.save();
 
+        console.log('Return request submitted.');
+
+        // ✅ Check payment status and refund to wallet if needed
+        if (order.paymentStatus === 'Completed') {
+            const user = await User.findById(order.userId);
+            if (user) {
+                user.wallet += order.totalAmount; // Add refund amount to wallet
+                user.walletHistory.push({
+                    date: new Date(),
+                    amount: order.totalAmount,
+                });
+
+                await user.save();
+                console.log(`Refunded ₹${order.totalAmount} to user wallet.`);
+            }
+        }
+
+        return res.status(200).json({ success: true, message: 'Return request submitted successfully' });
+
+    } catch (error) {
+        console.error('Error processing return request:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+const returnRequestOrder = async(req,res)=>{
+    const Id=req.params.id;
+    console.log('id kittiii',Id);
+    try {
+        if(!Id){
+            return res.status(404).json({message:'id not found'})
+        }
+        const order=await Order.findById(Id);
+        if(!order){
+            return res.status(404).json({message:'invalid order'});
+        }
+        order.orderStatus='Return Requested';
+        order.paymentStatus='Refunded';
+        await order.save();
+    } catch (error) {
+        console.log(error.message);
+        return res.json({message:'internal server error'})
+    }
+
+}
 
 module.exports = {
     checkoutPageInfo,
@@ -658,5 +752,6 @@ module.exports = {
     viewPurchaseDetails,
     razorpayCreation,
     verifyRazorPay,
-    returnOrder
+    returnOrder,
+    returnRequestOrder
 };

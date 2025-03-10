@@ -70,15 +70,16 @@
                     <div class="col-lg-3">
                         <div class="card card-body mb-4">
                             <article class="icontext">
-                                <span class="icon icon-sm rounded-circle bg-primary-light"><i class="text-primary material-icons md-monetization_on"></i></span>
                                 <div class="text">
-                                    <h6 class="mb-1 card-title">Revenue</h6>
-                                    <span>13,456.5</span>
-                                    <span class="text-sm"> Shipping fees are not included </span>
+                                    <h6 class="mb-1 card-title">Total Sales Revenue</h6>
+                                    <span>₹<%= totalSales ? totalSales.toFixed(2) : "0.00" %></span>
+                                    <span class="text-sm">Shipping fees are not included</span>
                                 </div>
                             </article>
                         </div>
                     </div>
+                    
+                    
                     <div class="col-lg-3">
                         <div class="card card-body mb-4">
                             <article class="icontext">
@@ -123,8 +124,55 @@
                     <div class="col-xl-8 col-lg-12">
                         <div class="card mb-4">
                             <article class="card-body">
-                                <h5 class="card-title">Sale statistics</h5>
-                                <canvas id="myChart" height="120px"></canvas>
+                                <h5 class="card-title">Sale Statistics</h5>
+                                
+                                <!-- Date Range Picker -->
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label for="startDate">Start Date:</label>
+                                        <input type="date" id="startDate" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="endDate">End Date:</label>
+                                        <input type="date" id="endDate" class="form-control">
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <button class="btn btn-primary" id="fetchSales">Show Sales</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Chart Container -->
+                                <div class="chart-container" style="position: relative; height:300px;">
+                                    <canvas id="myChart"></canvas>
+                                </div>
+                                
+                                <!-- Summary Stats (Optional enhancement) -->
+                                <div class="row mt-3 text-center">
+                                    <div class="col-md-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6 class="card-title">Total Sales</h6>
+                                                <h3 class="text-success" id="totalSalesValue">₹0</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6 class="card-title">Total Orders</h6>
+                                                <h3 class="text-primary" id="totalOrdersValue">0</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6 class="card-title">Avg. Order Value</h6>
+                                                <h3 class="text-info" id="avgOrderValue">₹0</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </article>
                         </div>
                         <div class="row">
@@ -170,77 +218,34 @@
                             <div class="col-lg-7">
                                 <div class="card mb-4">
                                     <article class="card-body">
-                                        <h5 class="card-title">Recent activities</h5>
-                                        <ul class="verti-timeline list-unstyled font-sm">
-                                            <li class="event-list">
-                                                <div class="event-timeline-dot">
-                                                    <i class="material-icons md-play_circle_outline font-xxl"></i>
-                                                </div>
-                                                <div class="media">
-                                                    <div class="me-3">
-                                                        <h6><span>Today</span> <i class="material-icons md-trending_flat text-brand ml-15 d-inline-block"></i></h6>
-                                                    </div>
-                                                    <div class="media-body">
-                                                        <div>Lorem ipsum dolor sit amet consectetur</div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li class="event-list active">
-                                                <div class="event-timeline-dot">
-                                                    <i class="material-icons md-play_circle_outline font-xxl animation-fade-right"></i>
-                                                </div>
-                                                <div class="media">
-                                                    <div class="me-3">
-                                                        <h6><span>17 May</span> <i class="material-icons md-trending_flat text-brand ml-15 d-inline-block"></i></h6>
-                                                    </div>
-                                                    <div class="media-body">
-                                                        <div>Debitis nesciunt voluptatum dicta reprehenderit</div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li class="event-list">
-                                                <div class="event-timeline-dot">
-                                                    <i class="material-icons md-play_circle_outline font-xxl"></i>
-                                                </div>
-                                                <div class="media">
-                                                    <div class="me-3">
-                                                        <h6><span>13 May</span> <i class="material-icons md-trending_flat text-brand ml-15 d-inline-block"></i></h6>
-                                                    </div>
-                                                    <div class="media-body">
-                                                        <div>Accusamus voluptatibus voluptas.</div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li class="event-list">
-                                                <div class="event-timeline-dot">
-                                                    <i class="material-icons md-play_circle_outline font-xxl"></i>
-                                                </div>
-                                                <div class="media">
-                                                    <div class="me-3">
-                                                        <h6><span>05 April</span> <i class="material-icons md-trending_flat text-brand ml-15 d-inline-block"></i></h6>
-                                                    </div>
-                                                    <div class="media-body">
-                                                        <div>At vero eos et accusamus et iusto odio dignissi</div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li class="event-list">
-                                                <div class="event-timeline-dot">
-                                                    <i class="material-icons md-play_circle_outline font-xxl"></i>
-                                                </div>
-                                                <div class="media">
-                                                    <div class="me-3">
-                                                        <h6><span>26 Mar</span> <i class="material-icons md-trending_flat text-brand ml-15 d-inline-block"></i></h6>
-                                                    </div>
-                                                    <div class="media-body">
-                                                        <div>Responded to need “Volunteer Activities</div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        </ul>
+                                        <h5 class="card-title">Top-Selling Products</h5>
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Product</th>
+                                                    <th>Count</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% if (topSellingProducts && topSellingProducts.length > 0) { %>
+                                                    <% topSellingProducts.forEach((product) => { %>
+                                                        <tr>
+                                                            <td><%= product.title %></td>
+                                                            <td><%= product.saleCount || 0 %></td>
+                                                        </tr>
+                                                    <% }); %>
+                                                <% } else { %>
+                                                    <tr>
+                                                        <td colspan="2" class="text-center">No top-selling products available.</td>
+                                                    </tr>
+                                                <% } %>
+                                            </tbody>
+                                        </table>
                                     </article>
                                 </div>
                             </div>
+                            
+                            
                         </div>
                     </div>
                     <div class="col-xl-4 col-lg-12">
@@ -318,17 +323,20 @@
                                 <input type="date" id="endDate" class="form-control" placeholder="End Date" onchange="filterOrdersByDate()" />
                             </div>
                             
-                            <!-- Status Dropdown -->
-                            <div class="col-md-2 col-12">
-                                <div class="custom_select">
-                                    <select class="form-select select-nice">
-                                        <option>All</option>
-                                        <% orderStatuses.forEach(status => { %>
-                                            <option value="<%= status %>"><%= status %></option>
-                                        <% }); %>
-                                    </select>
-                                </div>
-                            </div>
+                            
+    <div class="custom_select">
+        <select id="statusFilter" class="form-select select-nice" onchange="filterByStatus(this.value)">
+            <option value="All">All</option>
+            <% orderStatuses.forEach(status => { %>
+                <option value="<%= status %>"><%= status %></option>
+            <% }); %>
+            <option value="Paid">Paid</option>
+            <option value="Failed">Failed</option>
+            <option value="Refund">Refund</option>
+            <option value="Pending">Pending</option>
+        </select>
+    </div>
+</div>
                     
                         </div>
                     </header>
@@ -367,7 +375,12 @@
                                     </thead>
                                     <tbody id="ordersTableBody">
                                         <% if (recentOrders && recentOrders.length > 0) { %>
-                                            <% recentOrders.forEach((order, index) => { %>
+                                            <% 
+                                            let totalOrdersAmount = 0;
+                                            let totalOrdersCount = recentOrders.length;
+                                            recentOrders.forEach((order, index) => { 
+                                                totalOrdersAmount += order.totalAmount || 0;
+                                            %>
                                                 <tr>
                                                     <td class="text-center">
                                                         <div class="form-check">
@@ -397,20 +410,40 @@
                                                         <% } %>
                                                     </td>
                                                     <td>
-                                                        <i class="material-icons md-payment font-xxl text-muted mr-5"></i> <%= order.paymentMethod && order.paymentMethod.length > 0 ? order.paymentMethod[0] : 'Unknown' %>
+                                                        <i class="material-icons md-payment font-xxl text-muted mr-5"></i> 
+                                                        <%= order.paymentMethod && order.paymentMethod.length > 0 ? order.paymentMethod[0] : 'Unknown' %>
                                                     </td>
                                                     <td>
                                                         <a href="/admin/orders/<%= order._id %>" class="btn btn-sm btn-info">
                                                             View Details
-                                                        </a>                                                    </td>
+                                                        </a>
+                                                    </td>
                                                 </tr>
                                             <% }); %>
+                                    
+                                            <!-- ✅ Show total orders & sales only on the last page -->
+                                            <% if (currentPage === totalPages) { %>
+                                                <tr class="table-info fw-bold">
+                                                    <td colspan="4" class="text-end">Total Orders:</td>
+                                                    <td><%= typeof totalOrders !== 'undefined' ? totalOrders : 0 %>
+                                                    </td>
+                                                    <td colspan="3"></td>
+                                                </tr>
+                                                <tr class="table-info fw-bold">
+                                                    <td colspan="4" class="text-end">Total Sales:</td>
+                                                    <td>₹<%= totalOrdersAmount.toFixed(2) %></td>
+                                                    <td colspan="3"></td>
+                                                </tr>
+                                            <% } %>
+                                    
                                         <% } else { %>
                                             <tr>
                                                 <td colspan="8" class="text-center">No orders found</td>
                                             </tr>
                                         <% } %>
                                     </tbody>
+                                    
+                                    
                                 </table>
                             </div>
                         </div>
@@ -464,46 +497,204 @@
             
             <%-include("../../views/partials/admin/footer.ejs")%>
             <script src="\asset1\js\filter.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
             <script>
-              // Client-side JavaScript for dashboard
+         document.addEventListener("DOMContentLoaded", function () {
+    const ctx = document.getElementById("myChart").getContext("2d");
+    let myChart;
 
-document.getElementById("dateFilter").addEventListener("change", function () {
-    let selectedValue = this.value;
-    let startDateContainer = document.getElementById("startDateContainer");
-    let endDateContainer = document.getElementById("endDateContainer");
+    async function fetchSalesData(startDate, endDate) {
+        try {
+            const url = `/admin/sales-data?startDate=${startDate}&endDate=${endDate}`;
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            const salesData = await response.json();
 
-    if (selectedValue === "custom") {
-        startDateContainer.classList.remove("d-none");
-        endDateContainer.classList.remove("d-none");
-    } else {
-        startDateContainer.classList.add("d-none");
-        endDateContainer.classList.add("d-none");
-        fetchOrdersByDate(selectedValue);
+            // Format dates for better display
+            const labels = salesData.map(data => {
+                const date = new Date(data._id);
+                return date.toLocaleDateString();
+            });
+            
+            const totalSales = salesData.map(data => data.totalSales);
+            const orderCount = salesData.map(data => data.orderCount);
+
+            // Calculate summary statistics
+            const totalSalesSum = totalSales.reduce((sum, value) => sum + value, 0);
+            const totalOrdersSum = orderCount.reduce((sum, value) => sum + value, 0);
+            const avgOrderValue = totalOrdersSum > 0 ? totalSalesSum / totalOrdersSum : 0;
+
+            // Update summary statistics in the UI
+            document.getElementById("totalSalesValue").textContent = `₹${totalSalesSum.toLocaleString('en-IN')}`;
+            document.getElementById("totalOrdersValue").textContent = totalOrdersSum;
+            document.getElementById("avgOrderValue").textContent = `₹${avgOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+
+            if (myChart) myChart.destroy(); // Destroy old chart before creating a new one
+
+            myChart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: "Total Sales (₹)",
+                            data: totalSales,
+                            backgroundColor: "rgba(75, 192, 192, 0.3)",
+                            borderColor: "rgba(75, 192, 192, 1)",
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: "Total Orders",
+                            data: orderCount,
+                            backgroundColor: "rgba(255, 99, 132, 0.3)",
+                            borderColor: "rgba(255, 99, 132, 1)",
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Sales Amount (₹)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            title: {
+                                display: true,
+                                text: 'Number of Orders'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.datasetIndex === 0) {
+                                        label += `₹${context.raw.toLocaleString('en-IN')}`;
+                                    } else {
+                                        label += context.raw;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Handle case where no data is returned
+            if (salesData.length === 0) {
+                document.getElementById("totalSalesValue").textContent = "₹0";
+                document.getElementById("totalOrdersValue").textContent = "0";
+                document.getElementById("avgOrderValue").textContent = "₹0";
+                
+                // You could also display a "No data" message in the chart
+                ctx.font = "20px Arial";
+                ctx.fillStyle = "gray";
+                ctx.textAlign = "center";
+                ctx.fillText("No sales data for selected period", ctx.canvas.width/2, ctx.canvas.height/2);
+            }
+
+        } catch (error) {
+            console.error("Error fetching sales data:", error);
+            // Display error message to user
+            alert("Failed to fetch sales data. Please try again.");
+        }
     }
+
+    // Fetch default sales data (last 7 days)
+    const today = new Date().toISOString().split("T")[0];
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const defaultStartDate = sevenDaysAgo.toISOString().split("T")[0];
+
+    document.getElementById("startDate").value = defaultStartDate;
+    document.getElementById("endDate").value = today;
+    fetchSalesData(defaultStartDate, today);
+
+    // Fetch new data when user selects a date range
+    document.getElementById("fetchSales").addEventListener("click", () => {
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
+        
+        if (new Date(startDate) > new Date(endDate)) {
+            alert("Start date cannot be after end date");
+            return;
+        }
+        
+        fetchSalesData(startDate, endDate);
+    });
 });
-
-document.getElementById("startDate").addEventListener("change", function () {
-    if (document.getElementById("endDate").value) {
-        fetchOrdersByDate("custom", this.value, document.getElementById("endDate").value);
-    }
-});
-
-document.getElementById("endDate").addEventListener("change", function () {
-    if (document.getElementById("startDate").value) {
-        fetchOrdersByDate("custom", document.getElementById("startDate").value, this.value);
-    }
-});
-
-document.querySelector('.select-nice').addEventListener('change', function() {
-    const categoryId = this.value;
-    if (categoryId && categoryId !== 'All Categories') {
-        window.location.href = `/admin/orderFilterByCategory?categoryId=${categoryId}`;
-    } else if (categoryId === 'All Categories') {
-        window.location.href = '/admin/dashboard';
-    }
-});
-
-// Status filter handler
-
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize date filter visibility
+        const dateFilter = document.getElementById("dateFilter");
+        const startDateContainer = document.getElementById("startDateContainer");
+        const endDateContainer = document.getElementById("endDateContainer");
+        
+        if (dateFilter) {
+            dateFilter.addEventListener("change", function() {
+                // Show/hide date pickers based on selection
+                if (this.value === "custom") {
+                    startDateContainer.classList.remove("d-none");
+                    endDateContainer.classList.remove("d-none");
+                } else {
+                    startDateContainer.classList.add("d-none");
+                    endDateContainer.classList.add("d-none");
+                    // Immediately filter for non-custom selections
+                    filterOrdersByDate();
+                }
+            });
+        }
+        
+        // Set default values for date filters
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("endDate").value = today;
+        
+        // Set start date to 7 days ago by default
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        document.getElementById("startDate").value = sevenDaysAgo.toISOString().split("T")[0];
+        
+        // Initialize category filter
+        const categoryFilter = document.getElementById("categoryFilter");
+        if (categoryFilter) {
+            categoryFilter.addEventListener("change", function() {
+                categoryFilter(this.value);
+            });
+        }
+    });
                 </script>
                 

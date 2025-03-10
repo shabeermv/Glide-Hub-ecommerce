@@ -107,18 +107,29 @@
                                                                             order.orderStatus === 'Completed' ? 'success' : 
                                                                             order.orderStatus === 'Shipped' ? 'primary' : 
                                                                             order.orderStatus === 'Pending' ? 'warning' : 
-                                                                            order.orderStatus === 'Cancelled' ? 'danger' : 'info' 
+                                                                            order.orderStatus === 'Cancelled' ? 'danger' :
+                                                                            order.orderStatus === 'Returned' ? 'secondary' :
+                                                                            order.orderStatus === 'Return Requested' ? 'info' : 'info' 
                                                                         %> p-2">
                                                                             <%= order.orderStatus %>
                                                                         </span>
                                                                     </td>
                                                                     <td class="text-center">
                                                                         <div class="btn-group" role="group">
+                                                                            <!-- View Details button is always shown -->
                                                                             <a href="/order/details/<%= order._id %>" class="btn btn-sm btn-info" style="margin-right: 5px;">
                                                                                 View Details
                                                                             </a>
                                                                             
-                                                                            <% if (order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Completed') { %>
+                                                                            <% if (order.orderStatus === 'Delivered') { %>
+                                                                                <!-- Show Return button only for Delivered orders -->
+                                                                                <button class="btn btn-sm btn-warning return-order-btn"
+                                                                                        data-order-id="<%= order._id %>">
+                                                                                    Return Order
+                                                                                </button>
+                                                                            <% } else if (order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Completed' && 
+                                                                                         order.orderStatus !== 'Returned' && order.orderStatus !== 'Return Requested') { %>
+                                                                                <!-- Show Cancel button for orders not in final states -->
                                                                                 <button class="btn btn-sm btn-danger cancel-order-btn"
                                                                                         data-order-id="<%= order._id %>">
                                                                                     Cancel Order
@@ -477,8 +488,18 @@
     <!-- Main JS File -->
     <script src="/asset3/js/main.js"></script>
  
-
+   
     <script>
+        // Add this to your JavaScript file
+document.querySelectorAll('.return-order-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const orderId = this.getAttribute('data-order-id');
+        if (confirm('Are you sure you want to request a return for this order?')) {
+            // Send AJAX request or form submission to request return
+            window.location.href = `/request-return/${orderId}`;
+        }
+    });
+});
         // Select the button and form
         const showAddressFormButton = document.getElementById('showAddressForm');
         const addressForm = document.getElementById('addressForm');

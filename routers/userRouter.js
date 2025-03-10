@@ -64,6 +64,7 @@ userRouter.post('/apply-coupon', couponController.applyCoupon);
 userRouter.delete('/cancelOrder/:id',authMiddleware.authMiddleware,checkoutController.cancelOrder);
 userRouter.get('/order/details/:id',authMiddleware.authMiddleware,checkoutController.viewPurchaseDetails);
 userRouter.post('/return-order',checkoutController.returnOrder);
+userRouter.get('/request-return/:id',checkoutController.returnRequestOrder)
 
 userRouter.post('/create-razorpay-order',checkoutController.razorpayCreation);
 userRouter.post('/verify-razorpay-payment',checkoutController.verifyRazorPay);

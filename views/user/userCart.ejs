@@ -7,16 +7,7 @@
         </div>
     </div>
 
-    <nav aria-label="breadcrumb" class="breadcrumb-nav">
-        <div class="container">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Home</a></li>
-                <li class="breadcrumb-item"><a href="#">Shop</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Shopping Cart</li>
-            </ol>
-        </div>
-    </nav>
-
+  
     <div class="page-content">
         <div class="cart">
             <div class="container">
@@ -139,50 +130,10 @@
                             <h3 class="summary-title">Cart Total</h3>
 
                             <table class="table table-summary">
-                                <tbody>
-                                    <tr class="summary-subtotal">
-                                        <td>Subtotal:</td>
-                                        <td>₹<%= cart && cart.totalPrice ? cart.totalPrice.toFixed(2) : '0.00' %></td>
-                                    </tr>
-                                    <tr class="summary-shipping">
-                                        <td>Shipping:</td>
-                                        <td>&nbsp;</td>
-                                    </tr>
+                               
 
-                                    <tr class="summary-shipping-row">
-                                        <td>
-                                            <div class="custom-control custom-radio">
-                                                <input type="radio" id="free-shipping" name="shipping" class="custom-control-input" checked>
-                                                <label class="custom-control-label" for="free-shipping">Free Shipping</label>
-                                            </div>
-                                        </td>
-                                        <td>₹0.00</td>
-                                    </tr>
-
-                                    <tr class="summary-shipping-row">
-                                        <td>
-                                            <div class="custom-control custom-radio">
-                                                <input type="radio" id="standart-shipping" name="shipping" class="custom-control-input">
-                                                <label class="custom-control-label" for="standart-shipping">Standard:</label>
-                                            </div>
-                                        </td>
-                                        <td>₹49.00</td>
-                                    </tr>
-
-                                    <tr class="summary-shipping-row">
-                                        <td>
-                                            <div class="custom-control custom-radio">
-                                                <input type="radio" id="express-shipping" name="shipping" class="custom-control-input">
-                                                <label class="custom-control-label" for="express-shipping">Express:</label>
-                                            </div>
-                                        </td>
-                                        <td>₹99.00</td>
-                                    </tr>
-
-                                    <tr class="summary-shipping-estimate">
-                                        <td>Estimate for Your Location<br> <a href="#">Change address</a></td>
-                                        <td>&nbsp;</td>
-                                    </tr>
+                                   
+                                    
 
                                     <tr class="summary-total">
                                         <td>Total:</td>

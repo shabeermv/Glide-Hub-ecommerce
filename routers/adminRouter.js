@@ -15,11 +15,13 @@ const middleware=require('../middleware/middlewares')
 adminRouter.get('/adminLogin', adminController.adminLogin);
 adminRouter.post('/adminLogin', adminController.postAdmin);
 adminRouter.get('/home', adminController.getHome);
+adminRouter.get('/sales-data',adminController.getSalesData)
 adminRouter.get('/logoutAdmin',adminController.logoutAdmin);
 adminRouter.get('/downloadOrdersPDF',adminController.downloadOrdersPDF);
 adminRouter.get('/downloadOrdersExcel', adminController.downloadOrdersExcel);
 adminRouter.get('/orderFilterByCategory', adminController.filterCategoryList);
-adminRouter.get('/filterByDate',adminController.getFilterByDate)
+adminRouter.get('/filterByDate',adminController.getFilterByDate);
+adminRouter.get('/filterByStatus',adminController.filterByStatus);
 
 
 // Products routes
@@ -61,6 +63,7 @@ adminRouter.get('/userOrders',orderController.userOrdersInfo);
 adminRouter.post('/orders/update-status',orderController.changeOrderStatus);
 adminRouter.get('/orders/:id',orderController.viewOrderDetails);
 adminRouter.get('/invoice/:id',orderController.getInvoice);
+adminRouter.post('/approve-return',orderController.approveReturn);
 
 
 
