@@ -205,80 +205,81 @@
 				
 
 			<!-- Other HTML content above -->
-<div class="row flex-wrap">
-	<% updatedProducts.forEach(product => { %>
-	  <div class="col-sm-6 col-md-6 col-lg-3 p-b-35 isotope-item women">
-		<div class="block2">
-		  <div class="block2-pic hov-img0">
-			<img 
-			  src="<%= product.image && product.image.length > 0 ? product.image[0] : '/images/placeholder.jpg' %>"
-			  alt="<%= product.title %>"
-			  class="img-fluid"
-			/>
-			<a href="/show/<%= product._id %>" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04">
-			  Quick View
-			</a>
-		  </div>
-  
-		  <div class="block2-txt flex-w flex-t p-t-14">
-			<div class="block2-txt-child1 flex-col-l">
-			  <a href="/show/<%= product._id %>" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-				<%= product.title %>
-			  </a>
-  
-			  <% if (product.hasDiscount) { %>
-				<!-- Discount badge - show offer type -->
-				<div class="offer-type-badge" style="background-color: <%= product.offerType === 'category' ? '#6c42f5' : '#dc3545' %>;">
-				  <%= product.offerType === 'category' ? 'CATEGORY OFFER' : 'PRODUCT OFFER' %>
-				</div>
-				
-				<!-- Price display with strikethrough -->
-				<div class="price-container">
-				  <span class="original-price">
-					₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
-				  </span>
-				  <span class="discounted-price">
-					₹<%= parseFloat(product.discountedPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
-				  </span>
-				</div>
-				
-				<!-- Discount information -->
-				<div class="discount-info">
-				  <span class="discount-badge">
-					<% if (product.appliedOffer.discountType === 'percentage') { %>
-					  <%= product.appliedOffer.discountValue %>% OFF
-					<% } else { %>
-					  ₹<%= product.appliedOffer.discountValue %> OFF
-					<% } %>
-				  </span>
-				  <span class="savings">
-					(Save ₹<%= Math.round(product.appliedOffer.discountAmount) %>)
-				  </span>
-				</div>
-				
-				<!-- Offer description -->
-				<div class="offer-description">
-				  <%= product.appliedOffer.description %>
-				</div>
-			  <% } else { %>
-				<p class="price" style="font-weight: bold; font-size: 1rem;">
-				  ₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
-				</p>
-			  <% } %>
+			<div class="row flex-wrap">
+				<% updatedProducts.forEach(product => { %>
+					<div class="col-sm-6 col-md-6 col-lg-3 p-b-35 isotope-item women">
+						<div class="block2">
+							<div class="block2-pic hov-img0">
+								<img 
+									src="<%= product.image && product.image.length > 0 ? product.image[0] : '/images/placeholder.jpg' %>"
+									alt="<%= product.title %>"
+									class="img-fluid"
+								/>
+								<a href="/show/<%= product._id %>" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04">
+									Quick View
+								</a>
+							</div>
+			
+							<div class="block2-txt flex-w flex-t p-t-14">
+								<div class="block2-txt-child1 flex-col-l">
+									<a href="/show/<%= product._id %>" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
+										<%= product.title %>
+									</a>
+			
+									<% if (product.hasDiscount) { %>
+										<!-- Offer Type Badge -->
+										<div class="offer-type-badge" style="background-color: <%= product.offerType === 'category' ? '#6c42f5' : '#dc3545' %>;">
+											<%= product.offerType === 'category' ? 'CATEGORY OFFER' : 'PRODUCT OFFER' %>
+										</div>
+			
+										<!-- Price Display with Discount -->
+										<div class="price-container">
+											<span class="original-price">
+												₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+											</span>
+											<span class="discounted-price">
+												₹<%= parseFloat(product.discountedPrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+											</span>
+										</div>
+			
+										<!-- Discount Info -->
+										<div class="discount-info">
+											<span class="discount-badge">
+												<% if (product.appliedOffer.discountType === 'percentage') { %>
+													<%= product.appliedOffer.discountValue %>% OFF
+												<% } else { %>
+													₹<%= product.appliedOffer.discountValue %> OFF
+												<% } %>
+											</span>
+											<span class="savings">
+												(Save ₹<%= Math.round(product.appliedOffer.discountAmount) %>)
+											</span>
+										</div>
+			
+										<!-- Offer Description -->
+										<div class="offer-description">
+											<%= product.appliedOffer.description %>
+										</div>
+									<% } else { %>
+										<!-- Regular Price Display -->
+										<p class="price" style="font-weight: bold; font-size: 1rem;">
+											₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+										</p>
+									<% } %>
+								</div>
+			
+								<div class="block2-txt-child2 flex-r p-t-3">
+									<a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
+										<img class="icon-heart1 dis-block trans-04" src="/images/icons/icon-heart-01.png" alt="ICON">
+										<img class="icon-heart2 dis-block trans-04 ab-t-l" src="/images/icons/icon-heart-02.png" alt="ICON">
+									</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				<% }); %>
 			</div>
 			
-			<div class="block2-txt-child2 flex-r p-t-3">
-			  <a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-				<img class="icon-heart1 dis-block trans-04" src="/images/icons/icon-heart-01.png" alt="ICON">
-				<img class="icon-heart2 dis-block trans-04 ab-t-l" src="/images/icons/icon-heart-02.png" alt="ICON">
-			  </a>
-			</div>
-		  </div>
-		</div>
-	  </div>
-	<% }); %>
-  </div>
-  <!-- Other HTML content below -->
 			  
 				
 
@@ -315,3 +316,56 @@
 
 
 	<%-include("../../views/partials/users/footer.ejs")%>
+	<style>
+		/* Price display */
+.price-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: #6c757d;
+    margin-right: 8px;
+    font-size: 1.9rem;
+}
+
+.discounted-price {
+    font-weight: bold;
+    color: #28a745;
+    font-size: 2.1rem;
+}
+
+/* Discount Info */
+.discount-badge {
+    background-color: #dc3545;
+    color: white;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 1.1rem;
+}
+
+.savings {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-left: 5px;
+}
+
+/* Offer Type Badge */
+.offer-type-badge {
+    display: inline-block;
+    margin-bottom: 5px;
+    color: white;
+    font-size: 0.7rem;
+    padding: 1px 5px;
+    border-radius: 3px;
+}
+
+/* Hover effect */
+.block2:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+	</style>

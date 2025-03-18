@@ -1,35 +1,39 @@
 const mongoose = require('mongoose');
+const { v4: uuidv4 } = require('uuid'); // Import UUID for unique IDs
 
 const orderSchema = new mongoose.Schema({
     orderId: {
         type: String,
         required: false,
         unique: true,
-        sparse: true  // This makes the unique index only apply to non-null values
+        sparse: true  
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: function () {
-            return !this.isGuestCheckout; // Only required if not a guest
+            return !this.isGuestCheckout; 
         }
     },
-    cancellationReason:{
-        type:String
+    cancellationReason: {
+        type: String
     },
     isGuestCheckout: {
         type: Boolean,
         default: false
-      },
-      guestEmail: {
+    },
+    guestEmail: {
         type: String,
-        // Required if it's a guest checkout
-        required: function() {
-          return this.isGuestCheckout === true;
+        required: function () {
+            return this.isGuestCheckout === true;
         }
-      },
+    },
     products: [
         {
+            productOrderId: { 
+                type: String, 
+                default: uuidv4() // ✅ Ensure uuidv4() is called as a function
+            },
             productId: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'Product',
@@ -41,18 +45,23 @@ const orderSchema = new mongoose.Schema({
                 default: 1
             },
             size: {
-                type: String,  // Changed from Number to String to match the controller
+                type: String,  
                 required: true
             },
             price: {
                 type: Number,
                 required: true
+            },
+            status: {
+                type: String,
+                enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Return Requested','Return Rejected'],
+                default: "Pending"
             }
         }
     ],
     orderStatus: {
         type: String,
-        enum: ['Pending','Confirmed', 'Shipped', 'Delivered', 'Cancelled','Returned','Return Requested'],
+        enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Return Requested','Return Rejected'],
         default: 'Pending'
     },
     shippingAddress: {
@@ -66,11 +75,11 @@ const orderSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: [String],
-        enum: ['Credit Card', 'Debit Card', 'RazorPay', 'UPI', 'Cash on Delivery']
+        enum: ['wallet', 'RazorPay', 'Cash on delivery']
     },
     paymentStatus: {
         type: String,
-        enum: ['Pending', 'completed', 'Failed','Refunded'],
+        enum: ['Pending', 'completed', 'Failed', 'Refunded'],
         default: 'Pending'
     },
     totalAmount: {
@@ -81,12 +90,25 @@ const orderSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    returnReason: {
+        type: String,
+        required: false
+    },
     razorpayOrderId: {
         type: String
-      },
-      razorpayPaymentId: {
+    },
+    razorpayPaymentId: {
         type: String
-      }
+    }
+});
+
+orderSchema.pre('save', function (next) {
+    this.products.forEach(product => {
+        if (!product.productOrderId) {
+            product.productOrderId = uuidv4(); 
+        }
+    });
+    next();
 });
 
 const Order = mongoose.model('Order', orderSchema);

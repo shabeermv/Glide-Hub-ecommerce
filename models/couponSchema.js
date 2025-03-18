@@ -26,6 +26,10 @@ const mongoose=require('mongoose');
         minPurchase: {
             type: Number,
             required: true
+        },
+        count:{
+            type:Number,
+            
         }
     }, {timestamps: true});
 

@@ -24,6 +24,11 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    referalCode:{
+      type:String,
+      
+
+    },
     contact: {
       type: Number,
       required: false,
@@ -76,7 +81,7 @@ const userSchema = new Schema(
     }
   }],
   },
-  { timestamps: true } // ✅ Moved options inside the schema definition
+  { timestamps: true } 
 );
 
 const User = mongoose.model('User', userSchema);

@@ -301,42 +301,35 @@
                             </div>
                 
                             <!-- Date Filter Dropdown -->
-                            <div class="col-md-3 col-12">
-                                <div class="custom_select">
-                                    <select id="dateFilter" class="form-select select-nice" onchange="filterOrdersByDate()">
-                                        <option value="daily">Daily</option>
-                                        <option value="weekly">Weekly</option>
-                                        <option value="monthly">Monthly</option>
-                                        <option value="yearly">Yearly</option>
-                                        <option value="custom">Custom Date</option>
-                                    </select>
-                                </div>
-                            </div>
-                
-                            <!-- Start Date Picker (Hidden by Default) -->
-                            <div class="col-md-2 col-6 d-none" id="startDateContainer">
-                                <input type="date" id="startDate" class="form-control" placeholder="Start Date" onchange="filterOrdersByDate()" />
-                            </div>
-                
-                            <!-- End Date Picker (Hidden by Default) -->
-                            <div class="col-md-2 col-6 d-none" id="endDateContainer">
-                                <input type="date" id="endDate" class="form-control" placeholder="End Date" onchange="filterOrdersByDate()" />
-                            </div>
-                            
-                            
+<div class="col-md-3 col-12">
     <div class="custom_select">
-        <select id="statusFilter" class="form-select select-nice" onchange="filterByStatus(this.value)">
-            <option value="All">All</option>
-            <% orderStatuses.forEach(status => { %>
-                <option value="<%= status %>"><%= status %></option>
-            <% }); %>
-            <option value="Paid">Paid</option>
-            <option value="Failed">Failed</option>
-            <option value="Refund">Refund</option>
-            <option value="Pending">Pending</option>
+        <select id="dateFilter" class="form-select select-nice">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+            <option value="custom">Custom Date</option>
         </select>
     </div>
 </div>
+
+<!-- Start Date Picker (Hidden by Default) -->
+<div class="col-md-2 col-6 d-none" id="startDateContainer">
+    <input type="date" id="startDate" class="form-control" placeholder="Start Date" />
+</div>
+
+<!-- End Date Picker (Hidden by Default) -->
+<div class="col-md-2 col-6 d-none" id="endDateContainer">
+    <input type="date" id="endDate" class="form-control" placeholder="End Date" />
+</div>
+
+<!-- Apply Filter Button (Hidden by Default) -->
+<div class="col-md-2 col-12 d-none" id="applyFilterContainer">
+    <button id="applyFilterBtn" class="btn btn-primary w-100" onclick="applyDateFilter()">Apply Filter</button>
+</div>
+
+                            
+
                     
                         </div>
                     </header>
@@ -479,19 +472,7 @@
                 </div>
             </section>
             
-            <footer class="main-footer font-xs">
-                <div class="row pb-30 pt-15">
-                    <div class="col-sm-6">
-                        <script>
-                            document.write(new Date().getFullYear());
-                        </script>
-                        &copy; Nest - HTML Ecommerce Template .
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="text-sm-end">All rights reserved</div>
-                    </div>
-                </div>
-            </footer>
+            
             </main>
             
             
@@ -638,7 +619,7 @@
     // Fetch default sales data (last 7 days)
     const today = new Date().toISOString().split("T")[0];
     const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 20);
     const defaultStartDate = sevenDaysAgo.toISOString().split("T")[0];
 
     document.getElementById("startDate").value = defaultStartDate;
@@ -685,7 +666,7 @@
         
         // Set start date to 7 days ago by default
         const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 30);
         document.getElementById("startDate").value = sevenDaysAgo.toISOString().split("T")[0];
         
         // Initialize category filter

@@ -101,20 +101,22 @@
                                 <a href="/">Home</a>
                             </li>
                             <li><a href="/shop">Shop</a></li>
-                            <li><a href="/about">about</a></li>
+                            <li><a href="/about">About</a></li>
                             <li><a href="/contact">Contact</a></li>
-                            <li><a href="/logout">Logout</a></li>
-                            
+                            <li>
+                                <% if (user) { %>
+                                    <a href="/profile"><%= user.username %></a>
+                                <% } else { %>
+                                    <a href="/login">Login</a> <!-- Changed from logout to login -->
+                                <% } %>
+                            </li>                      
                                 
                             
                     </div>
 
                     <!-- Header Icons -->
                     <div class="wrap-icon-header flex-w flex-r-m">
-                        <div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 js-show-modal-search">
-                            <i class="zmdi zmdi-search" style="font-size: 24px;"></i>
-                        </div>
-                        <!-- Profile Icon -->
+                        
                         <a href="/profile">
                             <div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11">
                                 <i class="zmdi zmdi-account-circle" style="font-size: 24px;"></i>

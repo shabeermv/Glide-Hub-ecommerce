@@ -1,9 +1,9 @@
 const User = require("../../models/userSchema");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto"); // Import crypto for generating random referral codes
 const nodemailer = require("nodemailer");
 const env = require("dotenv").config();
 const Cart = require("../../models/cartSchema");
-// const errorHandler = require('../middleware/errorHandler');
 const Wishlist = require("../../models/wishlistSchema");
 const Category = require("../../models/categorySchema");
 const ProductOffer = require('../../models/productOffer');
@@ -126,6 +126,7 @@ const loadHome = async (req, res) => {
       };
     });
     
+    
     // Only pass updatedProducts to the template, not both products and updatedProducts
     res.render("home", { category, updatedProducts: updatedProducts.slice(0, 4), user });
   } catch (error) {
@@ -233,7 +234,7 @@ async function sendVerificationEmail(email, otp) {
 }
 
 const postSignUp = async (req, res) => {
-  const { email, userName, contact, password } = req.body;
+  const { email, userName, contact, password,referalCode } = req.body;
   // console.log("Received data:", req.body);
 
   try {
@@ -260,6 +261,7 @@ const postSignUp = async (req, res) => {
       userName,
       contact,
       password: hashedPassword,
+      referalCode
     };
 
     return res.json({ success: true });
@@ -278,10 +280,11 @@ const loadOtp = async (req, res) => {
   }
 };
 
-const postOtp = async (req, res) => {
+
+const postOtp = async (req, res, next) => {
   try {
     const { fillOtp } = req.body;
-    const { email, userName, password, contact } = req.session.user;
+    const { email, userName, password, contact, referalCode } = req.session.user;
 
     console.log("Received OTP:", fillOtp);
     console.log("Expected OTP:", req.session.userOtp);
@@ -290,28 +293,62 @@ const postOtp = async (req, res) => {
       return res.json({ success: false, message: "Invalid OTP" });
     }
 
+    // Generate a unique referral code for the new user
+    let newReferralCode;
+    let isUnique = false;
+    
+    while (!isUnique) {
+      newReferralCode = crypto.randomBytes(4).toString("hex").toUpperCase(); // Example: 'A1B2C3D4'
+      const existingUser = await User.findOne({ referalCode: newReferralCode });
+      if (!existingUser) isUnique = true;
+    }
+
+    // Check if the user was referred by someone (using the referral code they entered)
+    if (referalCode) {
+      const referrer = await User.findOne({ referalCode: referalCode });
+      if (referrer) {
+        // Add 100 to referrer's wallet
+        referrer.wallet += 100;
+        
+        // Add a record to the wallet history
+        referrer.walletHistory.push({
+          date: new Date(),
+          amount: 100
+        });
+        
+        // Save the referrer with updated wallet
+        await referrer.save();
+        console.log('Referrer rewarded:', referrer.email, 'New wallet balance:', referrer.wallet);
+      } else {
+        console.log('Invalid referral code used:', referalCode);
+      }
+    }
+
+    // Create new user with their own referral code
     const newUser = new User({
       email,
       username: userName,
       contact,
-      password: password,
+      password,
+      referalCode: newReferralCode, // Assign the generated referral code
     });
 
     const user = await newUser.save();
 
     req.session.userId = user._id;
     req.session.user = user;
-    console.log(user);
+    console.log("User Created:", user);
     req.session.save();
 
     return res.json({
       success: true,
       message: "OTP verified and user created successfully",
+      referralCode: user.referalCode, // Return the referral code in the response
     });
   } catch (error) {
     console.error("Error verifying OTP:", error);
-    next(error)
-    }
+    next(error);
+  }
 };
 
 const logout = (req, res) => {
@@ -500,7 +537,7 @@ const userProfileInfo = async (req, res) => {
           order.totalAmount = order.totalAmount || calculatedTotal;
       });
 
-      res.render("myAccount", { user, orders });
+      res.render("myAccount", { user, orders,referralCode: user.referalCode  });
   } catch (error) {
       console.error('Error in userProfileInfo:', error);
       return res.json({message:'interal server error'})
@@ -540,8 +577,11 @@ const addAccountDetails = async (req, res) => {
 };
 
 const editProfileInfo = async (req, res) => {
-  const user = req.session.user;
-  // console.log(user,'edit profile user get......');
+  let user = null;
+              if (req.session.userId) {
+                user = await User.findById(req.session.userId);
+              }
+    
 
   res.render("editProfile", { user });
 };
@@ -616,7 +656,7 @@ const deleteAddress = async (req, res) => {
     return res.json({ success: true, message: "Address deleted successfully" });
   } catch (error) {
     console.error("Error deleting address:", error);
-    next(error)
+    return res.status(500).json({success:false,message:"internal server error"})
     }
 };
 
@@ -668,7 +708,12 @@ const blogInfo = async (req, res) => {
 };
 
 const contactInfo = async (req, res) => {
-  res.render("contact");
+  let user = null;
+            if (req.session.userId) {
+              user = await User.findById(req.session.userId);
+            }
+  
+  res.render("contact",{user});
 };
 const sendMessage = async(req,res)=>{
   const { email, message } = req.body;
@@ -705,9 +750,14 @@ const sendMessage = async(req,res)=>{
 }
 
 const aboutInfo = async (req, res) => {
+  let user = null;
+            if (req.session.userId) {
+              user = await User.findById(req.session.userId);
+            }
+  
   const categories = await Category.find({});
   const products = await Product.find({});
-  res.render("about",{categories,products});
+  res.render("about",{categories,products,user});
 };
 
 module.exports = {

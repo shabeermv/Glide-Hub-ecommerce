@@ -38,7 +38,6 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(errorHandler);
 app.use(cors());
 app.use('/uploads',express.static(path.join(__dirname, 'uploads')));
 
@@ -51,6 +50,9 @@ app.use('/admin', adminRouter);
 app.use(methodOverride('_method'))
 
 app.use(errorHandler);
+app.use((req, res) => {
+    res.status(404).render('404');
+});
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

@@ -1,7 +1,8 @@
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const CategoryOffer = require("../../models/categoryOffer");
-const ProductOffer = require("../../models/productOffer"); // Add this import
+const ProductOffer = require("../../models/productOffer");
+const User=require('../../models/userSchema') // Add this import
 
 const shopInfo = async (req, res) => {
   try {
@@ -15,6 +16,11 @@ const shopInfo = async (req, res) => {
     const skip = (page - 1) * limit;
 
     let query = { isDeleted: false };
+    let user = null;
+              if (req.session.userId) {
+                user = await User.findById(req.session.userId);
+              }
+    
 
     if (searchValue) {
       query.$or = [
@@ -171,17 +177,21 @@ const shopInfo = async (req, res) => {
       selectedCategory: categoryFilter,
       selectedSort: sortBy,
       selectedPriceRange: priceRange,
-      priceRanges
+      priceRanges,
+      user
     });
   } catch (error) {
     console.error("shopInfo error:", error);
-    next(error)  }
+    res.status(500).json({message:'internal server error'}) }
 };
 
 const getDetailInfo = async (req, res) => {
   try {
     const productId = req.params.id;
-    
+    let user = null;
+    if (req.session.userId) {
+      user = await User.findById(req.session.userId);
+    }
     const product = await Product.findById(productId).populate('category');
     
     if (!product) {
@@ -273,7 +283,8 @@ const getDetailInfo = async (req, res) => {
       relatedProducts,
       categories,
       availableSizes,
-      totalStock
+      totalStock,
+      user
     });
   } catch (error) {
     next(error)

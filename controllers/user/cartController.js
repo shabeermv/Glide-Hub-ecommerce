@@ -7,7 +7,11 @@ const ProductOffer = require("../../models/productOffer");
 const cartPageInfo = async (req, res, next) => {
   try {
     const userId = req.session.userId;
-   
+    let user = null;
+          if (req.session.userId) {
+            user = await User.findById(req.session.userId);
+          }
+
     const cartData = await Cart.findOne({ userId }).populate(
       "product.productId"
     );
@@ -16,7 +20,7 @@ const cartPageInfo = async (req, res, next) => {
       cartData.product = cartData.product.filter(
         (item) => item.productId !== null
       );
-
+     
       const currentDate = new Date();
 
       for (const item of cartData.product) {
@@ -86,10 +90,11 @@ const cartPageInfo = async (req, res, next) => {
       await cartData.save();
     }
 
-    res.render("userCart", { cart: cartData });
+    res.render("userCart", { cart: cartData,user });
   } catch (error) {
     console.log('this is the internal server error');
-    next(error)  }
+    return res.status(500).json({message:'internal server errror'})
+    }
 };
 
 const addProductCart = async (req, res) => {
@@ -166,7 +171,7 @@ const addProductCart = async (req, res) => {
       });
     }
 
-    sizeData.stock -= quantity;
+    
     await product.save();
 
     cart.totalPrice = cart.product.reduce(
@@ -315,11 +320,11 @@ const updateProductQuantity = async (req, res) => {
         stockWarning = `Only ${availableStock} items available in size ${size}`;
       } else {
         updatedQuantity++;
-        product.sizes[sizeIndex].stock--; // Decrease stock count
+         // Decrease stock count
       }
     } else if (action === "decrease" && updatedQuantity > 1) {
       updatedQuantity--;
-      product.sizes[sizeIndex].stock++; // Increase stock count when decreasing quantity
+       // Increase stock count when decreasing quantity
     }
 
     cartItem.quantity = updatedQuantity;

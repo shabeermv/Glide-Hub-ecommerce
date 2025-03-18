@@ -21,7 +21,6 @@ adminRouter.get('/downloadOrdersPDF',adminController.downloadOrdersPDF);
 adminRouter.get('/downloadOrdersExcel', adminController.downloadOrdersExcel);
 adminRouter.get('/orderFilterByCategory', adminController.filterCategoryList);
 adminRouter.get('/filterByDate',adminController.getFilterByDate);
-adminRouter.get('/filterByStatus',adminController.filterByStatus);
 
 
 // Products routes
@@ -63,7 +62,8 @@ adminRouter.get('/userOrders',orderController.userOrdersInfo);
 adminRouter.post('/orders/update-status',orderController.changeOrderStatus);
 adminRouter.get('/orders/:id',orderController.viewOrderDetails);
 adminRouter.get('/invoice/:id',orderController.getInvoice);
-adminRouter.post('/approve-return',orderController.approveReturn);
+adminRouter.get('/returnRequests',orderController.returnRequests);
+adminRouter.post('/returnOrderAction',orderController.setUpReturnRequest);
 
 
 

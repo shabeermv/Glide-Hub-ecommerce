@@ -3,19 +3,8 @@
 <main class="main-wrap">
   <header class="main-header navbar">
     <div class="col-search">
-      <form class="searchform" method="GET" action="/users">
-        <div class="input-group">
-          <input
-            list="search_terms"
-            type="text"
-            class="form-control"
-            name="search"
-            placeholder="Search term"
-            value="<%= search %>"
-          />
-          <button class="btn btn-light bg" type="submit">
-            <i class="material-icons md-search"></i>
-          </button>
+      <a href="/admin/home" class="btn btn-success btn-lg">Back</a>
+        
         </div>
         <datalist id="search_terms">
           <option value="Products"></option>

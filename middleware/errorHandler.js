@@ -1,35 +1,34 @@
-// errorHandler.js
 const errorHandler = (err, req, res, next) => {
-  console.error(err);
-  
-  // Determine status code
-  const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
-  
-  // Check if it's an API request
-  const isApiRequest = req.path.startsWith('/api') || 
-                       req.xhr || 
-                       req.headers.accept.indexOf('json') > -1;
-  
-  if (isApiRequest) {
-      // Return JSON error for API requests
-      return res.status(statusCode).json({
-          success: false,
-          message: err.message || 'Server Error',
-          stack: process.env.NODE_ENV === 'development' ? err.stack : {}
-      });
-  }
-  
-  // For regular requests, render error page
-  // Check which view directory to use
-  const viewPrefix = req.originalUrl.startsWith('/admin') ? 'admin' : 'user';
-  
-  // Provide default error message
-  const errorMessage = err.message || 'An unexpected error occurred';
-  
-  res.status(statusCode).render(`${viewPrefix}/error`, {
-      message: errorMessage,
-      error: process.env.NODE_ENV === 'development' ? err : {}
-  });
+    console.error('Error:', err);
+    
+    const isAdmin = req.originalUrl.includes('/admin');
+    let user = null;
+    
+    // Get user from session if available
+    if (req.session && req.session.userId) {
+        user = { id: req.session.userId }; // Basic user object
+    }
+    
+    try {
+        // Set status code based on error type
+        const statusCode = err.statusCode || 500;
+        
+        if (isAdmin) {
+            res.status(statusCode).render('admin/error', {
+                message: err.message || 'Internal Server Error',
+                error: process.env.NODE_ENV === 'development' ? err : {}
+            });
+        } else {
+            res.status(statusCode).render('user/error', {
+                message: err.message || 'Internal Server Error',
+                user: user,
+                error: process.env.NODE_ENV === 'development' ? err : {}
+            });
+        }
+    } catch (renderError) {
+        console.error('Error rendering error page:', renderError);
+        res.status(500).send('Internal Server Error');
+    }
 };
 
 module.exports = errorHandler;

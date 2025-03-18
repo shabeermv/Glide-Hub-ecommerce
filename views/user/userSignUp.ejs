@@ -192,6 +192,7 @@
         const email = document.getElementById("email").value;
         const userName = document.getElementById("username").value;
         const password = document.getElementById("password").value;
+        const referalCode = document.getElementById('referalCode').value;
         const confirmPassword = document.getElementById("confirmPassword").value;
         const contactNumber = document.getElementById("contactNumber").value;
   
@@ -226,6 +227,8 @@
           userName: userName,
           contact: contactNumber,
           password: password,
+          referalCode:referalCode
+
         };
   
         fetch("/signup", {

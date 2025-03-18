@@ -167,63 +167,86 @@ const getEligibleCoupons = async (req, res) => {
         }
 };
 
+
+
 const applyCoupon = async (req, res) => {
     try {
-        const { code, cartTotal } = req.body;
-        
-        if (!code || !cartTotal) {
-            return res.status(400).json({ success: false, message: "Missing coupon code or cart total" });
-        }
-        
-        const total = parseFloat(cartTotal);
-        
-        if (isNaN(total)) {
-            return res.status(400).json({ success: false, message: "Invalid cart total" });
-        }
-        
+        const { couponCode, subtotal } = req.body;
+        const userId = req.session.userId;
+
+        // Find the coupon in the database
         const coupon = await Coupon.findOne({ 
-            code: code,
-            expireDate: { $gt: new Date() }
+            code: couponCode,
+            minPurchase: { $lte: subtotal },
+            expireDate: { $gte: new Date() }
         });
-        
+
         if (!coupon) {
-            return res.status(404).json({ success: false, message: "Invalid or expired coupon" });
-        }
-        
-        if (total < coupon.minPurchase) {
-            return res.status(400).json({ 
-                success: false, 
-                message: `Minimum purchase of ₹${coupon.minPurchase} required for this coupon` 
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid coupon code or minimum purchase not met'
             });
         }
-        
-        let discountAmount = 0;
-        if (coupon.discount === 'percentage') {
-            discountAmount = (total * coupon.discountValue) / 100;
-        } else { // fixed
-            discountAmount = coupon.discountValue;
-        }
-        
-        const newTotal = total - discountAmount;
-        
-        res.status(200).json({
-            success: true,
-            coupon: {
-                name: coupon.name,
-                code: coupon.code,
-                discountType: coupon.discount,
-                discountValue: coupon.discountValue
-            },
-            discountAmount,
-            newTotal
-        });
-        
-    } catch (error) {
-        console.error("Error applying coupon:", error);
-        next(error)
-        }
-};
 
+        // Check if coupon has already been used by this user
+        if (coupon.usedBy && coupon.usedBy.includes(userId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'You have already used this coupon'
+            });
+        }
+
+        // Calculate discount
+        let discount = 0;
+        let discountPercentage = 0;
+        
+        if (coupon.discount === 'percentage') {
+            // Store the percentage for display purposes
+            discountPercentage = coupon.discountValue;
+            
+            // Calculate the discount amount
+            discount = (subtotal * coupon.discountValue) / 100;
+            
+            // Apply maximum discount limit if specified
+            if (coupon.maxDiscount && discount > coupon.maxDiscount) {
+                discount = coupon.maxDiscount;
+            }
+        } else {
+            // Fixed amount discount
+            discount = coupon.discountValue;
+        }
+
+        // Calculate discounted total
+        const discountedTotal = subtotal - discount;
+
+        // If this is a real order (not just preview), mark coupon as used
+        if (req.body.finalizeOrder) {
+            // Add user to usedBy array
+            if (userId) {
+                await Coupon.findByIdAndUpdate(
+                    coupon._id,
+                    { $addToSet: { usedBy: userId } }
+                );
+            }
+        }
+
+        return res.json({
+            success: true,
+            discount: discount,
+            discountPercentage: discountPercentage,
+            discountedTotal: discountedTotal,
+            couponCode: couponCode,
+            discountType: coupon.discount
+        });
+
+    } catch (error) {
+        console.error('Error applying coupon:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
 
 
 

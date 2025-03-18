@@ -14,17 +14,34 @@
                 <li class="breadcrumb-item active" aria-current="page">Checkout</li>
             </ol>
         </div><!-- End .container -->
-    </nav><!-- End .breadcrumb-nav -->
+    </nav>
+   
 
     <div class="page-content">
         <div class="checkout">
             <div class="container">
-                <div class="checkout-discount">
-                    <form action="#">
-                        <input type="text" class="form-control" required id="checkout-discount-input">
-                        <label for="checkout-discount-input" class="text-truncate">Have a coupon? <span>Click here to enter your code</span></label>
-                    </form>
-                </div><!-- End .checkout-discount -->
+                <div class="coupon-container">
+                    <% if (applicableCoupons.length > 0) { %>
+                        <h3>Available Coupons</h3>
+                        <div class="coupon-grid">
+                            <% applicableCoupons.forEach(coupon => { %>
+                                <div class="coupon-card">
+                                    <div class="coupon-left">
+                                        <h2><%= coupon.discount === 'percentage' ? coupon.discountValue + '%' : '₹' + coupon.discountValue %> OFF</h2>
+                                        <p>On purchases above ₹<%= coupon.minPurchase %></p>
+                                    </div>
+                                    <div class="coupon-right">
+                                        <p class="coupon-code"><%= coupon.code %></p>
+                                        <button class="apply-coupon-btn" data-code="<%= coupon.code %>">Apply</button>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } else { %>
+                        <p>No available coupons at the moment.</p>
+                    <% } %>
+                </div>
+                <!-- End .checkout-discount -->
                 
                 <!-- Toggle Button for Address Form -->
                 <div class="row mb-4">
@@ -241,7 +258,7 @@
                                             <td>Shipping:</td>
                                             <td>Free shipping</td>
                                         </tr>
-                                        <tr class="summary-total">
+                                        <tr class="summary-total" id="finalAmount">
                                             <td>Total:</td>
                                             <td>₹<%= subtotal.toFixed(2) %></td>
                                         </tr>
@@ -251,6 +268,7 @@
                                 </table>
                                 
                                 <!-- Hidden input for total amount -->
+                                <input type="hidden" id="finalAmountInput" value="<%= subtotal.toFixed(2) %>">
                                 <input type="hidden" id="totalAmount" value="<%= subtotal.toFixed(2) %>">
                                 
                                 <div class="accordion-summary" id="accordion-payment">
@@ -268,23 +286,29 @@
                                                 Pay securely using credit/debit card, NetBanking, UPI, or Wallet through Razorpay. Your payment is processed securely and no card information is stored on our servers.
                                             </div><!-- End .card-body -->
                                         </div><!-- End .collapse -->
-                                    </div><!-- End .card -->
-
+                                    </div>
                                     <div class="card">
-                                        <div class="card-header" id="heading-2">
+                                        <div class="card-header" id="heading-wallet">
                                             <h2 class="card-title">
-                                                <a class="collapsed" role="button" data-toggle="collapse" href="#collapse-2" aria-expanded="false" aria-controls="collapse-2">
-                                                    Check payments
+                                                <a class="collapsed" role="button" data-toggle="collapse" href="#collapse-wallet" aria-expanded="false" aria-controls="collapse-wallet">
+                                                    Wallet Payment
+                                                    <span class="float-right">Balance: ₹<span id="walletBalance">Loading...</span></span>
                                                 </a>
                                             </h2>
                                         </div><!-- End .card-header -->
-                                        <div id="collapse-2" class="collapse" aria-labelledby="heading-2" data-parent="#accordion-payment">
+                                        <div id="collapse-wallet" class="collapse" aria-labelledby="heading-wallet" data-parent="#accordion-payment">
                                             <div class="card-body">
-                                                Ipsum dolor sit amet, consectetuer adipiscing elit. Donec odio. Quisque volutpat mattis eros. Nullam malesuada erat ut turpis. 
+                                                <div class="wallet-info">
+                                                    <p>Pay using your wallet balance. If your balance is insufficient, please choose another payment method.</p>
+                                                    <div id="insufficient-balance-msg" class="text-danger mt-2" style="display: none;">
+                                                        Insufficient wallet balance. Please add funds or choose another payment method.
+                                                    </div>
+                                                </div>
                                             </div><!-- End .card-body -->
                                         </div><!-- End .collapse -->
                                     </div><!-- End .card -->
 
+                                    
                                     <% if (subtotal > 1000) { %>
                                         <div class="card">
                                             <div class="card-header" id="heading-3">
@@ -302,37 +326,8 @@
                                         </div><!-- End .card -->
                                     <% } %>
                                     
-                                    <div class="card">
-                                        <div class="card-header" id="heading-4">
-                                            <h2 class="card-title">
-                                                <a class="collapsed" role="button" data-toggle="collapse" href="#collapse-4" aria-expanded="false" aria-controls="collapse-4">
-                                                    PayPal <small class="float-right paypal-link">What is PayPal?</small>
-                                                </a>
-                                            </h2>
-                                        </div><!-- End .card-header -->
-                                        <div id="collapse-4" class="collapse" aria-labelledby="heading-4" data-parent="#accordion-payment">
-                                            <div class="card-body">
-                                                Nullam malesuada erat ut turpis. Suspendisse urna nibh, viverra non, semper suscipit, posuere a, pede. Donec nec justo eget felis facilisis fermentum.
-                                            </div><!-- End .card-body -->
-                                        </div><!-- End .collapse -->
-                                    </div><!-- End .card -->
 
-                                    <div class="card">
-                                        <div class="card-header" id="heading-5">
-                                            <h2 class="card-title">
-                                                <a class="collapsed" role="button" data-toggle="collapse" href="#collapse-5" aria-expanded="false" aria-controls="collapse-5">
-                                                    Credit Card (Stripe)
-                                                    <img src="/asset3/images/payments-summary.png" alt="payments cards">
-                                                </a>
-                                            </h2>
-                                        </div><!-- End .card-header -->
-                                        <div id="collapse-5" class="collapse" aria-labelledby="heading-5" data-parent="#accordion-payment">
-                                            <div class="card-body"> Donec nec justo eget felis facilisis fermentum.Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec odio. Quisque volutpat mattis eros. Lorem ipsum dolor sit ame.
-                                            </div><!-- End .card-body -->
-                                        </div><!-- End .collapse -->
-                                    </div><!-- End .card -->
-                                </div><!-- End .accordion -->
-
+                                    
                                 <button type="button" id="btn-place-order" class="btn btn-outline-primary-2 btn-order btn-block" style="height: 50px;">
                                     <span class="btn-text">Place Order</span>
                                     <span class="btn-hover-text">Proceed to Checkout</span>
@@ -391,7 +386,77 @@
 </div>
 
 <style>
-/* Success Animation Styles */
+.coupon-container {
+    margin-top: 20px;
+    text-align:left;
+}
+
+.coupon-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: left;
+}
+
+.coupon-card {
+    display: flex;
+    width: 300px;
+    background-color: #6a8759;
+    color: white;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.coupon-left {
+    flex: 2;
+    padding: 15px;
+    text-align: left;
+}
+
+.coupon-left h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.coupon-left p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.coupon-right {
+    flex: 1;
+    background-color: white;
+    color: black;
+    text-align: center;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-left: 2px dashed #333;
+}
+
+.coupon-code {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.apply-coupon-btn {
+    background-color: #6a8759;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+.apply-coupon-btn:hover {
+    background-color: #ecf1e8;
+}
+
 .success-animation {
     margin: 20px auto;
 }
@@ -486,6 +551,20 @@
 <!-- Add this script tag in your header or before the closing body tag -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
+       document.addEventListener("DOMContentLoaded", function() {
+        const couponButtons = document.querySelectorAll(".apply-coupon-btn");
+        const couponInput = document.getElementById("checkout-discount-input");
+
+        couponButtons.forEach(button => {
+            button.addEventListener("click", function() {
+                const couponCode = this.getAttribute("data-code");
+                couponInput.value = couponCode;
+            });
+        });
+    });
+
+
+
     document.addEventListener('DOMContentLoaded', function() {
     const toggleAddressBtn = document.getElementById('toggle-address-btn');
     const billingDetailsSection = document.getElementById('billing-details-section');
@@ -506,10 +585,8 @@
         }
     });
     
-    // Handle save new address button
     saveAddressBtn.addEventListener('click', function() {
-        // Here you would typically validate the form and save the address
-        // For this example, we'll just switch back to the original form
+       
         const newFName = document.getElementById('new-fName').value;
         const newLName = document.getElementById('new-lName').value;
         const newCountry = document.getElementById('new-country').value;
@@ -545,18 +622,172 @@
         alert('New address saved successfully!');
     });
     
-    // Handle cancel button
     cancelAddressBtn.addEventListener('click', function() {
         billingDetailsSection.style.display = 'block';
         newAddressForm.style.display = 'none';
         toggleAddressBtn.querySelector('#btn-text').textContent = 'Add New Address';
     });
 });
-// Modify the existing script that handles the place order button
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  const applyButtons = document.querySelectorAll('.apply-coupon-btn');
+  
+  applyButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const couponCode = this.getAttribute('data-code');
+      applyCoupon(couponCode);
+    });
+  });
+  
+  // Function to apply coupon
+  function applyCoupon(couponCode) {
+    // Get the current subtotal from the page
+    const subtotalElement = document.querySelector('.summary-subtotal td:last-child');
+    const currentSubtotal = parseFloat(subtotalElement.textContent.replace('₹', ''));
+    
+    fetch('/apply-coupon', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        couponCode: couponCode,
+        subtotal: currentSubtotal
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Store the discount value for order submission
+        const discount = data.discount || (currentSubtotal - data.discountedTotal);
+        
+        // Update UI and hidden fields
+        updateOrderSummary(data.discountedTotal, discount, data.couponCode);
+        showMessage('Coupon applied successfully!', 'success');
+        disableCouponButtons();
+      } else {
+        // Show error message
+        showMessage(data.message, 'error');
+      }
+    })
+    .catch(error => {
+      console.error('Error applying coupon:', error);
+      showMessage('An error occurred while applying the coupon.', 'error');
+    });
+  }
+  
+  // Function to update the order summary with new totals
+  function updateOrderSummary(discountedTotal, discount, couponCode) {
+    const subtotalElement = document.querySelector('.summary-subtotal td:last-child');
+    const totalElement = document.querySelector('.summary-total td:last-child');
+    const subtotal = parseFloat(subtotalElement.textContent.replace('₹', ''));
+    
+    // Create or update discount row
+    let discountRow = document.querySelector('.summary-discount');
+    if (!discountRow) {
+      // Create new discount row if it doesn't exist
+      const totalRow = document.querySelector('.summary-total');
+      discountRow = document.createElement('tr');
+      discountRow.className = 'summary-discount';
+      
+      const discountLabel = document.createElement('td');
+      discountLabel.textContent = 'Discount:';
+      
+      const discountValue = document.createElement('td');
+      discountValue.textContent = `- ₹${discount.toFixed(2)} (${couponCode})`;
+      discountValue.style.color = '#4CAF50';
+      
+      discountRow.appendChild(discountLabel);
+      discountRow.appendChild(discountValue);
+      
+      // Insert before total row
+      totalRow.parentNode.insertBefore(discountRow, totalRow);
+    } else {
+      // Update existing discount row
+      discountRow.querySelector('td:last-child').textContent = `- ₹${discount.toFixed(2)} (${couponCode})`;
+    }
+    
+    // Update the total amount in UI
+    totalElement.textContent = `₹${discountedTotal.toFixed(2)}`;
+    
+    // Update hidden inputs for form submission
+    document.getElementById('finalAmountInput').value = discountedTotal.toFixed(2);
+    
+    // Add a hidden input for coupon information if it doesn't exist
+    let couponCodeInput = document.getElementById('couponCodeInput');
+    let couponDiscountInput = document.getElementById('couponDiscountInput');
+    
+    if (!couponCodeInput) {
+      couponCodeInput = document.createElement('input');
+      couponCodeInput.type = 'hidden';
+      couponCodeInput.id = 'couponCodeInput';
+      couponCodeInput.name = 'couponCode';
+      document.getElementById('finalAmountInput').parentNode.appendChild(couponCodeInput);
+    }
+    
+    if (!couponDiscountInput) {
+      couponDiscountInput = document.createElement('input');
+      couponDiscountInput.type = 'hidden';
+      couponDiscountInput.id = 'couponDiscountInput';
+      couponDiscountInput.name = 'couponDiscount';
+      document.getElementById('finalAmountInput').parentNode.appendChild(couponDiscountInput);
+    }
+    
+    couponCodeInput.value = couponCode;
+    couponDiscountInput.value = discount.toFixed(2);
+    
+    // Add a visual indicator that the total has been updated
+    totalElement.classList.add('highlight');
+    setTimeout(() => {
+      totalElement.classList.remove('highlight');
+    }, 1000);
+  }
+  
+  // Function to show messages to the user
+  function showMessage(message, type) {
+    const messageContainer = document.createElement('div');
+    messageContainer.className = `alert alert-${type === 'success' ? 'success' : 'danger'}`;
+    messageContainer.textContent = message;
+    
+    // Insert at the top of the checkout container
+    const checkoutContainer = document.querySelector('.checkout .container');
+    checkoutContainer.insertBefore(messageContainer, checkoutContainer.firstChild);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      messageContainer.remove();
+    }, 5000);
+  }
+  
+  // Function to disable all coupon buttons once one is applied
+  function disableCouponButtons() {
+    applyButtons.forEach(button => {
+      button.disabled = true;
+      button.classList.add('disabled');
+      button.textContent = 'Applied';
+    });
+  }
+  
+  // Add CSS for highlight effect if not already defined
+  if (!document.getElementById('coupon-highlight-css')) {
+    const style = document.createElement('style');
+    style.id = 'coupon-highlight-css';
+    style.textContent = `
+      .highlight {
+        animation: highlight-effect 1s ease;
+      }
+      @keyframes highlight-effect {
+        0% { background-color: rgba(76, 175, 80, 0.3); }
+        100% { background-color: transparent; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+});
 document.getElementById('btn-place-order').addEventListener('click', function(e) {
     e.preventDefault();
 
-    // Find which payment method is selected
     let selectedPaymentMethod = '';
     const paymentDivs = document.querySelectorAll('.collapse.show');
     
@@ -570,6 +801,7 @@ document.getElementById('btn-place-order').addEventListener('click', function(e)
         selectedPaymentMethod = paymentTitle;
     });
 
+    // Get values from the form
     const formData = {
         firstName: document.getElementById('fName').value,
         lastName: document.getElementById('lName').value,
@@ -581,10 +813,19 @@ document.getElementById('btn-place-order').addEventListener('click', function(e)
         state: document.getElementById('state').value,
         postCode: document.getElementById('pCode').value,
         phone: document.getElementById('mobile').value,
-        email: document.getElementById("email").value,
+        email: document.getElementById('email').value,
         paymentMethod: selectedPaymentMethod,
         orderNotes: document.getElementById('orderNote').value || '',
-        totalAmount: document.getElementById('totalAmount').value || 0
+        
+        // Get the final amount (with any coupon discount applied)
+        finalAmount: document.getElementById('finalAmountInput').value,
+        
+        // Get original total amount before discounts
+        totalAmount: document.getElementById('totalAmount').value,
+        
+        // Get coupon information if available
+        couponCode: document.getElementById('couponCodeInput')?.value || '',
+        couponDiscount: document.getElementById('couponDiscountInput')?.value || 0
     };
 
     const requiredFields = ['firstName', 'lastName', 'country', 'streetAddress', 'city', 'state', 'postCode', 'phone', 'email'];
@@ -595,18 +836,24 @@ document.getElementById('btn-place-order').addEventListener('click', function(e)
         return;
     }
 
-    // Check if Razorpay is selected as payment method
     if (selectedPaymentMethod.includes('Razorpay')) {
-        // First create order on the server
         createOrderAndInitiatePayment(formData);
+    } else if (selectedPaymentMethod.includes('Wallet')) {
+        // Check wallet balance before proceeding
+        const walletBalance = parseFloat(document.getElementById('walletBalance').textContent);
+        const finalAmount = parseFloat(formData.finalAmount);
+        
+        if (walletBalance < finalAmount) {
+            document.getElementById('insufficient-balance-msg').style.display = 'block';
+            return;
+        }
+        submitOrderThroughRegularCheckout(formData);
     } else {
-        // Continue with the original flow for other payment methods
         submitOrderThroughRegularCheckout(formData);
     }
 });
 
 function createOrderAndInitiatePayment(formData) {
-    // Step 1: Create order on your server
     fetch('/create-razorpay-order', {
         method: 'POST',
         headers: {
@@ -622,15 +869,13 @@ function createOrderAndInitiatePayment(formData) {
     })
     .then(data => {
         if (data.success) {
-            // Validate required data from server
             if (!data.orderId || !data.amount || !data.razorpayKeyId) {
                 throw new Error('Missing required data from server');
             }
             
-            // Step 2: Initialize Razorpay checkout
             const options = {
                 key: data.razorpayKeyId, // Your Razorpay Key ID from server
-                amount: data.amount, // Amount in smallest currency unit (paise for INR)
+                amount: data.amount, 
                 currency: "INR",
                 name: "Your Store Name",
                 description: "Purchase Payment",
@@ -647,7 +892,6 @@ function createOrderAndInitiatePayment(formData) {
                     color: "#3399cc"
                 },
                 handler: function (response) {
-                    // Step 3: Verify payment on your server
                     verifyPayment({
                         razorpay_payment_id: response.razorpay_payment_id,
                         razorpay_order_id: response.razorpay_order_id,
@@ -701,7 +945,6 @@ function verifyPayment(paymentData) {
                 keyboard: false
             });
 
-            // Redirect to the order details page after a delay
             setTimeout(() => {
                 window.location.href = '/shop';
             }, 5000);
@@ -716,7 +959,6 @@ function verifyPayment(paymentData) {
 }
 
 function submitOrderThroughRegularCheckout(formData) {
-    // This is for non-Razorpay payment methods
     fetch('/place-order', {
         method: 'POST',
         headers: {
@@ -734,7 +976,7 @@ function submitOrderThroughRegularCheckout(formData) {
         if (data.success) {
             // Show success modal - make sure we're accessing the right properties
             document.getElementById('modalOrderId').textContent = data.orderId || data._id || 'N/A';
-            document.getElementById('modalOrderTotal').textContent = data.total || data.amount || 'N/A';
+            document.getElementById('modalOrderTotal').textContent = data.finalAmount || data.amount || 'N/A'; // ✅ Fix: Using finalAmount
 
             $('#successModal').modal({
                 backdrop: 'static',
@@ -754,5 +996,243 @@ function submitOrderThroughRegularCheckout(formData) {
         alert('An error occurred: ' + error.message);
     });
 }
+// 1. First, add code to fetch and display wallet balance when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Fetch wallet balance when page loads
+  fetchWalletBalance();
+  
+  // Other existing event listeners...
+});
+
+// Function to fetch wallet balance from server
+function fetchWalletBalance() {
+  fetch('/wallet/balance')
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Update wallet balance display
+        document.getElementById('walletBalance').textContent = data.balance.toFixed(2);
+        
+        // Store balance for later use
+        document.body.dataset.walletBalance = data.balance;
+        
+        // Check if wallet balance is sufficient for current order
+        checkWalletBalance();
+      } else {
+        document.getElementById('walletBalance').textContent = '0.00';
+        console.error('Error fetching wallet balance:', data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching wallet balance:', error);
+      document.getElementById('walletBalance').textContent = '0.00';
+    });
+}
+
+// Function to check if wallet balance is sufficient for order total
+function checkWalletBalance() {
+  const walletBalance = parseFloat(document.body.dataset.walletBalance || 0);
+  const orderTotal = parseFloat(document.getElementById('finalAmountInput').value);
+  
+  // Show warning if balance is insufficient
+  if (walletBalance < orderTotal) {
+    document.getElementById('insufficient-balance-msg').style.display = 'block';
+  } else {
+    document.getElementById('insufficient-balance-msg').style.display = 'none';
+  }
+}
+
+// Add event listener to payment method collapsible sections
+document.querySelectorAll('#accordion-payment .card-header').forEach(header => {
+  header.addEventListener('click', function() {
+    // Delay to allow collapse animation to complete
+    setTimeout(() => {
+      const walletPaymentSelected = document.getElementById('collapse-wallet').classList.contains('show');
+      
+      if (walletPaymentSelected) {
+        checkWalletBalance();
+      } else {
+        // Hide insufficient balance message if wallet not selected
+        document.getElementById('insufficient-balance-msg').style.display = 'none';
+      }
+    }, 300);
+  });
+});
+
+// Modify the existing place order function to handle wallet payments
+// Modify the existing place order function to handle wallet payments
+document.getElementById('btn-place-order').addEventListener('click', function(e) {
+    e.preventDefault();
+
+    let selectedPaymentMethod = '';
+    const paymentDivs = document.querySelectorAll('.collapse.show');
+    
+    if (paymentDivs.length === 0) {
+        alert('Please select a payment method');
+        return;
+    }
+    
+    paymentDivs.forEach(div => {
+        const paymentTitle = div.previousElementSibling.querySelector('.card-title a').textContent.trim();
+        selectedPaymentMethod = paymentTitle;
+    });
+
+    // Get values from the form
+    const formData = {
+        firstName: document.getElementById('fName').value,
+        lastName: document.getElementById('lName').value,
+        companyName: document.getElementById('cName').value || '',
+        country: document.getElementById('country').value,
+        streetAddress: document.getElementById('sAddress').value,
+        landmark: document.getElementById('lMark').value || '',
+        city: document.getElementById('city').value,
+        state: document.getElementById('state').value,
+        postCode: document.getElementById('pCode').value,
+        phone: document.getElementById('mobile').value,
+        email: document.getElementById('email').value,
+        paymentMethod: selectedPaymentMethod,
+        orderNotes: document.getElementById('orderNote').value || '',
+        
+        // Get the final amount (with any coupon discount applied)
+        finalAmount: parseFloat(document.getElementById('finalAmountInput').value),
+        
+        // Get original total amount before discounts
+        totalAmount: parseFloat(document.getElementById('totalAmount').value),
+        
+        // Get coupon information if available
+        couponCode: document.getElementById('couponCodeInput')?.value || '',
+        couponDiscount: parseFloat(document.getElementById('couponDiscountInput')?.value || 0)
+    };
+
+    const requiredFields = ['firstName', 'lastName', 'country', 'streetAddress', 'city', 'state', 'postCode', 'phone', 'email'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+
+    if (missingFields.length > 0) {
+        alert('Please fill in all required fields: ' + missingFields.join(', '));
+        return;
+    }
+
+    if (selectedPaymentMethod.includes('Razorpay')) {
+        createOrderAndInitiatePayment(formData);
+    } else if (selectedPaymentMethod.toLowerCase().includes('wallet')) {
+        // ✅ Fix: Convert "Wallet" to lowercase "wallet"
+        formData.paymentMethod = 'wallet';
+
+        // Check wallet balance before proceeding
+        const walletBalance = parseFloat(document.body.dataset.walletBalance || 0);
+        const finalAmount = parseFloat(formData.finalAmount);
+
+        if (walletBalance < finalAmount) {
+            document.getElementById('insufficient-balance-msg').style.display = 'block';
+            showInsufficientBalanceModal(finalAmount, walletBalance);
+            return;
+        }
+        submitWalletPayment(formData);
+    } else {
+        submitOrderThroughRegularCheckout(formData);
+    }
+});
+
+// ✅ Fix: Convert "Wallet" to lowercase "wallet" in API call
+function submitWalletPayment(formData) {
+    formData.paymentMethod = 'wallet';
+    
+    fetch('/process-wallet-payment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            document.getElementById('modalOrderId').textContent = data.orderId || 'N/A';
+            document.getElementById('modalOrderTotal').textContent = data.finalAmount || 'N/A';
+
+            $('#successModal').modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 5000);
+        } else {
+            if (data.insufficientBalance) {
+                showInsufficientBalanceModal(
+                    parseFloat(formData.finalAmount), 
+                    parseFloat(data.walletBalance || 0)
+                );
+            } else {
+                alert(data.message || 'Payment failed. Please try again.');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred: ' + error.message);
+    });
+}
+
+// Function to show insufficient balance modal
+function showInsufficientBalanceModal(orderAmount, walletBalance) {
+    // Create modal if it doesn't exist
+    if (!document.getElementById('insufficientBalanceModal')) {
+        const modalHTML = `
+        <div class="modal fade" id="insufficientBalanceModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Insufficient Wallet Balance</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center mb-4">
+                            <i class="icon-wallet" style="font-size: 3rem; color: #dc3545;"></i>
+                        </div>
+                        <p>Your wallet balance is insufficient for this purchase.</p>
+                        <div class="row">
+                            <div class="col-6 text-right">Order Amount:</div>
+                            <div class="col-6 text-left font-weight-bold" id="modalOrderAmount">₹0.00</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 text-right">Your Balance:</div>
+                            <div class="col-6 text-left font-weight-bold" id="modalCurrentBalance">₹0.00</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 text-right">Shortage:</div>
+                            <div class="col-6 text-left font-weight-bold text-danger" id="modalBalanceShortage">₹0.00</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Choose Another Payment</button>
+                        <a href="/wallet/add-funds" class="btn btn-primary">Add Funds to Wallet</a>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+        
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = modalHTML;
+        document.body.appendChild(modalContainer.firstChild);
+    }
+    
+    // Update modal content
+    document.getElementById('modalOrderAmount').textContent = `₹${orderAmount.toFixed(2)}`;
+    document.getElementById('modalCurrentBalance').textContent = `₹${walletBalance.toFixed(2)}`;
+    document.getElementById('modalBalanceShortage').textContent = `₹${(orderAmount - walletBalance).toFixed(2)}`;
+    
+    // Show modal
+    $('#insufficientBalanceModal').modal('show');
+}
 </script>
+
 <%-include("../../views/partials/users/footer.ejs")%>

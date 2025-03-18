@@ -32,11 +32,16 @@ const wishlistPageInfo = async (req, res) => {
             ]);
 
             const totalPages = Math.ceil((totalProducts[0]?.totalItems || 0) / limit);
-
+            let user = null;
+            if (req.session.userId) {
+              user = await User.findById(req.session.userId);
+            }
+  
             res.render('wishlist', {
                 wishlist: wishlist.products, 
                 currentPage: page,
                 totalPages,
+                user
             });
         } catch (error) {
             console.error(error);

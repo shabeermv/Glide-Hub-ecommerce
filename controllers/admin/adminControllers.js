@@ -50,7 +50,7 @@ const getHome = async (req, res) => {
 
             // ✅ Calculate Total Sales Revenue (only completed orders)
             const totalSalesResult = await Order.aggregate([
-                { $match: { paymentStatus: "Completed" } }, // Count only paid orders
+                { $match: { paymentStatus: "completed" } }, // Count only paid orders
                 { $group: { _id: null, totalSales: { $sum: "$totalAmount" } } }
             ]);
 
@@ -139,6 +139,7 @@ const filterCategoryList = async(req, res) => {
         let productCount = await Products.countDocuments();
         let categories = await Category.find();
         let orderStatuses = ['Pending', 'Shipped', 'Delivered', 'Cancelled', 'Returned'];
+        let paymentStatus = ['completed'];
 
         const page = parseInt(req.query.page) || 1;
         const limit = 5;
@@ -166,7 +167,7 @@ const filterCategoryList = async(req, res) => {
         const totalPages = Math.ceil(totalOrders / limit);
 
         const totalSalesResult = await Order.aggregate([
-            { $match: { paymentStatus: "Completed" } },
+            { $match: { paymentStatus: "completed" } },
             { $group: { _id: null, totalSales: { $sum: "$totalAmount" } } }
         ]);
 
@@ -195,7 +196,8 @@ const filterCategoryList = async(req, res) => {
             selectedCategory: categoryId || 'All Categories',
             totalSales,
             topSellingProducts,
-            totalOrders // ✅ Added to fix the error
+            totalOrders,
+            paymentStatus // ✅ Added to fix the error
         });
 
     } catch (error) {
@@ -211,118 +213,95 @@ const filterCategoryList = async(req, res) => {
 
 const getFilterByDate = async (req, res) => {
     try {
-        const { filter, startDate, endDate } = req.query;
-
-        let start, end;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        switch (filter) {
-            case "daily":
-                start = new Date(today);
-                end = new Date(today);
-                end.setHours(23, 59, 59, 999);
-                break;
-            case "weekly":
-                start = new Date(today);
-                start.setDate(today.getDate() - 7);
-                end = new Date(today);
-                end.setHours(23, 59, 59, 999);
-                break;
-            case "monthly":
-                start = new Date(today.getFullYear(), today.getMonth(), 1);
-                end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                end.setHours(23, 59, 59, 999);
-                break;
-            case "yearly":
-                start = new Date(today.getFullYear(), 0, 1);
-                end = new Date(today.getFullYear(), 11, 31);
-                end.setHours(23, 59, 59, 999);
-                break;
-            case "custom":
-                if (!startDate || !endDate) {
-                    return res.status(400).json({ success: false, message: "Start and end date required" });
-                }
-                start = new Date(startDate);
-                end = new Date(endDate);
-                end.setHours(23, 59, 59, 999);
-                break;
-            default:
-                return res.status(400).json({ success: false, message: "Invalid filter type" });
-        }
-
-        // Fetch orders by date range
-        const orders = await Order.find({
-            createdAt: { $gte: start, $lte: end }
-        })
-        .populate('userId', 'name email')
-        .populate({
-            path: 'products.productId',
-            select: 'title price'
-        })
-        .sort({ createdAt: -1 });
-
-        // ✅ Calculate totalOrders count
-        const totalOrders = await Order.countDocuments({
-            createdAt: { $gte: start, $lte: end }
-        });
-
-        res.json({ 
-            success: true, 
-            orders,
-            totalOrders,
-            currentPage: 1,
-            totalPages: Math.ceil(totalOrders / 10) // Assuming 10 items per page
-        });
-    } catch (error) {
-        console.error("Error fetching orders by date:", error);
-        return res.status(500).json({ success: false, message: 'Internal server error' });
-    }
-};
-
-
-// Filter orders by payment/order status
-const filterByStatus = async (req, res) => {
-    try {
-        const { status } = req.query;
-        
-        let query = {};
-        
-        if (status && status !== 'All') {
-            if (status === 'Paid') {
-                query.paymentStatus = 'Completed';
-            } else if (status === 'Failed') {
-                query.paymentStatus = 'Failed';
-            } else if (status === 'Refund') {
-                query.orderStatus = 'Cancelled';
-            } else if (status === 'Pending') {
-                query.paymentStatus = { $nin: ['Completed', 'Failed'] };
-                query.orderStatus = { $ne: 'Cancelled' };
-            } else {
-                // Handle other statuses (if they come from orderStatuses array)
-                query.orderStatus = status;
-            }
-        }
-        
-        const orders = await Order.find(query)
-            .populate('userId', 'name email')
-            .populate('products.productId', 'title price')
-            .sort({ createdAt: -1 });
-        
-        const totalOrders = orders.length;
+      const { filter, startDate, endDate } = req.query;
+      let start, end;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+  
+      switch (filter) {
+        case "daily":
+          start = new Date(today);
+          end = new Date(today);
+          end.setHours(23, 59, 59, 999);
+          break;
+        case "weekly":
+          start = new Date(today);
+          start.setDate(today.getDate() - 7);
+          end = new Date(today);
+          end.setHours(23, 59, 59, 999);
+          break;
+        case "monthly":
+          start = new Date(today.getFullYear(), today.getMonth(), 1);
+          end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          end.setHours(23, 59, 59, 999);
+          break;
+        case "yearly":
+          start = new Date(today.getFullYear(), 0, 1);
+          end = new Date(today.getFullYear(), 11, 31);
+          end.setHours(23, 59, 59, 999);
+          break;
+        case "custom":
+          if (!startDate || !endDate) {
+            return res.status(400).json({ success: false, message: "Start and end date required" });
+          }
+  
+          // ✅ Fix: Proper date parsing with validation
+          try {
+            start = new Date(startDate);
+            end = new Date(endDate);
             
-        res.json({ 
-            success: true, 
-            orders,
-            totalOrders,
-            currentPage: 1,
-            totalPages: Math.ceil(totalOrders / 10) 
-        });
+            if (isNaN(start) || isNaN(end)) {
+              return res.status(400).json({ success: false, message: "Invalid date format. Use YYYY-MM-DD." });
+            }
+  
+            start.setHours(0, 0, 0, 0);
+            end.setHours(23, 59, 59, 999);
+          } catch (error) {
+            return res.status(400).json({ success: false, message: "Error parsing custom dates." });
+          }
+          break;
+        default:
+          return res.status(400).json({ success: false, message: "Invalid filter type" });
+      }
+  
+      console.log(`Filtering orders from ${start.toISOString()} to ${end.toISOString()}`);
+  
+      // ✅ Ensure filtering by date is working correctly
+      const orders = await Order.find({
+        createdAt: { $gte: start, $lte: end }
+      })
+      .populate('userId', 'name email')
+      .populate({ path: 'products.productId', select: 'title price' })
+      .sort({ createdAt: -1 });
+  
+      // ✅ Calculate total sales amount
+      let totalAmount = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+      const totalOrders = orders.length;
+  
+      res.json({
+        success: true,
+        orders,
+        totalOrders,
+        totalAmount,
+        currentPage: 1,
+        totalPages: 1,
+        dateRange: {
+          start: start.toISOString(),
+          end: end.toISOString()
+        }
+      });
     } catch (error) {
-        console.error("Error filtering orders by status:", error);
-        return res.status(500).json({ success: false, message: 'Internal server error' });
+      console.error("Error fetching orders by date:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message
+      });
     }
-};
+  };
+  
+// Filter orders by payment/order status
+
 
 
 const postAdmin = async (req, res) => {
@@ -492,42 +471,42 @@ const downloadOrdersExcel = async (req, res) => {
         }
     }
 };
-const getFilteredOrders = async (req, res) => {
-    try {
-        let { filter, startDate, endDate } = req.query;
-        let query = {};
-        let today = new Date();
-        let start, end;
+// const getFilteredOrders = async (req, res) => {
+//     try {
+//         let { filter, startDate, endDate } = req.query;
+//         let query = {};
+//         let today = new Date();
+//         let start, end;
 
-        if (filter === "daily") {
-            start = new Date(today.setHours(0, 0, 0, 0));
-            end = new Date(today.setHours(23, 59, 59, 999));
-        } else if (filter === "weekly") {
-            let firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
-            start = new Date(firstDayOfWeek.setHours(0, 0, 0, 0));
-            end = new Date(today.setDate(firstDayOfWeek.getDate() + 6));
-        } else if (filter === "monthly") {
-            start = new Date(today.getFullYear(), today.getMonth(), 1);
-            end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        } else if (filter === "yearly") {
-            start = new Date(today.getFullYear(), 0, 1);
-            end = new Date(today.getFullYear(), 11, 31);
-        } else if (filter === "custom" && startDate && endDate) {
-            start = new Date(startDate);
-            end = new Date(endDate);
-        }
+//         if (filter === "daily") {
+//             start = new Date(today.setHours(0, 0, 0, 0));
+//             end = new Date(today.setHours(23, 59, 59, 999));
+//         } else if (filter === "weekly") {
+//             let firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+//             start = new Date(firstDayOfWeek.setHours(0, 0, 0, 0));
+//             end = new Date(today.setDate(firstDayOfWeek.getDate() + 6));
+//         } else if (filter === "monthly") {
+//             start = new Date(today.getFullYear(), today.getMonth(), 1);
+//             end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+//         } else if (filter === "yearly") {
+//             start = new Date(today.getFullYear(), 0, 1);
+//             end = new Date(today.getFullYear(), 11, 31);
+//         } else if (filter === "custom" && startDate && endDate) {
+//             start = new Date(startDate);
+//             end = new Date(endDate);
+//         }
 
-        if (start && end) {
-            query.createdAt = { $gte: start, $lte: end };
-        }
+//         if (start && end) {
+//             query.createdAt = { $gte: start, $lte: end };
+//         }
 
-        const orders = await Order.find(query).populate('userId');
+//         const orders = await Order.find(query).populate('userId');
 
-        res.json(orders);
-    } catch (error) {
-        console.error("Error fetching filtered orders:", error);
-       return res.status(500).json({success:false,message:'internal server error'})   }
-};
+//         res.json(orders);
+//     } catch (error) {
+//         console.error("Error fetching filtered orders:", error);
+//        return res.status(500).json({success:false,message:'internal server error'})   }
+// };
 
 module.exports = {
     adminLogin,
@@ -536,7 +515,6 @@ module.exports = {
     getSalesData,
     filterCategoryList,
     getFilterByDate,
-    filterByStatus,
     logoutAdmin,
     downloadOrdersPDF,
     downloadOrdersExcel,
