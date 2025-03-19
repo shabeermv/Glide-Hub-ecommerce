@@ -384,6 +384,20 @@
         </div>
     </div>
 </div>
+<div id="paymentErrorModal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Payment Failed</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="paymentErrorMessage">Your payment was not successful. Please try again.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <style>
 .coupon-container {
@@ -856,59 +870,121 @@ document.getElementById('btn-place-order').addEventListener('click', function(e)
 function createOrderAndInitiatePayment(formData) {
     fetch('/create-razorpay-order', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
         if (data.success) {
             if (!data.orderId || !data.amount || !data.razorpayKeyId) {
                 throw new Error('Missing required data from server');
             }
-            
+
             const options = {
-                key: data.razorpayKeyId, // Your Razorpay Key ID from server
+                key: data.razorpayKeyId, 
                 amount: data.amount, 
                 currency: "INR",
                 name: "Your Store Name",
                 description: "Purchase Payment",
-                order_id: data.orderId, // Order ID from Razorpay
+                order_id: data.orderId, 
                 prefill: {
                     name: formData.firstName + " " + formData.lastName,
                     email: formData.email,
                     contact: formData.phone
                 },
-                notes: {
-                    address: formData.streetAddress
-                },
-                theme: {
-                    color: "#3399cc"
-                },
+                notes: { address: formData.streetAddress },
+                theme: { color: "#3399cc" },
+                
+                // ✅ SUCCESS HANDLER
                 handler: function (response) {
                     verifyPayment({
                         razorpay_payment_id: response.razorpay_payment_id,
                         razorpay_order_id: response.razorpay_order_id,
                         razorpay_signature: response.razorpay_signature,
-                        order_id: data.yourOrderId // Your internal order ID
+                        order_id: data.yourOrderId 
                     });
                 }
             };
-            
+
             const rzp = new Razorpay(options);
             rzp.open();
-            
-            // Handle payment failures
+
+            // ✅ PAYMENT FAILURE HANDLER
             rzp.on('payment.failed', function (response) {
-                alert("Payment failed: " + response.error.description);
-                console.log(response.error);
+                console.error("❌ Payment failed:", response.error);
+                
+                alert(`Payment failed: ${response.error.description || 'Transaction could not be completed.'}`);
+
+                // Send the failed status to the backend
+                handleFailedPayment(data.yourOrderId);
             });
+
+        } else {
+            alert(data.message || 'Failed to create order. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred: ' + error.message);
+    });
+}
+function createOrderAndInitiatePayment(formData) {
+    fetch('/create-razorpay-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (!data.orderId || !data.amount || !data.razorpayKeyId) {
+                throw new Error('Missing required data from server');
+            }
+
+            const options = {
+                key: data.razorpayKeyId, 
+                amount: data.amount, 
+                currency: "INR",
+                name: "Your Store Name",
+                description: "Purchase Payment",
+                order_id: data.orderId, 
+                prefill: {
+                    name: formData.firstName + " " + formData.lastName,
+                    email: formData.email,
+                    contact: formData.phone
+                },
+                notes: { address: formData.streetAddress },
+                theme: { color: "#3399cc" },
+                
+                // ✅ SUCCESS HANDLER
+                handler: function (response) {
+                    verifyPayment({
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature,
+                        order_id: data.yourOrderId 
+                    });
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+
+            // ✅ PAYMENT FAILURE HANDLER
+            rzp.on("payment.failed", function (response) {
+                console.error("❌ Payment failed:", response.error);
+
+                // Update modal message
+                document.getElementById("paymentErrorMessage").textContent =
+                    response.error.description || "Your payment was not successful. Please try again.";
+
+                // Show the modal
+                $("#paymentErrorModal").modal("show");
+
+                // ✅ Send failed payment status to the backend
+                handleFailedPayment(data.yourOrderId);
+            });
+
         } else {
             alert(data.message || 'Failed to create order. Please try again.');
         }
@@ -957,6 +1033,33 @@ function verifyPayment(paymentData) {
         alert('An error occurred during payment verification: ' + error.message);
     });
 }
+function handleFailedPayment(orderId) {
+    fetch('/handle-failed-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            console.error("Error updating failed payment status:", data.message);
+        }
+
+        // ✅ Show the failure modal
+        document.getElementById("paymentErrorMessage").textContent = 
+            data.message || "Your payment was not successful. Please try again.";
+        
+        $("#paymentErrorModal").modal("show");
+    })
+    .catch(error => {
+        console.error("Error handling failed payment:", error);
+        document.getElementById("paymentErrorMessage").textContent = 
+            "An error occurred while processing your payment. Please try again.";
+
+        $("#paymentErrorModal").modal("show");
+    });
+}
+
 
 function submitOrderThroughRegularCheckout(formData) {
     fetch('/place-order', {

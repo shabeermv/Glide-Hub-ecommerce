@@ -80,7 +80,6 @@ function applyDateFilter() {
         startDateValue = document.getElementById("startDate").value;
         endDateValue = document.getElementById("endDate").value;
 
-        // ✅ Ensure date format is correct before sending request
         if (!startDateValue || !endDateValue) {
             alert("Please select both start and end dates.");
             return;
@@ -98,8 +97,8 @@ function applyDateFilter() {
         tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Loading...</td></tr>';
     }
 
-    // ✅ API Call with Proper Date Format
-    fetch(`/admin/filterByDate?filter=${filterType}&startDate=${startDateValue}&endDate=${endDateValue}`)
+    // ✅ API Call - Only Fetch Delivered Orders
+    fetch(`/admin/filterByDate?filter=${filterType}&startDate=${startDateValue}&endDate=${endDateValue}&orderStatus=Delivered`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -117,10 +116,11 @@ function applyDateFilter() {
             console.error("Error:", error);
             alert("An error occurred while filtering orders.");
             if (tableBody) {
-                tableBody.innerHTML = '<tr><td colspan="8" class="text-center">No orders found</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="8" class="text-center">No delivered orders found</td></tr>';
             }
         });
 }
+
 
 
 // Function to update the orders table with filtered data

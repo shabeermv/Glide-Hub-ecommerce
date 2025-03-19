@@ -18,11 +18,10 @@ const adminLogin = async (req, res) => {
 };
 
 
-
 const getHome = async (req, res) => {
     try {
         if (req.session.admin) {
-            const orderCount = await Order.countDocuments();
+            const orderCount = await Order.countDocuments({ orderStatus: "Delivered" }); // ✅ Count only Delivered orders
             const productCount = await Products.countDocuments();
             const categories = await Category.find();
             const orderStatuses = await Order.distinct('orderStatus');
@@ -31,26 +30,23 @@ const getHome = async (req, res) => {
             const limit = 5;
             const skip = (page - 1) * limit;
 
-            const recentOrders = await Order.find()
+            // ✅ Fetch only "Delivered" orders
+            const recentOrders = await Order.find({ orderStatus: "Delivered" })
                 .populate('userId', 'name email')
                 .populate('products.productId', 'title price')
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit);
 
-            // ✅ Ensure `totalOrders` is properly counted
-            const totalOrders = await Order.countDocuments();
-
+            const totalOrders = await Order.countDocuments({ orderStatus: "Delivered" });
             const totalPages = Math.ceil(totalOrders / limit);
 
-            // ✅ Fetch top 5 best-selling products
             const topSellingProducts = await Products.find()
-                .sort({ saleCount: -1 }) // Sort by highest sale count
+                .sort({ saleCount: -1 })
                 .limit(5);
 
-            // ✅ Calculate Total Sales Revenue (only completed orders)
             const totalSalesResult = await Order.aggregate([
-                { $match: { paymentStatus: "completed" } }, // Count only paid orders
+                { $match: { orderStatus: "Delivered" } },
                 { $group: { _id: null, totalSales: { $sum: "$totalAmount" } } }
             ]);
 
@@ -64,8 +60,8 @@ const getHome = async (req, res) => {
                 orderStatuses,
                 currentPage: page,
                 totalPages,
-                totalOrders, // ✅ Ensure this is passed
-                totalSales,  // ✅ Ensure this is passed
+                totalOrders,
+                totalSales,
                 topSellingProducts,
                 selectedCategory: 'All Categories' 
             });
@@ -79,6 +75,7 @@ const getHome = async (req, res) => {
         });
     }
 };
+
 
 
 
@@ -130,44 +127,41 @@ const getSalesData = async (req, res) => {
 
 
 
-const filterCategoryList = async(req, res) => {
+const filterCategoryList = async (req, res) => {
     try {
         const { categoryId } = req.query;
         const isAjaxRequest = req.xhr || req.headers.accept.indexOf('json') > -1;
 
-        let orderCount = await Order.countDocuments();
+        let orderCount = await Order.countDocuments({ orderStatus: "Delivered" }); // ✅ Count only Delivered orders
         let productCount = await Products.countDocuments();
         let categories = await Category.find();
-        let orderStatuses = ['Pending', 'Shipped', 'Delivered', 'Cancelled', 'Returned'];
+        let orderStatuses = ['Delivered'];
         let paymentStatus = ['completed'];
 
         const page = parseInt(req.query.page) || 1;
         const limit = 5;
         const skip = (page - 1) * limit;
 
-        let query = {};
-        let recentOrders = [];
-        let totalOrders = 0;
+        let query = { orderStatus: "Delivered" }; // ✅ Filter only Delivered orders
 
         if (categoryId && categoryId !== 'All Categories') {
             const products = await Products.find({ category: categoryId });
             const productIds = products.map(product => product._id);
-
-            query = { 'products.productId': { $in: productIds } };
+            query['products.productId'] = { $in: productIds };
         }
 
-        recentOrders = await Order.find(query)
+        const recentOrders = await Order.find(query)
             .populate('userId', 'name email')
             .populate('products.productId', 'title price')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
 
-        totalOrders = await Order.countDocuments(query); // ✅ Make sure it's calculated
+        const totalOrders = await Order.countDocuments(query);
         const totalPages = Math.ceil(totalOrders / limit);
 
         const totalSalesResult = await Order.aggregate([
-            { $match: { paymentStatus: "completed" } },
+            { $match: { orderStatus: "Delivered" } }, // ✅ Only Delivered orders
             { $group: { _id: null, totalSales: { $sum: "$totalAmount" } } }
         ]);
 
@@ -197,16 +191,14 @@ const filterCategoryList = async(req, res) => {
             totalSales,
             topSellingProducts,
             totalOrders,
-            paymentStatus // ✅ Added to fix the error
+            paymentStatus
         });
 
     } catch (error) {
         console.error('Error filtering orders by category:', error);
-
         if (req.xhr || req.headers.accept.indexOf('json') > -1) {
             return res.status(500).json({ error: 'Server error while filtering orders' });
         }
-
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -245,7 +237,6 @@ const getFilterByDate = async (req, res) => {
             return res.status(400).json({ success: false, message: "Start and end date required" });
           }
   
-          // ✅ Fix: Proper date parsing with validation
           try {
             start = new Date(startDate);
             end = new Date(endDate);
@@ -264,10 +255,11 @@ const getFilterByDate = async (req, res) => {
           return res.status(400).json({ success: false, message: "Invalid filter type" });
       }
   
-      console.log(`Filtering orders from ${start.toISOString()} to ${end.toISOString()}`);
-  
-      // ✅ Ensure filtering by date is working correctly
+      console.log(`Filtering delivered orders from ${start.toISOString()} to ${end.toISOString()}`);
+
+      // ✅ Only Fetch Orders with `orderStatus: "Delivered"`
       const orders = await Order.find({
+        orderStatus: "Delivered", // ✅ Ensure only Delivered orders are fetched
         createdAt: { $gte: start, $lte: end }
       })
       .populate('userId', 'name email')
@@ -291,14 +283,15 @@ const getFilterByDate = async (req, res) => {
         }
       });
     } catch (error) {
-      console.error("Error fetching orders by date:", error);
+      console.error("Error fetching delivered orders by date:", error);
       return res.status(500).json({
         success: false,
         message: "Internal server error",
         error: error.message
       });
     }
-  };
+};
+
   
 // Filter orders by payment/order status
 

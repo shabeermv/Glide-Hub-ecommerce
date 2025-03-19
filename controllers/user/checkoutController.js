@@ -265,7 +265,72 @@ res.status(500).render('user/error', {
 });
     }
 };
+// Controller function
+const applyCoupon = async (req, res) => {
+    try {
+        const { couponCode, subtotal } = req.body;
+        
+        if (!couponCode || !subtotal) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Coupon code and subtotal are required' 
+            });
+        }
 
+        // Find the coupon in the database - using your actual schema field names
+        const coupon = await Coupon.findOne({ 
+            code: couponCode,
+            expireDate: { $gt: new Date() } // Check if coupon hasn't expired
+        });
+
+        if (!coupon) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Invalid or expired coupon code' 
+            });
+        }
+
+        // Check if the minimum purchase amount is met - using your actual field name
+        if (coupon.minPurchase && subtotal < coupon.minPurchase) {
+            return res.status(400).json({
+                success: false,
+                message: `Minimum purchase of ₹${coupon.minPurchase} required to use this coupon`
+            });
+        }
+
+        // Check if coupon has reached usage limit
+        if (coupon.count !== undefined && coupon.count <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'This coupon has reached its usage limit'
+            });
+        }
+
+        // Calculate discount
+        let discount = 0;
+        if (coupon.discount === 'percentage') {
+            discount = (subtotal * coupon.discountValue / 100);
+        } else {
+            // Fixed amount discount
+            discount = coupon.discountValue;
+        }
+
+        // Calculate final amount
+        const discountedTotal = Math.max(0, subtotal - discount);
+
+        res.status(200).json({
+            success: true,
+            discount: discount,
+            discountedTotal: discountedTotal,
+            couponCode: couponCode,
+            message: `Coupon applied! You saved ₹${discount.toFixed(2)}`
+        });
+
+    } catch (error) {
+        console.error('Error applying coupon:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
 
 
 const generateOrderId = () => {
@@ -356,25 +421,29 @@ const cancelOrder = async (req, res) => {
             });
         }
 
+        // ✅ Loop through each product in the order and update stock for the correct size
         for (const item of order.products) {
             const product = await Product.findById(item.productId);
 
             if (product) {
-                product.saleCount-=1;
+                product.saleCount = Math.max(0, (product.saleCount || 0) - 1); // Prevent negative saleCount
+
                 if (!Array.isArray(product.sizes)) {
                     console.warn(`Product ${product._id} has no sizes array`);
                     continue;
                 }
 
+                // ✅ Find the correct size object inside the product
                 const sizeIndex = product.sizes.findIndex(sizeObj => sizeObj.size === item.size);
 
                 if (sizeIndex !== -1) {
+                    // ✅ Increase stock for the canceled size
                     product.sizes[sizeIndex].stock += item.quantity;
                 } else {
+                    // ✅ If size not found, add a new size entry with the stock restored
                     product.sizes.push({
                         size: item.size,
-                        stock: item.quantity,
-                        canceled: true
+                        stock: item.quantity
                     });
                 }
 
@@ -382,6 +451,7 @@ const cancelOrder = async (req, res) => {
             }
         }
         
+        // ✅ Refund to the user's wallet if the payment was completed
         if (order.paymentStatus === 'completed' && order.userId) {
             const user = await User.findById(order.userId);
             if (user) {
@@ -390,14 +460,22 @@ const cancelOrder = async (req, res) => {
                 user.walletHistory.push({
                     date: new Date(),
                     amount: order.totalAmount
-                    
                 });
 
                 await user.save();
             }
         }
 
-        order.orderStatus = 'Cancelled';
+        // ✅ Set all product statuses in the order to "Cancelled"
+        order.products.forEach(product => {
+            product.status = "Cancelled";
+        });
+
+        order.markModified("products"); // Ensure Mongoose detects changes
+
+        // ✅ Set order status to "Cancelled"
+        order.orderStatus = "Cancelled";
+        
         await order.save();
 
         res.status(200).json({
@@ -408,20 +486,21 @@ const cancelOrder = async (req, res) => {
 
     } catch (error) {
         console.error('Error in cancelOrder:', error);
-        return res.status(500).json({success:false,message:'internal server error'})
+        return res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
+
 
 
 const viewPurchaseDetails = async (req, res) => {
     try {
         const orderId = req.params.id;
         const userId = req.session.userId;
-        
+
         const order = await Order.findById(orderId)
             .populate({
                 path: 'products.productId',
-                select: 'name price image' 
+                select: 'title price image' // ✅ Select the correct field: 'title'
             })
             .populate('userId', 'username email contact');
 
@@ -430,23 +509,151 @@ const viewPurchaseDetails = async (req, res) => {
                 message: 'Order not found'
             });
         }
-        
+
         if (order.userId._id.toString() !== userId) {
             return res.status(403).render('error', {
                 message: 'Unauthorized access to order'
             });
         }
-        
+
         res.render('purchaseDetails', {  
             order: order,
             user: order.userId
         });
     } catch (error) {
         console.error('Error fetching order details:', error);
-        return res.status(500).json({success:false,message:'internal server error'})
-
+        return res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
+
+const cancelPartialProduct = async (req, res) => {
+    try {
+        const { orderId, productOrderId } = req.params;
+        const { productId } = req.body;
+
+        console.log(`Processing cancellation for Order ID: ${orderId}, Product Order ID: ${productOrderId}, Product ID: ${productId}`);
+
+        // Find the order
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        // Ensure products array exists
+        if (!order.products || order.products.length === 0) {
+            return res.status(404).json({ success: false, message: 'No products found in order' });
+        }
+
+        // Find the specific product in the order by productOrderId and productId
+        const product = order.products.find(p => p.productOrderId.toString() === productOrderId && p.productId.toString() === productId);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found in order' });
+        }
+
+        console.log('Product found in order:', product);
+
+        // Check if the product is already cancelled
+        if (product.status === "Cancelled") {
+            return res.status(400).json({ success: false, message: 'Product already cancelled' });
+        }
+
+        // ✅ Update product status to "Cancelled"
+        product.status = "Cancelled";
+        order.markModified('products'); // Ensure Mongoose detects the change
+
+        // ✅ Update product inventory (increase stock for the correct size)
+        const productData = await Product.findById(productId);
+        if (productData) {
+            if (!Array.isArray(productData.sizes)) {
+                console.warn(`Product ${productData._id} has no sizes array`);
+            } else {
+                // ✅ Find the size and increase the stock (Do NOT add a new size)
+                const sizeObj = productData.sizes.find(sizeObj => sizeObj.size === product.size);
+                if (sizeObj) {
+                    sizeObj.stock += product.quantity; // ✅ Only increase stock
+                } else {
+                    console.warn(`Size ${product.size} not found for Product ${productData._id}`);
+                }
+            }
+
+            await productData.save();
+        }
+
+        // ✅ Check if ALL products in the order are cancelled
+        const allCancelled = order.products.every(p => p.status === "Cancelled");
+
+        console.log('All products cancelled?', allCancelled);
+
+        // ✅ If all products are cancelled, update order status
+        if (allCancelled) {
+            order.orderStatus = "Cancelled";
+            order.markModified('orderStatus'); // Ensure Mongoose detects the change
+            console.log('Order status updated to Cancelled');
+        }
+
+        // ✅ Save the updated order
+        await order.save();
+
+        return res.status(200).json({ success: true, message: 'Product cancelled successfully' });
+
+    } catch (error) {
+        console.error('Error in cancelPartialProduct:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+const orderCancel = async (req, res) => {
+    const orderId = req.params.id;
+    console.log('Cancelling order with ID:', orderId);
+
+    try {
+        // ✅ Find the order
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        // ✅ Loop through each product in the order and cancel it
+        for (const product of order.products) {
+            product.status = "Cancelled"; // Mark as cancelled
+            order.markModified('products'); // Ensure Mongoose detects the change
+
+            // ✅ Update product inventory (increase stock for the correct size)
+            const productData = await Product.findById(product.productId);
+            if (productData) {
+                if (!Array.isArray(productData.sizes)) {
+                    console.warn(`Product ${productData._id} has no sizes array`);
+                } else {
+                    // ✅ Find the correct size and increase the stock
+                    const sizeObj = productData.sizes.find(sizeObj => sizeObj.size === product.size);
+                    if (sizeObj) {
+                        sizeObj.stock += product.quantity; // ✅ Only increase stock
+                    } else {
+                        console.warn(`Size ${product.size} not found for Product ${productData._id}`);
+                    }
+                }
+
+                await productData.save(); // ✅ Save updated stock
+            }
+        }
+
+        // ✅ Set order status to "Cancelled"
+        order.orderStatus = "Cancelled";
+        order.markModified('orderStatus'); // Ensure Mongoose detects the change
+        
+        // ✅ Save the updated order
+        await order.save();
+
+        return res.status(200).json({ success: true, message: 'Order cancelled successfully' });
+
+    } catch (error) {
+        console.error('Error in orderCancel:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+
+
 
 
 //   console.log('Environment variables check:');
@@ -579,9 +786,10 @@ const razorpayCreation = async (req, res) => {
 const verifyRazorPay = async (req, res) => {
     try {
         const { razorpay_payment_id, razorpay_order_id, razorpay_signature, order_id } = req.body;
+
         console.log("Verifying Razorpay payment:", razorpay_payment_id);
 
-        // Step 1: Verify the Payment Signature
+        // Verify the Razorpay signature
         const secret = process.env.RAZORPAY_SECRET_KEY;
         const generated_signature = crypto
             .createHmac("sha256", secret)
@@ -589,80 +797,89 @@ const verifyRazorPay = async (req, res) => {
             .digest("hex");
 
         if (generated_signature !== razorpay_signature) {
-            console.error("Signature verification failed for payment:", razorpay_payment_id);
-            await Order.findByIdAndUpdate(order_id, { 
-                paymentStatus: "Failed", 
-                orderStatus: "Cancelled" 
+            console.error(" Signature verification failed for payment:", razorpay_payment_id);
+
+            // Update the order status to "Failed"
+            await Order.findByIdAndUpdate(order_id, {
+                paymentStatus: "Failed",
+                orderStatus: "Cancelled"
             });
+
             return res.status(400).json({ 
                 success: false, 
-                message: "Payment verification failed" 
+                message: "Payment verification failed. Please try again or contact support." 
             });
         }
 
-        // Step 2: Find the Order with populated product details
+        // Find the order
         const order = await Order.findById(order_id);
-
         if (!order) {
             return res.status(404).json({ 
                 success: false, 
-                message: "Order not found" 
+                message: "Order not found. Please contact support." 
             });
         }
 
-        // Step 3: Update Order Status
-        order.paymentStatus = "completed";
+        // Update Order Status to 'Completed'
+        order.paymentStatus = "Completed";
         order.orderStatus = "Confirmed";
         order.razorpayPaymentId = razorpay_payment_id;
 
-        // Step 4: Update product stock for each item in the order
+        // ✅ Update Product Stock
         for (const item of order.products) {
             const product = await Product.findById(item.productId);
-            
             if (product) {
-                // ✅ Ensure saleCount is a valid number before incrementing
-                product.saleCount = Number(product.saleCount) || 0;
-                product.saleCount += 1;
-
-                const sizeIndex = product.sizes.findIndex(sizeObj => sizeObj.size === item.size);
+                product.saleCount = (Number(product.saleCount) || 0) + 1;
                 
+                const sizeIndex = product.sizes.findIndex(sizeObj => sizeObj.size === item.size);
                 if (sizeIndex !== -1) {
-                    // ✅ Ensure stock does not go below 0
-                    product.sizes[sizeIndex].stock = Math.max(
-                        0, 
-                        product.sizes[sizeIndex].stock - item.quantity
-                    );
-                } else {
-                    console.warn(`Size ${item.size} not found for product ${product._id}`);
+                    product.sizes[sizeIndex].stock = Math.max(0, product.sizes[sizeIndex].stock - item.quantity);
                 }
-
                 await product.save();
             }
         }
 
-        // Step 5: Clear the user's cart if they are logged in
+        // ✅ Clear Cart if user is logged in
         if (order.userId) {
-            await Cart.findOneAndUpdate(
-                { userId: order.userId },
-                { $set: { product: [], totalPrice: 0 } }
-            );
+            await Cart.findOneAndUpdate({ userId: order.userId }, { $set: { product: [], totalPrice: 0 } });
         }
 
-        // Save the updated order
         await order.save();
 
         res.json({
             success: true,
             orderId: order._id,
             total: order.totalAmount,
-            message: "Payment verified, order saved, and stock updated."
+            message: "Payment verified, order confirmed, and stock updated."
         });
 
     } catch (error) {
-        console.error("Error verifying payment:", error);
+        console.error(" Error verifying payment:", error);
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
+const handleFailedPayments = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+
+        if (!orderId) {
+            return res.status(400).json({ success: false, message: "Order ID is required" });
+        }
+
+        // Update order status to Failed
+        await Order.findByIdAndUpdate(orderId, { 
+            paymentStatus: "Failed", 
+            orderStatus: "Cancelled" 
+        });
+
+        res.json({ success: true, message: "Order status updated to Failed" });
+    } catch (error) {
+        console.error("❌ Error updating failed payment:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
 
 
 
@@ -898,11 +1115,15 @@ const payWithWallet = async (req, res) => {
 module.exports = {
     checkoutPageInfo,
     cartCheckoutPage,
+    applyCoupon,
     buyNow,
     cancelOrder,
     viewPurchaseDetails,
+    cancelPartialProduct,
+    orderCancel,
     razorpayCreation,
     verifyRazorPay,
+    handleFailedPayments,
     returnOrder,
     returnRequest,
     returnPartialRequest,

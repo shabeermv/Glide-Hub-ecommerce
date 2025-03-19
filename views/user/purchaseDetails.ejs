@@ -29,29 +29,50 @@
             <span class="badge-status"><%= order.orderStatus %></span>
         
             <h2>Products Ordered</h2>
-            <ul>
+            <ul class="list-unstyled">
                 <% order.products.forEach(product => { %>
-                    <li>
-                        <img src="<%= product.productId.image %>" alt="<%= product.productId.name %>" width="100">
-                        <p><strong>Product:</strong> <%= product.productId.name %></p>
-                        <p><strong>Price:</strong> ₹<%= product.productId.price.toFixed(2) %></p>
-                        <p><strong>Quantity:</strong> <%= product.quantity %></p>
-                        <p><strong>Size:</strong> <%= product.size %></p>
+                    <li class="d-flex justify-content-between align-items-center border-bottom py-3">
+                        <!-- Product Info on Left -->
+                        <div>
+                            <p><strong>Product:</strong> <%= product.productId.title || 'No title available' %></p>
+                            <p><strong>Price:</strong> ₹<%= product.productId.price.toFixed(2) %></p>
+                            <p><strong>Quantity:</strong> <%= product.quantity %></p>
+                            <p><strong>Size:</strong> <%= product.size %></p>
+                            
+                            <!-- ✅ Check Product Status and Display Appropriate Buttons or Messages -->
+                            <% if (product.status === "Cancelled") { %>
+                                <span class="text-danger fw-bold">Cancelled</span>
+                            <% } else if (product.status === "Returned") { %>
+                                <span class="text-success fw-bold">Returned</span>
+                            <% } else if (product.status === "Return Rejected") { %>
+                                <span class="text-warning fw-bold">Return Rejected</span>
+                            <% } else if (["Pending", "Confirmed", "Shipped"].includes(product.status) && order.products.length > 1) { %>
+                                <!-- ✅ Show Cancel Product Button ONLY if there is more than 1 product -->
+                                <button class="btn btn-warning mt-2" onclick="cancelProduct('<%= order._id %>', '<%= product.productId._id %>', '<%= product.productOrderId %>')">
+                                    Cancel Product
+                                </button>
+                            <% } else if (product.status === "Delivered" && order.products.length > 1) { %>
+                                <!-- ✅ Show Return Product Button ONLY if there is more than 1 product -->
+                                <% if (product.status !== "Returned" && product.status !== "Return Requested") { %>
+                                    <button class="btn btn-danger mt-2" onclick="openReturnModal('<%= order._id %>', '<%= product.productId._id %>', '<%= product.productOrderId %>')">
+                                        Return Product
+                                    </button>
+                                <% } else if (product.status === "Return Requested") { %>
+                                    <span class="text-warning fw-bold">Return Requested</span>
+                                <% } %>
+                            <% } %>
+                        </div>
             
-                        <!-- Return Order Button -->
-                        <% if (product.status !== 'Returned' && product.status !== 'Return Requested') { %>
-                            <button class="btn btn-danger mt-2" onclick="openReturnModal('<%= order.id %>', '<%= product.productId._id %>', '<%= product.productOrderId %>')">
-                                Return Product
-                            </button>
-                        <% } else if (product.status === 'Return Requested') { %>
-                            <span class="text-warning">Return Requested</span>
-                        <% } else { %>
-                            <span class="text-success">Returned</span>
-                        <% } %>
+                        <!-- Product Image on Right -->
+                        <div>
+                            <img src="<%= product.productId.image.length > 0 ? product.productId.image[0] : '/images/placeholder.jpg' %>" 
+                                 alt="<%= product.productId.title %>" width="200" class="img-fluid rounded">
+                        </div>
                     </li>
-                    <hr>
                 <% }) %>
             </ul>
+            
+            
             
             
             <div class="row mt-4">
@@ -85,9 +106,14 @@
             </div>
             
             <!-- Return Order Button (Hidden if order is already returned) -->
-            <% if (order.orderStatus !== 'Returned') { %>
-                <button class="btn btn-danger mt-3" id="returnOrder" data-bs-toggle="modal"data-order-id="<%= order._id %>"  data-bs-target="#returnModal">Return Order</button>
+            <!-- Order-Level Action Button -->
+            <% if (order.orderStatus === "Pending" || order.orderStatus === "Confirmed" || order.orderStatus === "Shipped") { %>
+                <button class="btn btn-warning mt-3" id="cancelOrder" onclick="cancelOrder('<%= order._id %>')">Cancel Order</button>
+            <% } else if (order.orderStatus === "Delivered") { %>
+                <button class="btn btn-danger mt-3" id="returnOrder" data-bs-toggle="modal" data-order-id="<%= order._id %>" data-bs-target="#returnModal">Return Order</button>
             <% } %>
+            
+
         </div>
     </div>
 
@@ -161,19 +187,57 @@
 
 <!-- Success Modal -->
 <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- Larger modal for better shape -->
+        <div class="modal-content" style="border-radius: 10px; padding: 20px;"> <!-- Rounded corners & padding -->
             <div class="modal-header">
                 <h5 class="modal-title">Success</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <div class="modal-body text-center" style="min-height: 150px; display: flex; align-items: center; justify-content: center;">
+                <p style="font-size: 18px; font-weight: 500;">Your Return Request successfully completed. <br> Action will be taken within 24 hours.</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Success Modal for Product Cancellation -->
+<div class="modal fade" id="cancelSuccessModal" tabindex="-1" aria-labelledby="cancelSuccessModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelSuccessModalLabel">Success</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
             <div class="modal-body text-center">
-                <p>Order return successfully completed!</p>
+                <p class="text-success fw-bold">Product has been successfully cancelled!</p>
+            </div>
+            <div class="modal-footer">
                 <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- ✅ Error Modal for Product Cancellation -->
+<div class="modal fade" id="cancelErrorModal" tabindex="-1" aria-labelledby="cancelErrorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="cancelErrorModalLabel">Error</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p id="cancelErrorMessage" class="text-danger fw-bold">An error occurred while cancelling the product.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 function openReturnModal(orderId, productId, productOrderId) {
@@ -278,24 +342,110 @@ async function submitReturnAll() {
         
         // ✅ Use `data.success` instead of `result.success`
         if (data.success) {
-            const returnModalElement = document.getElementById('returnAllModal');
-            if (returnModalElement) {
-                const returnModal = new bootstrap.Modal(returnModalElement);
-                returnModal.hide();
-            }
-
-            // Show success modal
-            const successModalElement = document.getElementById('returnRequestModal');
-            if (successModalElement) {
-                const successModal = new bootstrap.Modal(successModalElement);
-                successModal.show();
-            }
+            var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+            successModal.show();
 
             setTimeout(() => {
-                window.location.reload();
+                location.reload();
             }, 2000);
         } else {
             alert(data.message || 'Failed to submit return request.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Something went wrong. Please try again.');
+    }
+}
+
+
+
+// Function to cancel individual product
+async function cancelProduct(orderId, productId, productOrderId) {
+    console.log("cancelProduct called with:", { orderId, productId, productOrderId });
+
+    if (!orderId || !productId || !productOrderId) {
+        console.error("Missing parameters in cancelProduct!", { orderId, productId, productOrderId });
+        return;
+    }
+
+    if (!confirm("Are you sure you want to cancel this product?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/cancelProduct/${orderId}/${productOrderId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId })
+        });
+
+        console.log("Response received:", response);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Cancellation response:", data);
+
+        if (data.success) {
+            var successModal = new bootstrap.Modal(document.getElementById('cancelSuccessModal'));
+            successModal.show();
+
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            var successModal = new bootstrap.Modal(document.getElementById('cancelErrorModal'));
+            successModal.show();
+
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Something went wrong. Please try again.');
+    }
+}
+
+// Function to cancel entire order
+async function cancelOrder(orderId) {
+    console.log("cancelOrder called with orderId:", orderId);
+
+    if (!orderId) {
+        console.error("Missing order ID in cancelOrder!");
+        return;
+    }
+
+    if (!confirm("Are you sure you want to cancel the entire order?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/orderCancel/${orderId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        console.log("Response received:", response);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Order cancellation response:", data);
+
+        if (data.success) {
+            var successModal = new bootstrap.Modal(document.getElementById('cancelSuccessModal'));
+            successModal.show();
+
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            alert('Error cancelling order: ' + data.message);
         }
     } catch (error) {
         console.error('Error:', error);

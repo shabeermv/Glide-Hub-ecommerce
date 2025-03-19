@@ -3,52 +3,60 @@ const Product = require('../../models/productSchema');
 const Wishlist = require('../../models/wishlistSchema');
 
 const wishlistPageInfo = async (req, res) => {
-    if (req.session.user) {
-        try {
-            const page = parseInt(req.query.page, 10) || 1; 
-            const limit = parseInt(req.query.limit, 10) || 5; 
-            const skip = (page - 1) * limit;
-
-            const wishlist = await Wishlist.findOne({ userId: req.session.userId })
-                .populate({
-                    path: 'products.productId',
-                    options: { skip, limit }  
-                })
-                .select('products')
-                .lean();
-
-            if (!wishlist || !wishlist.products || wishlist.products.length === 0) {
-                console.log('wishlist')
-                return res.render('wishlist', {
-                    wishlist:wishlist?.products || [],
-                    currentPage: page,
-                    totalPages: 0,
-                });
-            }
-
-            const totalProducts = await Wishlist.aggregate([
-                { $match: { userId: req.session.userId } },
-                { $project: { totalItems: { $size: "$products" } } }
-            ]);
-
-            const totalPages = Math.ceil((totalProducts[0]?.totalItems || 0) / limit);
-            let user = null;
-            if (req.session.userId) {
-              user = await User.findById(req.session.userId);
-            }
-  
-            res.render('wishlist', {
-                wishlist: wishlist.products, 
-                currentPage: page,
-                totalPages,
-                user
-            });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ success: false, message: "Internal server error" });
+    try {
+        if (!req.session.userId) {
+            return res.render('wishlist', { wishlist: [], currentPage: 1, totalPages: 0, user: null });
         }
-    } else {
-        res.redirect('/login');
+
+        const page = parseInt(req.query.page, 10) || 1; 
+        const limit = parseInt(req.query.limit, 10) || 5; 
+        const skip = (page - 1) * limit;
+
+        const wishlist = await Wishlist.findOne({ userId: req.session.userId })
+            .populate({
+                path: 'products.productId',
+                options: { skip, limit }
+            })
+            .select('products')
+            .lean();
+
+        // If wishlist is empty, return empty array
+        if (!wishlist || !wishlist.products || wishlist.products.length === 0) {
+            return res.render('wishlist', {
+                wishlist: [],
+                currentPage: page,
+                totalPages: 0,
+                user: await User.findById(req.session.userId)
+            });
+        }
+
+        // Calculate total pages
+        const totalProducts = await Wishlist.aggregate([
+            { $match: { userId: req.session.userId } },
+            { $project: { totalItems: { $size: "$products" } } }
+        ]);
+
+        const totalPages = Math.ceil((totalProducts[0]?.totalItems || 0) / limit);
+
+        // Fetch user details
+        const user = await User.findById(req.session.userId);
+
+        // Render the wishlist page with data
+        res.render('wishlist', {
+            wishlist: wishlist.products, 
+            currentPage: page,
+            totalPages,
+            user
+        });
+
+    } catch (error) {
+        console.error("Error in wishlistPageInfo:", error);
+
+        // Render an error page if `views/user/error.ejs` exists
+        return res.status(500).render('user/error', { message: "Internal server error" });
+
+        // If no error page exists, fallback to JSON response
+        // return res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
 

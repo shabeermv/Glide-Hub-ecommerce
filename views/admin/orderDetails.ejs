@@ -96,10 +96,11 @@
                 <img src="<%= product.productId.image ? product.productId.image[0] : '/default-image.jpg' %>" 
                      alt="<%= product.productId.title %>">
                 <div class="product-info">
-                    <p><strong>Product:</strong> <%= product.productId.title %></p>
+                    <p><strong>Product:</strong> <%= product.productId.title || 'No title available' %></p>
                     <p><strong>Size:</strong> <%= product.size %> | <strong>Quantity:</strong> <%= product.quantity %></p>
                     <p><strong>Price:</strong> ₹<%= product.productId.price.toFixed(2) %></p>
                     <p><strong>Total:</strong> ₹<%= (product.productId.price * product.quantity).toFixed(2) %></p>
+                    <p><strong>Status:</strong> <%= (product.status)%></p>
                 </div>
             </div>
         <% }) %>

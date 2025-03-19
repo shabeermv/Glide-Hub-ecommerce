@@ -379,7 +379,7 @@ const viewProductOfferInfo = async (req, res) => {
 
 
 
-const addProductOffer = async (req, res) => {
+const addProductOffer = async (req, res, next) => {
     const { description, selectedProduct, discountType, discountValue, startDate, endDate } = req.body;
 
     console.log('This is the req.body:', req.body);
@@ -393,8 +393,8 @@ const addProductOffer = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid discount type' });
         }
 
-        const productExists = await Product.findById(selectedProduct);
-        if (!productExists) {
+        const product = await Product.findById(selectedProduct);
+        if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found' });
         }
 
@@ -403,6 +403,21 @@ const addProductOffer = async (req, res) => {
             return res.status(400).json({ success: false, message: 'An offer already exists for this product' });
         }
 
+        // ✅ Calculate discounted price
+        let discountedPrice;
+        if (discountType === 'percentage') {
+            discountedPrice = product.price - (product.price * (discountValue / 100));
+        } else if (discountType === 'fixed') {
+            discountedPrice = product.price - discountValue;
+        }
+
+        // ✅ Ensure discounted price is not negative
+        discountedPrice = Math.max(0, discountedPrice);
+
+        // ✅ Round to 2 decimal places
+        discountedPrice = parseFloat(discountedPrice.toFixed(2));
+
+        // ✅ Save offer details
         const offerProduct = new ProductOffer({
             description,
             discountType,
@@ -412,13 +427,25 @@ const addProductOffer = async (req, res) => {
             productId: selectedProduct
         });
 
-        await offerProduct.save(); 
+        await offerProduct.save();
 
-        return res.status(200).json({ success: true, message: 'Product offer saved successfully.' });
+        // ✅ Update product with discounted price
+        product.hasDiscount = true;
+        product.discountedPrice = discountedPrice;
+        await product.save();
+
+        return res.status(200).json({ 
+            success: true, 
+            message: 'Product offer saved successfully.',
+            discountedPrice 
+        });
+
     } catch (error) {
         console.error('Error in addProductOffer:', error);
-        next(error)    }
+        next(error);
+    }
 };
+
 const deleteProductOffer=async(req,res)=>{
     try {
         const offerId = req.params.id;

@@ -57,6 +57,7 @@ userRouter.delete('/removeWishlistItem/:id',authMiddleware.authMiddleware,wishli
 
 
 userRouter.get('/checkout/:id',authMiddleware.authMiddleware,checkoutController.checkoutPageInfo);
+userRouter.post('/apply-coupon',checkoutController.applyCoupon);
 userRouter.get('/cart-checkout', authMiddleware.authMiddleware, checkoutController.cartCheckoutPage);
 userRouter.post('/place-order',authMiddleware.authMiddleware,checkoutController.buyNow);
 userRouter.get('/wallet/balance',checkoutController.getWalletBalance);
@@ -64,12 +65,14 @@ userRouter.post('/process-wallet-payment',checkoutController.payWithWallet);
 
 userRouter.delete('/cancelOrder/:id',authMiddleware.authMiddleware,checkoutController.cancelOrder);
 userRouter.get('/order/details/:id',authMiddleware.authMiddleware,checkoutController.viewPurchaseDetails);
-
+userRouter.post('/cancelProduct/:orderId/:productOrderId',checkoutController.cancelPartialProduct)
+userRouter.post('/orderCancel/:id',checkoutController.orderCancel);
 userRouter.post('/requestReturn/:id',checkoutController.returnOrder);
 userRouter.post('/returnRequested/:orderId/:productOrderId',checkoutController.returnPartialRequest);
 userRouter.post('/returnOrder/:id',checkoutController.returnOrder)
 userRouter.post('/create-razorpay-order',checkoutController.razorpayCreation);
 userRouter.post('/verify-razorpay-payment',checkoutController.verifyRazorPay);
+userRouter.post('/handle-failed-payment',checkoutController.handleFailedPayments);
 
 
 

@@ -371,8 +371,10 @@
                                             <% 
                                             let totalOrdersAmount = 0;
                                             let totalOrdersCount = recentOrders.length;
+                                    
                                             recentOrders.forEach((order, index) => { 
-                                                totalOrdersAmount += order.totalAmount || 0;
+                                                if (order.orderStatus === "Delivered") { // ✅ Ensure only Delivered orders are shown
+                                                    totalOrdersAmount += order.totalAmount || 0;
                                             %>
                                                 <tr>
                                                     <td class="text-center">
@@ -382,7 +384,9 @@
                                                         </div>
                                                     </td>
                                                     <td>
-                                                        <a href="/admin/orders/<%= order._id %>" class="fw-bold"><%= order.orderId || order._id.toString().slice(-6).toUpperCase() %></a>
+                                                        <a href="/admin/orders/<%= order._id %>" class="fw-bold">
+                                                            <%= order.orderId || order._id.toString().slice(-6).toUpperCase() %>
+                                                        </a>
                                                     </td>
                                                     <td>
                                                         <%= order.userId ? order.userId.name || (order.shippingAddress && order.shippingAddress.fullName ? order.shippingAddress.fullName : 'Unknown') : 'Unknown' %>
@@ -392,15 +396,7 @@
                                                     </td>
                                                     <td><%= order.totalAmount ? order.totalAmount.toFixed(2) : '0.00' %></td>
                                                     <td>
-                                                        <% if (order.paymentStatus === 'Completed') { %>
-                                                            <span class="badge badge-pill badge-success">Paid</span>
-                                                        <% } else if (order.paymentStatus === 'Failed') { %>
-                                                            <span class="badge badge-pill badge-danger">Failed</span>
-                                                        <% } else if (order.orderStatus === 'Cancelled') { %>
-                                                            <span class="badge badge-pill badge-warning">Refund</span>
-                                                        <% } else { %>
-                                                            <span class="badge badge-pill badge-warning">Pending</span>
-                                                        <% } %>
+                                                        <span class="badge badge-pill badge-success">Delivered</span>
                                                     </td>
                                                     <td>
                                                         <i class="material-icons md-payment font-xxl text-muted mr-5"></i> 
@@ -412,18 +408,17 @@
                                                         </a>
                                                     </td>
                                                 </tr>
-                                            <% }); %>
+                                            <% }}); %> <!-- ✅ Closing the check for Delivered orders -->
                                     
-                                            <!-- ✅ Show total orders & sales only on the last page -->
-                                            <% if (currentPage === totalPages) { %>
+                                            <!-- ✅ Show total orders & sales only if there are delivered orders -->
+                                            <% if (totalOrdersCount > 0) { %>
                                                 <tr class="table-info fw-bold">
-                                                    <td colspan="4" class="text-end">Total Orders:</td>
-                                                    <td><%= typeof totalOrders !== 'undefined' ? totalOrders : 0 %>
-                                                    </td>
+                                                    <td colspan="4" class="text-end">Total Delivered Orders:</td>
+                                                    <td><%= totalOrdersCount %></td>
                                                     <td colspan="3"></td>
                                                 </tr>
                                                 <tr class="table-info fw-bold">
-                                                    <td colspan="4" class="text-end">Total Sales:</td>
+                                                    <td colspan="4" class="text-end">Total Sales from Delivered Orders:</td>
                                                     <td>₹<%= totalOrdersAmount.toFixed(2) %></td>
                                                     <td colspan="3"></td>
                                                 </tr>
@@ -431,10 +426,11 @@
                                     
                                         <% } else { %>
                                             <tr>
-                                                <td colspan="8" class="text-center">No orders found</td>
+                                                <td colspan="8" class="text-center">No delivered orders found</td>
                                             </tr>
                                         <% } %>
                                     </tbody>
+                                    
                                     
                                     
                                 </table>
