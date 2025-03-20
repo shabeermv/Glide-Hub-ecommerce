@@ -594,21 +594,19 @@
 <!-- Add this script tag in your header or before the closing body tag -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
-       document.addEventListener("DOMContentLoaded", function() {
-        const couponButtons = document.querySelectorAll(".apply-coupon-btn");
-        const couponInput = document.getElementById("checkout-discount-input");
+document.addEventListener("DOMContentLoaded", function() {
+    const couponButtons = document.querySelectorAll(".apply-coupon-btn");
+    const couponInput = document.getElementById("checkout-discount-input");
 
-        couponButtons.forEach(button => {
-            button.addEventListener("click", function() {
-                const couponCode = this.getAttribute("data-code");
-                couponInput.value = couponCode;
-            });
+    couponButtons.forEach(button => {
+        button.addEventListener("click", function() {
+            const couponCode = this.getAttribute("data-code");
+            couponInput.value = couponCode;
         });
     });
+});
 
-
-
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     const toggleAddressBtn = document.getElementById('toggle-address-btn');
     const billingDetailsSection = document.getElementById('billing-details-section');
     const newAddressForm = document.getElementById('new-address-form');
@@ -671,7 +669,6 @@
         toggleAddressBtn.querySelector('#btn-text').textContent = 'Add New Address';
     });
 });
-
 
 document.addEventListener('DOMContentLoaded', function() {
   const applyButtons = document.querySelectorAll('.apply-coupon-btn');
@@ -826,70 +823,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.head.appendChild(style);
   }
 });
-document.getElementById('btn-place-order').addEventListener('click', function(e) {
-    e.preventDefault();
 
-    let selectedPaymentMethod = '';
-    const paymentDivs = document.querySelectorAll('.collapse.show');
-    
-    if (paymentDivs.length === 0) {
-        alert('Please select a payment method');
-        return;
-    }
-    
-    paymentDivs.forEach(div => {
-        const paymentTitle = div.previousElementSibling.querySelector('.card-title a').textContent.trim();
-        selectedPaymentMethod = paymentTitle;
-    });
-
-    const formData = {
-        firstName: document.getElementById('fName').value,
-        lastName: document.getElementById('lName').value,
-        companyName: document.getElementById('cName').value || '',
-        country: document.getElementById('country').value,
-        streetAddress: document.getElementById('sAddress').value,
-        landmark: document.getElementById('lMark').value || '',
-        city: document.getElementById('city').value,
-        state: document.getElementById('state').value,
-        postCode: document.getElementById('pCode').value,
-        phone: document.getElementById('mobile').value,
-        email: document.getElementById('email').value,
-        paymentMethod: selectedPaymentMethod,
-        orderNotes: document.getElementById('orderNote').value || '',
-        
-        finalAmount: document.getElementById('finalAmountInput').value,
-        
-        totalAmount: document.getElementById('totalAmount').value,
-        
-        couponCode: document.getElementById('couponCodeInput')?.value || '',
-        couponDiscount: document.getElementById('couponDiscountInput')?.value || 0
-    };
-
-    const requiredFields = ['firstName', 'lastName', 'country', 'streetAddress', 'city', 'state', 'postCode', 'phone', 'email'];
-    const missingFields = requiredFields.filter(field => !formData[field]);
-
-    if (missingFields.length > 0) {
-        alert('Please fill in all required fields: ' + missingFields.join(', '));
-        return;
-    }
-
-    if (selectedPaymentMethod.includes('Razorpay')) {
-        createOrderAndInitiatePayment(formData);
-    } else if (selectedPaymentMethod.includes('Wallet')) {
-        // Check wallet balance before proceeding
-        const walletBalance = parseFloat(document.getElementById('walletBalance').textContent);
-        const finalAmount = parseFloat(formData.finalAmount);
-        
-        if (walletBalance < finalAmount) {
-            document.getElementById('insufficient-balance-msg').style.display = 'block';
-            return;
-        }
-        submitOrderThroughRegularCheckout(formData);
-    } else {
-        submitOrderThroughRegularCheckout(formData);
-    }
-});
-
+// REMOVED DUPLICATE EVENT LISTENER HERE
 
 function createOrderAndInitiatePayment(formData) {
     fetch('/create-razorpay-order', {
@@ -1038,7 +973,6 @@ function handleFailedPayment(orderId) {
     });
 }
 
-
 function submitOrderThroughRegularCheckout(formData) {
     fetch('/place-order', {
         method: 'POST',
@@ -1075,64 +1009,12 @@ function submitOrderThroughRegularCheckout(formData) {
         alert('An error occurred: ' + error.message);
     });
 }
+
 document.addEventListener('DOMContentLoaded', function() {
   fetchWalletBalance();
   
-});
-
-function fetchWalletBalance() {
-  fetch('/wallet/balance')
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(data => {
-      if (data.success) {
-        document.getElementById('walletBalance').textContent = data.balance.toFixed(2);
-        
-        document.body.dataset.walletBalance = data.balance;
-        
-        checkWalletBalance();
-      } else {
-        document.getElementById('walletBalance').textContent = '0.00';
-        console.error('Error fetching wallet balance:', data.message);
-      }
-    })
-    .catch(error => {
-      console.error('Error fetching wallet balance:', error);
-      document.getElementById('walletBalance').textContent = '0.00';
-    });
-}
-
-function checkWalletBalance() {
-  const walletBalance = parseFloat(document.body.dataset.walletBalance || 0);
-  const orderTotal = parseFloat(document.getElementById('finalAmountInput').value || 0);
-  
-  // Show warning if balance is insufficient
-  if (walletBalance < orderTotal) {
-    document.getElementById('insufficient-balance-msg').style.display = 'block';
-  } else {
-    document.getElementById('insufficient-balance-msg').style.display = 'none';
-  }
-}
-
-document.querySelectorAll('#accordion-payment .card-header').forEach(header => {
-  header.addEventListener('click', function() {
-    setTimeout(() => {
-      const walletPaymentSelected = document.getElementById('collapse-wallet').classList.contains('show');
-      
-      if (walletPaymentSelected) {
-        checkWalletBalance();
-      } else {
-        document.getElementById('insufficient-balance-msg').style.display = 'none';
-      }
-    }, 300);
-  });
-});
-
-document.getElementById('btn-place-order').addEventListener('click', function(e) {
+  // SINGLE EVENT LISTENER FOR PLACE ORDER BUTTON
+  document.getElementById('btn-place-order').addEventListener('click', function(e) {
     e.preventDefault();
 
     let selectedPaymentMethod = '';
@@ -1200,6 +1082,59 @@ document.getElementById('btn-place-order').addEventListener('click', function(e)
     } else {
         submitOrderThroughRegularCheckout(formData);
     }
+  });
+});
+
+function fetchWalletBalance() {
+  fetch('/wallet/balance')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        document.getElementById('walletBalance').textContent = data.balance.toFixed(2);
+        
+        document.body.dataset.walletBalance = data.balance;
+        
+        checkWalletBalance();
+      } else {
+        document.getElementById('walletBalance').textContent = '0.00';
+        console.error('Error fetching wallet balance:', data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching wallet balance:', error);
+      document.getElementById('walletBalance').textContent = '0.00';
+    });
+}
+
+function checkWalletBalance() {
+  const walletBalance = parseFloat(document.body.dataset.walletBalance || 0);
+  const orderTotal = parseFloat(document.getElementById('finalAmountInput').value || 0);
+  
+  // Show warning if balance is insufficient
+  if (walletBalance < orderTotal) {
+    document.getElementById('insufficient-balance-msg').style.display = 'block';
+  } else {
+    document.getElementById('insufficient-balance-msg').style.display = 'none';
+  }
+}
+
+document.querySelectorAll('#accordion-payment .card-header').forEach(header => {
+  header.addEventListener('click', function() {
+    setTimeout(() => {
+      const walletPaymentSelected = document.getElementById('collapse-wallet').classList.contains('show');
+      
+      if (walletPaymentSelected) {
+        checkWalletBalance();
+      } else {
+        document.getElementById('insufficient-balance-msg').style.display = 'none';
+      }
+    }, 300);
+  });
 });
 
 function submitWalletPayment(formData) {
@@ -1312,5 +1247,4 @@ function showInsufficientBalanceModal(orderAmount, walletBalance) {
     $('#insufficientBalanceModal').modal('show');
 }
 </script>
-
 <%-include("../../views/partials/users/footer.ejs")%>

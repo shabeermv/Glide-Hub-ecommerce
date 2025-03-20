@@ -25,7 +25,7 @@
 	                		<aside class="col-md-4 col-lg-3">
 	                			<ul class="nav nav-dashboard flex-column mb-3 mb-md-0" role="tablist">
 								    <li class="nav-item">
-								        <a class="nav-link active" id="tab-dashboard-link" data-toggle="tab" href="#tab-dashboard" role="tab" aria-controls="tab-dashboard" aria-selected="true">Dashboard</a>
+								        <a class="nav-link active" id="tab-dashboard-link" data-toggle="tab" href="#tab-dashboard" role="tab" aria-controls="tab-dashboard" aria-selected="true">Personal Information</a>
 								    </li>
 								    <li class="nav-item">
 								        <a class="nav-link" id="tab-orders-link" data-toggle="tab" href="#tab-orders" role="tab" aria-controls="tab-orders" aria-selected="false">Orders</a>
@@ -51,22 +51,42 @@
                                     <div class="tab-pane fade show active" id="tab-dashboard" role="tabpanel" aria-labelledby="tab-dashboard-link">
                                         <div style="margin-top: 30px;">
                                             <!-- My Cart Button -->
-                                            <a href="/cart" class="btn btn-success" style="margin-right: 10px;">
-                                                My Cart
-                                            </a>
-                                            <!-- My Wishlist Button -->
-                                            <a href="/wishlist" class="btn btn-primary"style="margin-right: 10px;">
-                                                My Wishlist
-                                            </a>
-                                            <a href="/resetPassword" class="btn btn-secondary">
-                                                Reset Password
-                                            </a>
+                                            <a href="/cart" class="btn btn-success" style="margin-right: 10px;">My Cart</a>
+                                            <a href="/wishlist" class="btn btn-primary" style="margin-right: 10px;">My Wishlist</a>
+                                            <a href="/resetPassword" class="btn btn-secondary">Reset Password</a>
                                         </div>
+                                    
+                                        <!-- User Details Card -->
+                                        <div class="card mt-4 shadow-sm w-50 mx-auto">
+                                            <div class="card-body">
+                                                <h5 class="card-title">User Details</h5>
                                         
+                                                <p class="card-text"><strong>Full Name:</strong> 
+                                                    <span id="fullName"><%= user.username %></span>
+                                                    <input type="text" id="editFullName" class="form-control d-none" value="<%= user.username %>">
+                                                </p>
+                                                <p class="card-text"><strong>Email:</strong> 
+                                                    <span id="email"><%= user.email %></span>
+                                                    <input type="email" id="editEmail" class="form-control d-none" value="<%= user.email %>" readonly>
+                                                </p>
+                                                
+                                                <p class="card-text"><strong>Mobile Number:</strong> 
+                                                    <span id="mobileNumber"><%= user.contact %></span>
+                                                    <input type="text" id="editMobileNumber" class="form-control d-none" value="<%= user.contact %>">
+                                                </p>
+                                        
+                                                <button class="btn btn-warning mt-2" id="editButton" onclick="enableEdit()">Edit</button>
+                                                <button class="btn btn-success mt-2 d-none" id="saveButton" onclick="saveChanges()">Save</button>
+                                            </div>
+                                        </div>
+                                    
                                         <div class="mt-4">
-                                            <a href="/shop" class="btn btn-outline-primary-2"><span>GO SHOP</span><i class="icon-long-arrow-right"></i></a>
+                                            <a href="/shop" class="btn btn-outline-primary-2">
+                                                <span>GO SHOP</span>
+                                                <i class="icon-long-arrow-right"></i>
+                                            </a>
                                         </div>
-                                        
+                                    </div>
                                         <!-- Move referral code section here -->
                                         <div class="mt-4">
                                             <label for="referralCode"><strong>My Referral Code:</strong></label>
@@ -536,6 +556,22 @@
         </div>
     </div>
 </div>
+<!-- Order Cancellation Success Modal -->
+<div class="modal fade" id="cancelRequestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Success</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p>Your cancel request has been submitted successfully!</p>
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="reloadPage()">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- Plugins JS File -->
     <script src="/asset3/js/jquery.min.js"></script>
     <script src="/asset3/js/bootstrap.bundle.min.js"></script>
@@ -553,6 +589,48 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+
+function enableEdit() {
+    document.getElementById("fullName").classList.add("d-none");
+    document.getElementById("mobileNumber").classList.add("d-none");
+
+    document.getElementById("editFullName").classList.remove("d-none");
+    document.getElementById("editMobileNumber").classList.remove("d-none");
+
+    document.getElementById("editButton").classList.add("d-none");
+    document.getElementById("saveButton").classList.remove("d-none");
+}
+
+function saveChanges() {
+    const newFullName = document.getElementById("editFullName").value;
+    const newMobileNumber = document.getElementById("editMobileNumber").value;
+
+    document.getElementById("fullName").textContent = newFullName;
+    document.getElementById("mobileNumber").textContent = newMobileNumber;
+
+    document.getElementById("fullName").classList.remove("d-none");
+    document.getElementById("mobileNumber").classList.remove("d-none");
+
+    document.getElementById("editFullName").classList.add("d-none");
+    document.getElementById("editMobileNumber").classList.add("d-none");
+
+    document.getElementById("editButton").classList.remove("d-none");
+    document.getElementById("saveButton").classList.add("d-none");
+
+    // Send updated data to the backend (excluding email)
+    fetch('/updateUserDetails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            fullName: newFullName,
+            mobileNumber: newMobileNumber
+        })
+    })
+    .then(response => response.json())
+    .then(data => console.log("User details updated:", data))
+    .catch(error => console.error("Error updating user details:", error));
+}
+
 
  // Add event listeners to return buttons
 document.querySelectorAll('.return-order-btn').forEach(button => {
@@ -685,8 +763,9 @@ document.querySelectorAll('.cancel-order-btn').forEach(button => {
                 const result = await response.json();
 
                 if (result.success) {
-                    alert('Order cancelled successfully!');
-                    window.location.reload();
+                    // Hide confirmation prompt and show success modal
+                    const successModal = new bootstrap.Modal(document.getElementById('cancelRequestModal'));
+                    successModal.show();
                 } else {
                     alert(result.message || 'Failed to cancel order');
                 }
@@ -697,7 +776,6 @@ document.querySelectorAll('.cancel-order-btn').forEach(button => {
         }
     });
 });
-    
 
 
 document.getElementById('colorfulAddressForm').addEventListener('submit', async function (event) {

@@ -58,7 +58,9 @@ adminRouter.post('/orders/update-status', middleware.adminAuth, orderController.
 adminRouter.get('/orders/:id', middleware.adminAuth, orderController.viewOrderDetails);
 adminRouter.get('/invoice/:id', middleware.adminAuth, orderController.getInvoice);
 adminRouter.get('/returnRequests', middleware.adminAuth, orderController.returnRequests);
+adminRouter.get('/cancelRequests',middleware.adminAuth , orderController.getCancelRequests);
 adminRouter.post('/returnOrderAction', middleware.adminAuth, orderController.setUpReturnRequest);
+adminRouter.post('/cancelOrderAction',orderController.setCancelAction);
 
 // Coupons
 adminRouter.get('/coupon', middleware.adminAuth, couponController.couponPageInfo);

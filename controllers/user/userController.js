@@ -515,34 +515,77 @@ const postResetPasswordByOtp = async (req, res) => {
 
 const userProfileInfo = async (req, res) => {
   try {
-      const userId = req.session.userId;
-      const user = await User.findById(userId);
+    const userId = req.session.userId;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    const orders = await Order.find({ userId: userId })
+      .populate({
+        path: 'products.productId',
+        select: 'title price' 
+      })
+      .sort({ createdAt: -1 });
+
+    orders.forEach(order => {
+      const calculatedTotal = order.products.reduce((sum, product) => {
+        return sum + (product.price * product.quantity);
+      }, 0);
       
-      if (!user) {
-          return res.redirect("/login");
+      order.totalAmount = order.totalAmount || calculatedTotal;
+    });
+
+    // Render the template with user and orders data
+    res.render("myAccount", { 
+      user, 
+      orders, 
+      referralCode: user.referalCode 
+    });
+
+  } catch (error) {
+    console.error('Error in userProfileInfo:', error);
+    return res.json({ message: 'Internal server error' });
+  }
+};
+const updateUserDetails = async (req, res) => {
+  try {
+      const userId = req.session.userId; // Get user ID from session
+
+      if (!userId) {
+          return res.status(401).json({ success: false, message: "Unauthorized" });
       }
 
-      const orders = await Order.find({ userId: userId })
-          .populate({
-              path: 'products.productId',
-              select: 'title price' 
-          })
-          .sort({ createdAt: -1 });
+      const { fullName, mobileNumber } = req.body;
 
-      orders.forEach(order => {
-          const calculatedTotal = order.products.reduce((sum, product) => {
-              return sum + (product.price * product.quantity);
-          }, 0);
-          
-          order.totalAmount = order.totalAmount || calculatedTotal;
+      // Update only full name and mobile number (email remains unchanged)
+      const updatedUser = await User.findByIdAndUpdate(
+          userId,
+          { username: fullName, contact: mobileNumber },
+          { new: true }
+      );
+
+      if (!updatedUser) {
+          return res.status(404).json({ success: false, message: "User not found" });
+      }
+
+      res.json({ 
+          success: true, 
+          message: "User details updated successfully", 
+          user: {
+              fullName: updatedUser.username,
+              mobileNumber: updatedUser.contact
+          }
       });
 
-      res.render("myAccount", { user, orders,referralCode: user.referalCode  });
   } catch (error) {
-      console.error('Error in userProfileInfo:', error);
-      return res.json({message:'interal server error'})
-      }
+      console.error("Error updating user details:", error);
+      res.status(500).json({ success: false, message: "Internal server error" });
+  }
 };
+
+
 const addAccountDetails = async (req, res) => {
   // console.log(req.body, 'controllersil ethi.........');
 
@@ -776,6 +819,7 @@ module.exports = {
   postResetPasswordByOtp,
   resendOtp,
   userProfileInfo,
+  updateUserDetails,
   addAccountDetails,
   editProfileInfo,
   editProfile,

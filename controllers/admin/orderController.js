@@ -211,6 +211,63 @@ const returnRequests = async (req, res) => {
   }
 };
 
+const getCancelRequests = async (req, res) => {
+  try {
+    const orders = await Order.find({
+      $or: [
+        { orderStatus: "Cancel Requested" }, 
+        { "products.status": "Cancel Requested" }
+      ]
+    })
+    .populate("userId")
+    .populate("products.productId");
+
+    const returnOrders = [];
+
+    orders.forEach(order => {
+      if (order.orderStatus === "Cancel Requested") {
+        returnOrders.push({
+          _id: order._id,
+          orderId: order.orderId,
+          returnReason: order.returnReason || "Not specified",
+          totalAmount: order.totalAmount,
+          createdAt: order.createdAt,
+          products: order.products.map(product => ({
+            ...product._doc,
+            isFullOrderReturn: true,
+            returnReason: order.returnReason || product.returnReason || "Not specified"
+          }))
+        });
+      } else {
+        const returnRequestedProducts = order.products.filter(
+          product => product.status === "Cancel Requested"
+        );
+
+        if (returnRequestedProducts.length > 0) {
+          returnOrders.push({
+            _id: order._id,
+            orderId: order.orderId,
+            totalAmount: order.totalAmount,
+            createdAt: order.createdAt,
+            products: returnRequestedProducts.map(product => ({
+              ...product._doc,
+              isFullOrderReturn: false,
+              returnReason: product.returnReason || "Not specified"
+            }))
+          });
+        }
+      }
+    });
+
+    console.log("Return Orders Data:", returnOrders); // Debugging
+    res.render("cancelRequests", { returnOrders });
+
+  } catch (error) {
+    console.error("Error fetching return requests:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 const setUpReturnRequest = async (req, res) => {
   try {
     const { orderId, productOrderId, action, isFullOrder } = req.body;
@@ -260,6 +317,16 @@ const setUpReturnRequest = async (req, res) => {
       } else {
         returnedProduct.status = "Return Rejected";
       }
+
+      // ✅ Check if all products are returned or rejected
+      const allReturned = order.products.every(p => p.status === "Returned");
+      const allRejected = order.products.every(p => p.status === "Return Rejected");
+
+      if (allReturned) {
+        order.orderStatus = "Returned";
+      } else if (allRejected) {
+        order.orderStatus = "Return Rejected";
+      }
     }
 
     if (action === "approved" && refundAmount > 0) {
@@ -285,7 +352,91 @@ const setUpReturnRequest = async (req, res) => {
     });
   }
 };
+const setCancelAction = async(req,res)=>{
+  try {
+    const { orderId, productOrderId, action, isFullOrder } = req.body;
 
+    const order = await Order.findById(orderId).populate("userId");
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    const user = order.userId; 
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    let refundAmount = 0;
+
+    if (isFullOrder) {
+      if (action === "approved") {
+        order.orderStatus = "Cancelled";
+
+        order.products.forEach(product => {
+          product.status = "Cancelled";
+          refundAmount += product.price * product.quantity;  
+        });
+      } else {
+        order.orderStatus = "Cancel Rejected";
+
+        order.products.forEach(product => {
+          product.status = "Cancel Rejected";
+        });
+      }
+    } else {
+      const productIndex = order.products.findIndex(p => p.productOrderId === productOrderId);
+
+      if (productIndex === -1) {
+        return res.status(404).json({
+          success: false,
+          message: "Product not found in order"
+        });
+      }
+
+      const returnedProduct = order.products[productIndex];
+
+      if (action === "approved") {
+        returnedProduct.status = "Cancelled";
+        refundAmount = returnedProduct.price * returnedProduct.quantity; 
+      } else {
+        returnedProduct.status = "Cancel Rejected";
+      }
+
+      // ✅ Check if all products are returned or rejected
+      const allReturned = order.products.every(p => p.status === "Cancelled");
+      const allRejected = order.products.every(p => p.status === "Cancel Rejected");
+
+      if (allReturned) {
+        order.orderStatus = "Cancelled";
+      } else if (allRejected) {
+        order.orderStatus = "Cancel Rejected";
+      }
+    }
+
+    if (action === "approved" && refundAmount > 0) {
+      user.wallet += refundAmount;
+
+      user.walletHistory.push({
+        date: new Date(),
+        amount: refundAmount
+      });
+
+      await user.save();
+    }
+
+    await order.save();
+
+    res.json({ success: true, refundAmount });
+
+  } catch (error) {
+    console.error("Error handling return action:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+
+}
 
 
 
@@ -302,5 +453,7 @@ module.exports = {
   viewOrderDetails,
   getInvoice,
   returnRequests,
-  setUpReturnRequest
+  getCancelRequests,
+  setUpReturnRequest,
+  setCancelAction
 };

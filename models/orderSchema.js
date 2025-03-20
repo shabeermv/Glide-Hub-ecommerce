@@ -54,14 +54,14 @@ const orderSchema = new mongoose.Schema({
             },
             status: {
                 type: String,
-                enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Return Requested','Return Rejected'],
+                enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Return Requested','Return Rejected',"Cancel Requested","Cancel Rejected"],
                 default: "Pending"
             }
         }
     ],
     orderStatus: {
         type: String,
-        enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Return Requested','Return Rejected'],
+        enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Return Requested','Return Rejected',"Cancel Requested","Cancel Rejected"],
         default: 'Pending'
     },
     shippingAddress: {
@@ -94,6 +94,9 @@ const orderSchema = new mongoose.Schema({
     returnReason: {
         type: String,
         required: false
+    },
+    cancelReason:{
+        type:String
     },
     razorpayOrderId: {
         type: String

@@ -35,6 +35,7 @@ userRouter.get('/show/:id',authMiddleware.authMiddleware,productController.getDe
 userRouter.get('/shop',authMiddleware.authMiddleware,productController.shopInfo);
 
 userRouter.get('/profile',authMiddleware.authMiddleware,userController.userProfileInfo);
+userRouter.post('/updateUserDetails',authMiddleware.authMiddleware,userController.updateUserDetails);
 userRouter.post('/accountDetails',authMiddleware.authMiddleware,userController.addAccountDetails);
 userRouter.get('/editProfile/:id',authMiddleware.authMiddleware,userController.editProfileInfo);
 userRouter.patch('/editProfile/:id',authMiddleware.authMiddleware,userController.editProfile);

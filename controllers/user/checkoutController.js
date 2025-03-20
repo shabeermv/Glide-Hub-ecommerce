@@ -397,7 +397,7 @@ const buyNow = async (req, res) => {
             orderStatus: 'Confirmed',
             shippingAddress: shippingAddress,
             paymentMethod: [paymentMethod], // Ensure it's an array with the normalized value
-            paymentStatus: paymentMethod === 'wallet' ? 'completed' : 'pending',
+            paymentStatus: paymentMethod === 'wallet' ? 'completed' : 'Pending',
             totalAmount: finalAmount, 
             couponDiscount: couponDiscount > 0 ? couponDiscount : undefined,
             couponCode: couponCode || undefined
@@ -487,12 +487,12 @@ const cancelOrder = async (req, res) => {
         }
 
         order.products.forEach(product => {
-            product.status = "Cancelled";
+            product.status = "Cancel Requested";
         });
 
         order.markModified("products"); 
 
-        order.orderStatus = "Cancelled";
+        order.orderStatus = "Cancel Requested";
         
         await order.save();
 
@@ -567,11 +567,11 @@ const cancelPartialProduct = async (req, res) => {
 
         console.log('Product found in order:', product);
 
-        if (product.status === "Cancelled") {
+        if (product.status === "Cancel Requested") {
             return res.status(400).json({ success: false, message: 'Product already cancelled' });
         }
 
-        product.status = "Cancelled";
+        product.status = "Cancel Requested";
         order.markModified('products'); 
 
         // Restore stock quantity
@@ -607,9 +607,9 @@ const cancelPartialProduct = async (req, res) => {
         }
 
         // If all products are cancelled, cancel the entire order
-        const allCancelled = order.products.every(p => p.status === "Cancelled");
+        const allCancelled = order.products.every(p => p.status === "Cancel Requested");
         if (allCancelled) {
-            order.orderStatus = "Cancelled";
+            order.orderStatus = "Cancel Requested";
             order.markModified('orderStatus');
         }
 
@@ -635,7 +635,7 @@ const orderCancel = async (req, res) => {
         }
 
         for (const product of order.products) {
-            product.status = "Cancelled"; 
+            product.status = "Cancel Requested"; 
             order.markModified('products'); 
 
             const productData = await Product.findById(product.productId);
@@ -670,7 +670,7 @@ const orderCancel = async (req, res) => {
             }
         }
 
-        order.orderStatus = "Cancelled";
+        order.orderStatus = "Cancel Requested";
         order.markModified('orderStatus'); 
         
         await order.save();
@@ -757,6 +757,7 @@ const razorpayCreation = async (req, res) => {
             });
         }
 
+        // Create an order with a temporary flag
         const order = await Order.create({
             orderId: orderId,
             userId: userId,
@@ -768,7 +769,8 @@ const razorpayCreation = async (req, res) => {
             couponCode: formData.couponCode || undefined, 
             paymentStatus: "Pending",
             paymentMethod: ["RazorPay"],
-            shippingAddress
+            shippingAddress,
+            isTemporary: true // Add a flag to mark this as a temporary order
         });
 
         const razorpay = new Razorpay({
@@ -787,7 +789,9 @@ const razorpayCreation = async (req, res) => {
             }
         });
 
-        await Order.findByIdAndUpdate(order._id, { razorpayOrderId: razorpayOrder.id });
+        await Order.findByIdAndUpdate(order._id, { 
+            razorpayOrderId: razorpayOrder.id
+        });
 
         res.json({
             success: true,
@@ -838,9 +842,11 @@ const verifyRazorPay = async (req, res) => {
             });
         }
 
+        // Update the order and remove the temporary flag
         order.paymentStatus = "completed";
         order.orderStatus = "Confirmed";
         order.razorpayPaymentId = razorpay_payment_id;
+        order.isTemporary = false; // Remove temporary flag
 
         // ✅ 1. Update product stock & sales count
         for (const item of order.products) {
@@ -885,6 +891,8 @@ const verifyRazorPay = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
+
 
 
 const handleFailedPayments = async (req, res) => {

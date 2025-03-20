@@ -237,6 +237,26 @@
         </div>
     </div>
 </div>
+<!-- Order Cancellation Success Modal -->
+<!-- Order Cancellation Success Modal -->
+<div class="modal fade" id="cancelSuccessModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-success">Order Cancelled</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="fas fa-check-circle text-success" style="font-size: 50px;"></i>
+                <p class="mt-2">Your cancel request has been submitted successfully!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="reloadPage()">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 
 <script>
@@ -379,8 +399,6 @@ async function cancelProduct(orderId, productId, productOrderId) {
             body: JSON.stringify({ productId })
         });
 
-        console.log("Response received:", response);
-
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -389,19 +407,11 @@ async function cancelProduct(orderId, productId, productOrderId) {
         console.log("Cancellation response:", data);
 
         if (data.success) {
+            // Show success modal
             var successModal = new bootstrap.Modal(document.getElementById('cancelSuccessModal'));
             successModal.show();
-
-            setTimeout(() => {
-                location.reload();
-            }, 2000);
         } else {
-            var successModal = new bootstrap.Modal(document.getElementById('cancelErrorModal'));
-            successModal.show();
-
-            setTimeout(() => {
-                location.reload();
-            }, 2000);
+            alert("Error cancelling product: " + data.message);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -428,8 +438,6 @@ async function cancelOrder(orderId) {
             headers: { 'Content-Type': 'application/json' }
         });
 
-        console.log("Response received:", response);
-
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -438,12 +446,9 @@ async function cancelOrder(orderId) {
         console.log("Order cancellation response:", data);
 
         if (data.success) {
+            // Show success modal
             var successModal = new bootstrap.Modal(document.getElementById('cancelSuccessModal'));
             successModal.show();
-
-            setTimeout(() => {
-                location.reload();
-            }, 2000);
         } else {
             alert('Error cancelling order: ' + data.message);
         }
