@@ -16,18 +16,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Set default values for date filters
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date();
+    const formattedToday = formatDateForInput(today);
+    
     const endDateInput = document.getElementById("endDate");
     if (endDateInput) {
-        endDateInput.value = today;
+        endDateInput.value = formattedToday;
     }
     
-    // Set start date to 7 days ago by default
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // Set start date to 30 days ago by default
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const formattedThirtyDaysAgo = formatDateForInput(thirtyDaysAgo);
+    
     const startDateInput = document.getElementById("startDate");
     if (startDateInput) {
-        startDateInput.value = sevenDaysAgo.toISOString().split("T")[0];
+        startDateInput.value = formattedThirtyDaysAgo;
     }
     
     // Initialize category filter if present on the page
@@ -45,6 +49,23 @@ document.addEventListener('DOMContentLoaded', function() {
         applyFilterBtn.addEventListener("click", applyDateFilter);
     }
 });
+
+// Helper function to format dates consistently for input elements
+function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Helper function to format dates for API requests
+function formatDateForAPI(dateString) {
+    if (!dateString) return "";
+    
+    // Ensure consistent date format for API: YYYY-MM-DD
+    const date = new Date(dateString);
+    return formatDateForInput(date);
+}
 
 function filterOrdersByDate() {
     const filterType = document.getElementById("dateFilter").value;
@@ -77,30 +98,59 @@ function applyDateFilter() {
     let endDateValue = "";
 
     if (filterType === "custom") {
-        startDateValue = document.getElementById("startDate").value;
-        endDateValue = document.getElementById("endDate").value;
+        const startDateInput = document.getElementById("startDate");
+        const endDateInput = document.getElementById("endDate");
+        
+        startDateValue = startDateInput ? startDateInput.value : "";
+        endDateValue = endDateInput ? endDateInput.value : "";
 
         if (!startDateValue || !endDateValue) {
             alert("Please select both start and end dates.");
             return;
         }
 
-        if (new Date(startDateValue) > new Date(endDateValue)) {
+        // Parse dates for comparison
+        const startDate = new Date(startDateValue);
+        const endDate = new Date(endDateValue);
+        
+        if (startDate > endDate) {
             alert("Start date cannot be after end date.");
             return;
         }
+        
+        // Format dates consistently for API
+        startDateValue = formatDateForAPI(startDateValue);
+        endDateValue = formatDateForAPI(endDateValue);
+        
+        // Log the dates for debugging
+        console.log("Custom date range selected:", startDateValue, "to", endDateValue);
     }
 
-    // ✅ Show loading state
+    // Show loading state
     const tableBody = document.getElementById("ordersTableBody");
     if (tableBody) {
         tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Loading...</td></tr>';
     }
 
-    // ✅ API Call - Only Fetch Delivered Orders
-    fetch(`/admin/filterByDate?filter=${filterType}&startDate=${startDateValue}&endDate=${endDateValue}&orderStatus=Delivered`)
-        .then(response => response.json())
+    // Build the URL with correct query parameters
+    const url = `/admin/filterByDate?filter=${encodeURIComponent(filterType)}&startDate=${encodeURIComponent(startDateValue)}&endDate=${encodeURIComponent(endDateValue)}&orderStatus=Delivered`;
+    
+    // Log the URL for debugging
+    console.log("Fetching URL:", url);
+    
+    // Make the API call
+    fetch(url)
+        .then(response => {
+            console.log("Response status:", response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log("Received data:", data);
+            console.log("Number of orders:", data.orders ? data.orders.length : 0);
+            
             if (data.success) {
                 updateOrdersTable(data.orders, data.totalOrders);
 
@@ -110,6 +160,9 @@ function applyDateFilter() {
             } else {
                 console.error("Error filtering by date:", data.message);
                 alert("Error: " + (data.message || "Failed to filter orders"));
+                if (tableBody) {
+                    tableBody.innerHTML = '<tr><td colspan="8" class="text-center">No orders found</td></tr>';
+                }
             }
         })
         .catch(error => {
@@ -120,8 +173,6 @@ function applyDateFilter() {
             }
         });
 }
-
-
 
 // Function to update the orders table with filtered data
 function updateOrdersTable(orders, totalOrders) {
@@ -138,6 +189,13 @@ function updateOrdersTable(orders, totalOrders) {
     
     orders.forEach((order, index) => {
         totalAmount += order.totalAmount || 0;
+        
+        const orderStatus = order.orderStatus || 'Unknown';
+        
+        // Only show delivered orders
+        if (orderStatus.toLowerCase() !== 'delivered') {
+            return;
+        }
         
         let paymentStatusBadge = '';
         if (order.paymentStatus && order.paymentStatus.toLowerCase() === 'completed') {
@@ -181,7 +239,9 @@ function updateOrdersTable(orders, totalOrders) {
                 <td>${billingName}</td>
                 <td>${orderDate}</td>
                 <td>${order.totalAmount ? order.totalAmount.toFixed(2) : '0.00'}</td>
-                <td>${paymentStatusBadge}</td>
+                <td>
+                    <span class="badge badge-pill badge-success">Delivered</span>
+                </td>
                 <td>
                     <i class="material-icons md-payment font-xxl text-muted mr-5"></i> 
                     ${paymentMethod}
@@ -198,12 +258,12 @@ function updateOrdersTable(orders, totalOrders) {
     // Add summary rows
     html += `
         <tr class="table-info fw-bold">
-            <td colspan="4" class="text-end">Total Orders:</td>
+            <td colspan="4" class="text-end">Total Delivered Orders:</td>
             <td>${totalOrders || orders.length}</td>
             <td colspan="3"></td>
         </tr>
         <tr class="table-info fw-bold">
-            <td colspan="4" class="text-end">Total Sales:</td>
+            <td colspan="4" class="text-end">Total Sales from Delivered Orders:</td>
             <td>₹${totalAmount.toFixed(2)}</td>
             <td colspan="3"></td>
         </tr>
@@ -211,9 +271,6 @@ function updateOrdersTable(orders, totalOrders) {
     
     tableBody.innerHTML = html;
 }
-
-// Function to filter by payment status
-
 
 // Function to update the pagination controls
 function updatePagination(currentPage, totalPages) {

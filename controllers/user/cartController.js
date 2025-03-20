@@ -302,7 +302,6 @@ const updateProductQuantity = async (req, res) => {
       });
     }
     
-    // Find the size object inside the sizes array
     const sizeIndex = product.sizes.findIndex((s) => s.size === size);
     if (sizeIndex === -1) {
       return res.status(400).json({
@@ -320,11 +319,9 @@ const updateProductQuantity = async (req, res) => {
         stockWarning = `Only ${availableStock} items available in size ${size}`;
       } else {
         updatedQuantity++;
-         // Decrease stock count
       }
     } else if (action === "decrease" && updatedQuantity > 1) {
       updatedQuantity--;
-       // Increase stock count when decreasing quantity
     }
 
     cartItem.quantity = updatedQuantity;

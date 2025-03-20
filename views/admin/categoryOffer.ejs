@@ -3,12 +3,7 @@
 <main class="main-wrap">
     <header class="main-header navbar">
         <div class="col-search">
-            <form class="searchform">
-                <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Search term" />
-                    <button class="btn btn-light bg" type="button"><i class="material-icons md-search"></i></button>
-                </div>
-            </form>
+            
         </div>
     </header>
 
@@ -129,17 +124,22 @@
         <!-- Display existing offers as cards -->
         <div class="row" id="offersContainer">
             <% if (categoryOffers && categoryOffers.length > 0) { %>
-                <% categoryOffers.forEach(offer => { %>
+                <% categoryOffers.forEach(offer => { 
+                    const isExpired = new Date(offer.endDate) < new Date(); // Check if offer has expired
+                %>
                     <div class="col-md-6 col-lg-4 mb-4 offer-card" data-offer='<%= JSON.stringify(offer).replace(/'/g, "&#39;") %>'>
-                        <div class="card">
-                            <div class="card-header bg-light">
+                        <div class="card <%= isExpired ? 'border-danger' : '' %>">
+                            <div class="card-header bg-light d-flex justify-content-between">
                                 <h5 class="card-title"><%= offer.description %></h5>
+                                <% if (isExpired) { %>
+                                    <span class="badge bg-danger">Expired</span>
+                                <% } %>
                             </div>
                             <div class="card-body">
                                 <p><strong>Category:</strong> <%= offer.categoryId.name %></p>
                                 <p><strong>Discount:</strong> 
                                     <% if (offer.discountType === 'percentage') { %>
-                                        <%= offer.discountValue %>%
+                                        <%= offer.discountValue %>% 
                                     <% } else { %>
                                         ₹<%= offer.discountValue %>
                                     <% } %>
@@ -148,7 +148,7 @@
                                 <p><strong>Valid Until:</strong> <%= new Date(offer.endDate).toLocaleDateString() %></p>
                                 
                                 <div class="d-flex justify-content-between mt-3">
-                                    <button class="btn btn-sm btn-outline-primary edit-offer" data-id="<%= offer._id %>">
+                                    <button class="btn btn-sm btn-outline-primary edit-offer" data-id="<%= offer._id %>" <%= isExpired ? 'disabled' : '' %>>
                                         <i class="material-icons md-edit"></i> Edit
                                     </button>
                                     <button class="btn btn-sm btn-outline-danger delete-offer" data-id="<%= offer._id %>">

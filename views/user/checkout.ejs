@@ -1110,7 +1110,12 @@ document.addEventListener('DOMContentLoaded', function() {
 // Function to fetch wallet balance from server
 function fetchWalletBalance() {
   fetch('/wallet/balance')
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
     .then(data => {
       if (data.success) {
         // Update wallet balance display
@@ -1135,7 +1140,7 @@ function fetchWalletBalance() {
 // Function to check if wallet balance is sufficient for order total
 function checkWalletBalance() {
   const walletBalance = parseFloat(document.body.dataset.walletBalance || 0);
-  const orderTotal = parseFloat(document.getElementById('finalAmountInput').value);
+  const orderTotal = parseFloat(document.getElementById('finalAmountInput').value || 0);
   
   // Show warning if balance is insufficient
   if (walletBalance < orderTotal) {
@@ -1162,7 +1167,6 @@ document.querySelectorAll('#accordion-payment .card-header').forEach(header => {
   });
 });
 
-// Modify the existing place order function to handle wallet payments
 // Modify the existing place order function to handle wallet payments
 document.getElementById('btn-place-order').addEventListener('click', function(e) {
     e.preventDefault();
@@ -1218,7 +1222,7 @@ document.getElementById('btn-place-order').addEventListener('click', function(e)
     if (selectedPaymentMethod.includes('Razorpay')) {
         createOrderAndInitiatePayment(formData);
     } else if (selectedPaymentMethod.toLowerCase().includes('wallet')) {
-        // ✅ Fix: Convert "Wallet" to lowercase "wallet"
+        // Fix: Convert "Wallet" to lowercase "wallet"
         formData.paymentMethod = 'wallet';
 
         // Check wallet balance before proceeding
@@ -1236,11 +1240,12 @@ document.getElementById('btn-place-order').addEventListener('click', function(e)
     }
 });
 
-// ✅ Fix: Convert "Wallet" to lowercase "wallet" in API call
+// Fix: Match the API endpoint with the backend route (assuming '/wallet/pay' is the correct endpoint)
+// Function to submit wallet payment
 function submitWalletPayment(formData) {
     formData.paymentMethod = 'wallet';
     
-    fetch('/process-wallet-payment', {
+    fetch('/process-wallet-payment', {  // Updated to match the backend route
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -1249,14 +1254,16 @@ function submitWalletPayment(formData) {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            return response.json().then(err => {
+                throw err;  // This will be caught in the catch block below
+            });
         }
         return response.json();
     })
     .then(data => {
         if (data.success) {
             document.getElementById('modalOrderId').textContent = data.orderId || 'N/A';
-            document.getElementById('modalOrderTotal').textContent = data.finalAmount || 'N/A';
+            document.getElementById('modalOrderTotal').textContent = `₹${formData.finalAmount.toFixed(2)}`;
 
             $('#successModal').modal({
                 backdrop: 'static',
@@ -1279,7 +1286,15 @@ function submitWalletPayment(formData) {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred: ' + error.message);
+        
+        if (error.insufficientBalance) {
+            showInsufficientBalanceModal(
+                parseFloat(formData.finalAmount), 
+                parseFloat(error.walletBalance || 0)
+            );
+        } else {
+            alert(error.message || 'An error occurred while processing your payment. Please try again.');
+        }
     });
 }
 

@@ -79,7 +79,7 @@ const editCouponDetails=async(req,res)=>{
    try {
     const coupon=await Coupon.findById(couponId);
     if (!coupon) { 
-        res.status(404); // ✅ Set status before calling next()
+        res.status(404); 
         return next(new Error("Coupon not found"));
     }
     res.render('editCoupon',{coupon})
@@ -174,7 +174,6 @@ const applyCoupon = async (req, res) => {
         const { couponCode, subtotal } = req.body;
         const userId = req.session.userId;
 
-        // Find the coupon in the database
         const coupon = await Coupon.findOne({ 
             code: couponCode,
             minPurchase: { $lte: subtotal },
@@ -188,7 +187,6 @@ const applyCoupon = async (req, res) => {
             });
         }
 
-        // Check if coupon has already been used by this user
         if (coupon.usedBy && coupon.usedBy.includes(userId)) {
             return res.status(400).json({
                 success: false,
@@ -196,32 +194,24 @@ const applyCoupon = async (req, res) => {
             });
         }
 
-        // Calculate discount
         let discount = 0;
         let discountPercentage = 0;
         
         if (coupon.discount === 'percentage') {
-            // Store the percentage for display purposes
             discountPercentage = coupon.discountValue;
             
-            // Calculate the discount amount
             discount = (subtotal * coupon.discountValue) / 100;
             
-            // Apply maximum discount limit if specified
             if (coupon.maxDiscount && discount > coupon.maxDiscount) {
                 discount = coupon.maxDiscount;
             }
         } else {
-            // Fixed amount discount
             discount = coupon.discountValue;
         }
 
-        // Calculate discounted total
         const discountedTotal = subtotal - discount;
 
-        // If this is a real order (not just preview), mark coupon as used
         if (req.body.finalizeOrder) {
-            // Add user to usedBy array
             if (userId) {
                 await Coupon.findByIdAndUpdate(
                     coupon._id,

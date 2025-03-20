@@ -17,23 +17,32 @@ function authMiddleware(req, res, next) {
         next();
     }
   }
-function distroyByBlocking(req,res,next){
-  if(req.session.userId){
-    const user=User.findById(userId);
-    console.log(user,'user ne kitttttiiiiiii')
-    if(user.isBlocked==true){
-      session.distroy();
+  async function distroyByBlocking(req, res, next) {
+    if (req.session.userId) {
+      try {
+        const user = await User.findById(req.session.userId); // Await DB query
+        console.log(user, 'user found');
+        if (user && user.isBlocked) {
+          req.session.destroy(() => {
+            return res.redirect('/login'); // Redirect after destroying session
+          });
+        } else {
+          next();
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        next(error);
+      }
+    } else {
+      next();
     }
   }
-  else{
-    next();
-  }
-}
+  
 const adminAuth = (req, res, next) => {
   if (req.session && req.session.admin) {
       return next();
   } else {
-      return res.redirect('/admin/login');
+      return res.redirect('/admin/adminLogin');
   }
 };
  

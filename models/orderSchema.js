@@ -73,10 +73,11 @@ const orderSchema = new mongoose.Schema({
         country: String,
         phone: String
     },
-    paymentMethod: {
-        type: [String],
-        enum: ['wallet', 'RazorPay', 'Cash on delivery']
-    },
+    paymentMethod: [{
+        type: String,
+        enum: ['cod', 'razorpay', 'wallet'],  // Add all valid payment methods
+        required: true
+    }],
     paymentStatus: {
         type: String,
         enum: ['Pending', 'completed', 'Failed', 'Refunded'],

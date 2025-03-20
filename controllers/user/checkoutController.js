@@ -354,10 +354,8 @@ const buyNow = async (req, res) => {
             return res.status(400).json({ success: false, message: 'No items in cart' });
         }
 
-        // Calculate the original subtotal
         const subtotal = cart.product.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         
-        // Apply the discount to get final amount
         const finalAmount = Math.max(0, subtotal - couponDiscount);
 
         const shippingAddress = {
@@ -376,6 +374,21 @@ const buyNow = async (req, res) => {
             quantity: item.quantity,
             price: item.price
         }));
+        
+        // Ensure payment method is normalized to match enum values
+        let paymentMethod = formData.paymentMethod;
+        
+        // If it's a string, convert to lowercase and normalize
+        if (typeof paymentMethod === 'string') {
+            if (paymentMethod.toLowerCase().includes('wallet')) {
+                paymentMethod = 'wallet';
+            } else if (paymentMethod.toLowerCase().includes('razorpay')) {
+                paymentMethod = 'razorpay';
+            } else if (paymentMethod.toLowerCase().includes('cod') || 
+                      paymentMethod.toLowerCase().includes('cash on delivery')) {
+                paymentMethod = 'cod';
+            }
+        }
 
         const newOrder = new Order({
             orderId: generateOrderId(),
@@ -383,16 +396,28 @@ const buyNow = async (req, res) => {
             products: orderProducts,
             orderStatus: 'Confirmed',
             shippingAddress: shippingAddress,
-            paymentMethod: formData.paymentMethod,
-            paymentStatus: 'Pending',
-            totalAmount: finalAmount, // Use totalAmount as required by schema
+            paymentMethod: [paymentMethod], // Ensure it's an array with the normalized value
+            paymentStatus: paymentMethod === 'wallet' ? 'completed' : 'pending',
+            totalAmount: finalAmount, 
             couponDiscount: couponDiscount > 0 ? couponDiscount : undefined,
             couponCode: couponCode || undefined
         });
 
         await newOrder.save();
 
-        // Empty cart after order placement
+        // If wallet payment, update wallet balance
+        if (paymentMethod === 'wallet') {
+            const user = await User.findById(userId);
+            if (user) {
+                user.wallet -= finalAmount;
+                user.walletHistory.push({
+                    date: new Date(),
+                    amount: -finalAmount,
+                });
+                await user.save();
+            }
+        }
+
         await Cart.findOneAndUpdate({ userId: userId }, { $set: { product: [], totalPrice: 0 } });
 
         res.status(200).json({
@@ -421,26 +446,22 @@ const cancelOrder = async (req, res) => {
             });
         }
 
-        // ✅ Loop through each product in the order and update stock for the correct size
         for (const item of order.products) {
             const product = await Product.findById(item.productId);
 
             if (product) {
-                product.saleCount = Math.max(0, (product.saleCount || 0) - 1); // Prevent negative saleCount
+                product.saleCount = Math.max(0, (product.saleCount || 0) - 1);
 
                 if (!Array.isArray(product.sizes)) {
                     console.warn(`Product ${product._id} has no sizes array`);
                     continue;
                 }
 
-                // ✅ Find the correct size object inside the product
                 const sizeIndex = product.sizes.findIndex(sizeObj => sizeObj.size === item.size);
 
                 if (sizeIndex !== -1) {
-                    // ✅ Increase stock for the canceled size
                     product.sizes[sizeIndex].stock += item.quantity;
                 } else {
-                    // ✅ If size not found, add a new size entry with the stock restored
                     product.sizes.push({
                         size: item.size,
                         stock: item.quantity
@@ -451,7 +472,6 @@ const cancelOrder = async (req, res) => {
             }
         }
         
-        // ✅ Refund to the user's wallet if the payment was completed
         if (order.paymentStatus === 'completed' && order.userId) {
             const user = await User.findById(order.userId);
             if (user) {
@@ -466,14 +486,12 @@ const cancelOrder = async (req, res) => {
             }
         }
 
-        // ✅ Set all product statuses in the order to "Cancelled"
         order.products.forEach(product => {
             product.status = "Cancelled";
         });
 
-        order.markModified("products"); // Ensure Mongoose detects changes
+        order.markModified("products"); 
 
-        // ✅ Set order status to "Cancelled"
         order.orderStatus = "Cancelled";
         
         await order.save();
@@ -500,7 +518,7 @@ const viewPurchaseDetails = async (req, res) => {
         const order = await Order.findById(orderId)
             .populate({
                 path: 'products.productId',
-                select: 'title price image' // ✅ Select the correct field: 'title'
+                select: 'title price image' 
             })
             .populate('userId', 'username email contact');
 
@@ -533,18 +551,15 @@ const cancelPartialProduct = async (req, res) => {
 
         console.log(`Processing cancellation for Order ID: ${orderId}, Product Order ID: ${productOrderId}, Product ID: ${productId}`);
 
-        // Find the order
         const order = await Order.findById(orderId);
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        // Ensure products array exists
         if (!order.products || order.products.length === 0) {
             return res.status(404).json({ success: false, message: 'No products found in order' });
         }
 
-        // Find the specific product in the order by productOrderId and productId
         const product = order.products.find(p => p.productOrderId.toString() === productOrderId && p.productId.toString() === productId);
         if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found in order' });
@@ -552,25 +567,22 @@ const cancelPartialProduct = async (req, res) => {
 
         console.log('Product found in order:', product);
 
-        // Check if the product is already cancelled
         if (product.status === "Cancelled") {
             return res.status(400).json({ success: false, message: 'Product already cancelled' });
         }
 
-        // ✅ Update product status to "Cancelled"
         product.status = "Cancelled";
-        order.markModified('products'); // Ensure Mongoose detects the change
+        order.markModified('products'); 
 
-        // ✅ Update product inventory (increase stock for the correct size)
+        // Restore stock quantity
         const productData = await Product.findById(productId);
         if (productData) {
             if (!Array.isArray(productData.sizes)) {
                 console.warn(`Product ${productData._id} has no sizes array`);
             } else {
-                // ✅ Find the size and increase the stock (Do NOT add a new size)
                 const sizeObj = productData.sizes.find(sizeObj => sizeObj.size === product.size);
                 if (sizeObj) {
-                    sizeObj.stock += product.quantity; // ✅ Only increase stock
+                    sizeObj.stock += product.quantity;
                 } else {
                     console.warn(`Size ${product.size} not found for Product ${productData._id}`);
                 }
@@ -579,19 +591,28 @@ const cancelPartialProduct = async (req, res) => {
             await productData.save();
         }
 
-        // ✅ Check if ALL products in the order are cancelled
-        const allCancelled = order.products.every(p => p.status === "Cancelled");
+        // ✅ Refund to wallet if payment was completed
+        if (order.paymentStatus === "completed" && order.userId) {
+            const user = await User.findById(order.userId);
+            if (user) {
+                user.wallet += product.price * product.quantity; 
+                user.walletBalance += product.price * product.quantity;
+                user.walletHistory.push({
+                    date: new Date(),
+                    amount: product.price * product.quantity
+                });
 
-        console.log('All products cancelled?', allCancelled);
-
-        // ✅ If all products are cancelled, update order status
-        if (allCancelled) {
-            order.orderStatus = "Cancelled";
-            order.markModified('orderStatus'); // Ensure Mongoose detects the change
-            console.log('Order status updated to Cancelled');
+                await user.save();
+            }
         }
 
-        // ✅ Save the updated order
+        // If all products are cancelled, cancel the entire order
+        const allCancelled = order.products.every(p => p.status === "Cancelled");
+        if (allCancelled) {
+            order.orderStatus = "Cancelled";
+            order.markModified('orderStatus');
+        }
+
         await order.save();
 
         return res.status(200).json({ success: true, message: 'Product cancelled successfully' });
@@ -602,46 +623,56 @@ const cancelPartialProduct = async (req, res) => {
     }
 };
 
+
 const orderCancel = async (req, res) => {
     const orderId = req.params.id;
     console.log('Cancelling order with ID:', orderId);
 
     try {
-        // ✅ Find the order
         const order = await Order.findById(orderId);
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        // ✅ Loop through each product in the order and cancel it
         for (const product of order.products) {
-            product.status = "Cancelled"; // Mark as cancelled
-            order.markModified('products'); // Ensure Mongoose detects the change
+            product.status = "Cancelled"; 
+            order.markModified('products'); 
 
-            // ✅ Update product inventory (increase stock for the correct size)
             const productData = await Product.findById(product.productId);
             if (productData) {
                 if (!Array.isArray(productData.sizes)) {
                     console.warn(`Product ${productData._id} has no sizes array`);
                 } else {
-                    // ✅ Find the correct size and increase the stock
                     const sizeObj = productData.sizes.find(sizeObj => sizeObj.size === product.size);
                     if (sizeObj) {
-                        sizeObj.stock += product.quantity; // ✅ Only increase stock
+                        sizeObj.stock += product.quantity; 
                     } else {
                         console.warn(`Size ${product.size} not found for Product ${productData._id}`);
                     }
                 }
 
-                await productData.save(); // ✅ Save updated stock
+                await productData.save(); 
             }
         }
 
-        // ✅ Set order status to "Cancelled"
+        // ✅ Refund to wallet if payment was completed
+        if (order.paymentStatus === "completed" && order.userId) {
+            const user = await User.findById(order.userId);
+            if (user) {
+                user.wallet += order.totalAmount;
+                user.walletBalance += order.totalAmount;
+                user.walletHistory.push({
+                    date: new Date(),
+                    amount: order.totalAmount
+                });
+
+                await user.save();
+            }
+        }
+
         order.orderStatus = "Cancelled";
-        order.markModified('orderStatus'); // Ensure Mongoose detects the change
+        order.markModified('orderStatus'); 
         
-        // ✅ Save the updated order
         await order.save();
 
         return res.status(200).json({ success: true, message: 'Order cancelled successfully' });
@@ -664,18 +695,16 @@ const razorpayCreation = async (req, res) => {
     try {
         const formData = req.body;
         let subtotal = parseFloat(formData.totalAmount || 0);
-        const couponDiscount = parseFloat(formData.couponDiscount || 0); // ✅ Get discount
-        const finalAmount = Math.max(0, subtotal - couponDiscount); // ✅ Apply discount
+        const couponDiscount = parseFloat(formData.couponDiscount || 0); 
+        const finalAmount = Math.max(0, subtotal - couponDiscount); 
         
         const userId = req.session.userId || null;
 
-        // Get cart data with populated product information
         let cart = null;
         if (userId) {
             cart = await Cart.findOne({ userId }).populate("product.productId");
         }
 
-        // If subtotal is missing, calculate from cart
         if (!subtotal && cart && cart.product.length > 0) {
             subtotal = cart.product.reduce((total, item) => {
                 const price = item.productId.hasDiscount ? 
@@ -692,19 +721,15 @@ const razorpayCreation = async (req, res) => {
             });
         }
 
-        // ✅ Use `finalAmount` instead of `subtotal`
-        const amountInPaise = Math.round(finalAmount * 100); // Razorpay needs paise
+        const amountInPaise = Math.round(finalAmount * 100); 
 
-        // Generate a unique order ID
         const orderId = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
-        // Get user details
         let user = null;
         if (userId) {
             user = await User.findById(userId);
         }
 
-        // Prepare shipping address
         const shippingAddress = {
             fullName: user ? user.username : `${formData.firstName || ""} ${formData.lastName || ""}`.trim(),
             email: user ? user.email : formData.email || "",
@@ -717,7 +742,6 @@ const razorpayCreation = async (req, res) => {
             country: formData.country || (user?.address?.length > 0 ? user.address[0].country || "" : "")
         };
 
-        // Prepare order products
         let orderProducts = [];
         if (cart && cart.product.length > 0) {
             orderProducts = cart.product.map(item => {
@@ -733,29 +757,27 @@ const razorpayCreation = async (req, res) => {
             });
         }
 
-        // ✅ Save `finalAmount` in the database
         const order = await Order.create({
             orderId: orderId,
             userId: userId,
             guestEmail: userId ? undefined : formData.email || "anonymous",
             isGuestCheckout: !userId,
             products: orderProducts,  
-            totalAmount: finalAmount, // ✅ Fix: Save discounted amount
-            couponDiscount: couponDiscount > 0 ? couponDiscount : undefined, // ✅ Store discount
-            couponCode: formData.couponCode || undefined, // ✅ Store coupon code
+            totalAmount: finalAmount, 
+            couponDiscount: couponDiscount > 0 ? couponDiscount : undefined, 
+            couponCode: formData.couponCode || undefined, 
             paymentStatus: "Pending",
             paymentMethod: ["RazorPay"],
             shippingAddress
         });
 
-        // ✅ Create Razorpay order with `finalAmount`
         const razorpay = new Razorpay({
             key_id: process.env.RAZORPAY_ID_KEY,
             key_secret: process.env.RAZORPAY_SECRET_KEY
         });
 
         const razorpayOrder = await razorpay.orders.create({
-            amount: amountInPaise, // ✅ Fix: Use finalAmount instead of subtotal
+            amount: amountInPaise, 
             currency: "INR",
             receipt: order._id.toString(),
             notes: {
@@ -765,7 +787,6 @@ const razorpayCreation = async (req, res) => {
             }
         });
 
-        // Save Razorpay order ID in database
         await Order.findByIdAndUpdate(order._id, { razorpayOrderId: razorpayOrder.id });
 
         res.json({
@@ -789,7 +810,6 @@ const verifyRazorPay = async (req, res) => {
 
         console.log("Verifying Razorpay payment:", razorpay_payment_id);
 
-        // Verify the Razorpay signature
         const secret = process.env.RAZORPAY_SECRET_KEY;
         const generated_signature = crypto
             .createHmac("sha256", secret)
@@ -799,7 +819,6 @@ const verifyRazorPay = async (req, res) => {
         if (generated_signature !== razorpay_signature) {
             console.error(" Signature verification failed for payment:", razorpay_payment_id);
 
-            // Update the order status to "Failed"
             await Order.findByIdAndUpdate(order_id, {
                 paymentStatus: "Failed",
                 orderStatus: "Cancelled"
@@ -811,7 +830,6 @@ const verifyRazorPay = async (req, res) => {
             });
         }
 
-        // Find the order
         const order = await Order.findById(order_id);
         if (!order) {
             return res.status(404).json({ 
@@ -820,12 +838,10 @@ const verifyRazorPay = async (req, res) => {
             });
         }
 
-        // Update Order Status to 'Completed'
         order.paymentStatus = "Completed";
         order.orderStatus = "Confirmed";
         order.razorpayPaymentId = razorpay_payment_id;
 
-        // ✅ Update Product Stock
         for (const item of order.products) {
             const product = await Product.findById(item.productId);
             if (product) {
@@ -839,7 +855,6 @@ const verifyRazorPay = async (req, res) => {
             }
         }
 
-        // ✅ Clear Cart if user is logged in
         if (order.userId) {
             await Cart.findOneAndUpdate({ userId: order.userId }, { $set: { product: [], totalPrice: 0 } });
         }
@@ -867,7 +882,6 @@ const handleFailedPayments = async (req, res) => {
             return res.status(400).json({ success: false, message: "Order ID is required" });
         }
 
-        // Update order status to Failed
         await Order.findByIdAndUpdate(orderId, { 
             paymentStatus: "Failed", 
             orderStatus: "Cancelled" 
@@ -953,23 +967,19 @@ const returnPartialRequest = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        // Ensure products array exists
         if (!order.products || order.products.length === 0) {
             return res.status(404).json({ success: false, message: 'No products found in order' });
         }
 
-        // Find the specific product in the order
         const product = order.products.find(p => p.productOrderId.toString() === productOrderId && p.productId.toString() === productId);
         if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found in order' });
         }
 
-        // Check if product has already been returned
         if (product.status === "Returned") {
             return res.status(400).json({ success: false, message: 'Product already returned' });
         }
 
-        // Update product status and reason
         product.status = "Return Requested";
         product.returnReason = reason;
         product.additionalDetails = customReason;
@@ -987,7 +997,6 @@ const getWalletBalance = async (req, res) => {
     try {
         const userId = req.session.userId;
         
-        // ✅ Step 1: Check if the user is authenticated
         if (!userId) {
             return res.status(401).json({ success: false, message: 'User not authenticated' });
         }
@@ -1017,20 +1026,16 @@ const payWithWallet = async (req, res) => {
             return res.status(401).json({ success: false, message: 'User not authenticated' });
         }
 
-        // ✅ Step 1: Parse final amount
         const finalAmount = parseFloat(formData.finalAmount);
 
-        // ✅ Step 2: Get coupon information
         const couponCode = formData.couponCode || '';
         const couponDiscount = parseFloat(formData.couponDiscount || 0);
 
-        // ✅ Step 3: Fetch user's wallet balance from User model
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        // ✅ Step 4: Check wallet balance
         if (user.wallet < finalAmount) {
             return res.status(400).json({
                 success: false,
@@ -1040,13 +1045,11 @@ const payWithWallet = async (req, res) => {
             });
         }
 
-        // ✅ Step 5: Fetch cart items
         const cart = await Cart.findOne({ userId }).populate('product.productId');
         if (!cart || !cart.product || cart.product.length === 0) {
             return res.status(400).json({ success: false, message: 'No items in cart' });
         }
 
-        // ✅ Step 6: Process shipping address
         const shippingAddress = {
             fullName: `${formData.firstName} ${formData.lastName}`,
             address: formData.streetAddress + (formData.landmark ? `, ${formData.landmark}` : ''),
@@ -1057,7 +1060,6 @@ const payWithWallet = async (req, res) => {
             phone: formData.phone
         };
 
-        // ✅ Step 7: Map cart products to order format
         const orderProducts = cart.product.map(item => ({
             productId: item.productId._id,
             size: item.size,
@@ -1065,14 +1067,13 @@ const payWithWallet = async (req, res) => {
             price: item.price
         }));
 
-        // ✅ Fix: Store valid enum value for `paymentMethod`
         const newOrder = new Order({
             orderId: generateOrderId(),
             userId: userId,
             products: orderProducts,
             orderStatus: 'Confirmed',
             shippingAddress: shippingAddress,
-            paymentMethod: ['wallet'], // ✅ FIXED: Ensure correct enum value
+            paymentMethod: ['wallet'], 
             paymentStatus: 'completed',
             totalAmount: finalAmount,
             couponDiscount: couponDiscount > 0 ? couponDiscount : undefined,
@@ -1081,10 +1082,8 @@ const payWithWallet = async (req, res) => {
 
         await newOrder.save();
 
-        // ✅ Step 9: Deduct amount from wallet
         user.wallet -= finalAmount;
 
-        // ✅ Step 10: Add transaction to `walletHistory`
         user.walletHistory.push({
             date: new Date(),
             amount: -finalAmount,
@@ -1092,10 +1091,8 @@ const payWithWallet = async (req, res) => {
 
         await user.save();
 
-        // ✅ Step 11: Empty the cart after order placement
         await Cart.findOneAndUpdate({ userId: userId }, { $set: { product: [], totalPrice: 0 } });
 
-        // ✅ Step 12: Return success response
         res.status(200).json({
             success: true,
             message: 'Order placed successfully using wallet',

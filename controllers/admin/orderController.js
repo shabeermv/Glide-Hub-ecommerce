@@ -27,7 +27,6 @@ const userOrdersInfo = async (req, res) => {
 
     const processedOrders = await Promise.all(
       orderData.map(async (order) => {
-        // Check product statuses
         const allReturned = order.products.every(product => product.status === "Returned");
         const anyReturnRequested = order.products.some(product => product.status === "Return Requested");
 
@@ -157,35 +156,6 @@ const getInvoice = async(req,res)=>{
     next(error)  }
 
 }
-// const approveReturn = async (req, res, next) => {
-//   try {
-//       const { orderId, action } = req.body; 
-
-//       const order = await Order.findById(orderId);
-//       if (!order) {
-//           return res.status(404).json({ success: false, message: 'Order not found' });
-//       }
-
-//       if (order.orderStatus !== 'Return Requested') {
-//           return res.status(400).json({ success: false, message: 'No pending return request' });
-//       }
-
-//       if (action === 'approve') {
-//           order.orderStatus = 'Returned';
-//       } else if (action === 'reject') {
-//           order.orderStatus = 'Rejected';
-//       } else {
-//           return res.status(400).json({ success: false, message: 'Invalid action' });
-//       }
-
-//       await order.save();
-//       return res.status(200).json({ success: true, message: `Return request ${action}d successfully` });
-
-//   } catch (error) {
-//       console.log('Error approving return request:', error);
-//       next(error);
-//   }
-// };
 
 
 
@@ -194,20 +164,17 @@ const returnRequests = async (req, res) => {
   try {
     const orders = await Order.find({
       $or: [
-        { orderStatus: "Return Requested" }, // Full order return
-        { "products.status": "Return Requested" } // Individual product return
+        { orderStatus: "Return Requested" }, 
+        { "products.status": "Return Requested" } 
       ]
     })
     .populate("userId")
     .populate("products.productId");
 
-    // Format orders for display
     const returnOrders = [];
 
     orders.forEach(order => {
-      // Case 1: Full order return
       if (order.orderStatus === "Return Requested") {
-        // Create an entry with all products from the order
         returnOrders.push({
           _id: order._id,
           orderId: order.orderId,
@@ -220,9 +187,7 @@ const returnRequests = async (req, res) => {
           }))
         });
       } 
-      // Case 2: Individual product returns
       else {
-        // Filter only products with "Return Requested" status
         const returnRequestedProducts = order.products.filter(
           product => product.status === "Return Requested"
         );
@@ -250,13 +215,12 @@ const setUpReturnRequest = async (req, res) => {
   try {
     const { orderId, productOrderId, action, isFullOrder } = req.body;
 
-    // Fetch the order
     const order = await Order.findById(orderId).populate("userId");
     if (!order) {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    const user = order.userId; // Since `userId` is populated, it's now the user document
+    const user = order.userId; 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
@@ -264,13 +228,12 @@ const setUpReturnRequest = async (req, res) => {
     let refundAmount = 0;
 
     if (isFullOrder) {
-      // ✅ Full Order Return
       if (action === "approved") {
         order.orderStatus = "Returned";
 
         order.products.forEach(product => {
           product.status = "Returned";
-          refundAmount += product.price * product.quantity; // Calculate total refund
+          refundAmount += product.price * product.quantity;  
         });
       } else {
         order.orderStatus = "Return Rejected";
@@ -280,7 +243,6 @@ const setUpReturnRequest = async (req, res) => {
         });
       }
     } else {
-      // ✅ Single Product Return
       const productIndex = order.products.findIndex(p => p.productOrderId === productOrderId);
 
       if (productIndex === -1) {
@@ -294,25 +256,24 @@ const setUpReturnRequest = async (req, res) => {
 
       if (action === "approved") {
         returnedProduct.status = "Returned";
-        refundAmount = returnedProduct.price * returnedProduct.quantity; // Refund only this product
+        refundAmount = returnedProduct.price * returnedProduct.quantity; 
       } else {
         returnedProduct.status = "Return Rejected";
       }
     }
 
-    // ✅ Process Refund to Wallet if Approved
     if (action === "approved" && refundAmount > 0) {
-      user.wallet += refundAmount; // Add refund to user's wallet
+      user.wallet += refundAmount;
 
       user.walletHistory.push({
         date: new Date(),
         amount: refundAmount
       });
 
-      await user.save(); // Save user wallet update
+      await user.save();
     }
 
-    await order.save(); // Save updated order status
+    await order.save();
 
     res.json({ success: true, refundAmount });
 
@@ -340,7 +301,6 @@ module.exports = {
   changeOrderStatus,
   viewOrderDetails,
   getInvoice,
-  // approveReturn,
   returnRequests,
   setUpReturnRequest
 };
