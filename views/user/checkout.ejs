@@ -384,8 +384,8 @@
         </div>
     </div>
 </div>
-<div id="paymentErrorModal" class="modal fade" tabindex="-1">
-    <div class="modal-dialog">
+<div id="paymentErrorModal" class="modaal fade" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- Centered & Larger Size -->
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title text-danger">Payment Failed</h5>
@@ -504,6 +504,35 @@
     stroke-dashoffset: 48;
     animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
 }
+/* Ensure the modal is fully centered */
+.modaal {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.7); /* Dark overlay effect */
+}
+
+/* Make the modal larger */
+.modal-lg {
+    max-width: 60%; /* Adjust width */
+    min-height: 50vh; /* Adjust height */
+}
+
+/* Add hover effect on the entire screen when modal is active */
+.modaal.show {
+    background: rgba(0, 0, 0, 0.9); /* Darker overlay when modal is shown */
+}
+
+/* Add hover effect to modal */
+.modal-content {
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); /* Stronger shadow */
+}
+
+.modal-content:hover {
+    transform: scale(1.05); /* Slight zoom effect */
+}
+
 
 @keyframes stroke {
     100% {
@@ -768,13 +797,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const checkoutContainer = document.querySelector('.checkout .container');
     checkoutContainer.insertBefore(messageContainer, checkoutContainer.firstChild);
     
-    // Auto-remove after 5 seconds
     setTimeout(() => {
       messageContainer.remove();
     }, 5000);
   }
   
-  // Function to disable all coupon buttons once one is applied
   function disableCouponButtons() {
     applyButtons.forEach(button => {
       button.disabled = true;
@@ -815,7 +842,6 @@ document.getElementById('btn-place-order').addEventListener('click', function(e)
         selectedPaymentMethod = paymentTitle;
     });
 
-    // Get values from the form
     const formData = {
         firstName: document.getElementById('fName').value,
         lastName: document.getElementById('lName').value,
@@ -831,13 +857,10 @@ document.getElementById('btn-place-order').addEventListener('click', function(e)
         paymentMethod: selectedPaymentMethod,
         orderNotes: document.getElementById('orderNote').value || '',
         
-        // Get the final amount (with any coupon discount applied)
         finalAmount: document.getElementById('finalAmountInput').value,
         
-        // Get original total amount before discounts
         totalAmount: document.getElementById('totalAmount').value,
         
-        // Get coupon information if available
         couponCode: document.getElementById('couponCodeInput')?.value || '',
         couponDiscount: document.getElementById('couponDiscountInput')?.value || 0
     };
@@ -867,67 +890,7 @@ document.getElementById('btn-place-order').addEventListener('click', function(e)
     }
 });
 
-function createOrderAndInitiatePayment(formData) {
-    fetch('/create-razorpay-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            if (!data.orderId || !data.amount || !data.razorpayKeyId) {
-                throw new Error('Missing required data from server');
-            }
 
-            const options = {
-                key: data.razorpayKeyId, 
-                amount: data.amount, 
-                currency: "INR",
-                name: "Your Store Name",
-                description: "Purchase Payment",
-                order_id: data.orderId, 
-                prefill: {
-                    name: formData.firstName + " " + formData.lastName,
-                    email: formData.email,
-                    contact: formData.phone
-                },
-                notes: { address: formData.streetAddress },
-                theme: { color: "#3399cc" },
-                
-                // ✅ SUCCESS HANDLER
-                handler: function (response) {
-                    verifyPayment({
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_signature: response.razorpay_signature,
-                        order_id: data.yourOrderId 
-                    });
-                }
-            };
-
-            const rzp = new Razorpay(options);
-            rzp.open();
-
-            // ✅ PAYMENT FAILURE HANDLER
-            rzp.on('payment.failed', function (response) {
-                console.error("❌ Payment failed:", response.error);
-                
-                alert(`Payment failed: ${response.error.description || 'Transaction could not be completed.'}`);
-
-                // Send the failed status to the backend
-                handleFailedPayment(data.yourOrderId);
-            });
-
-        } else {
-            alert(data.message || 'Failed to create order. Please try again.');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred: ' + error.message);
-    });
-}
 function createOrderAndInitiatePayment(formData) {
     fetch('/create-razorpay-order', {
         method: 'POST',
@@ -980,6 +943,11 @@ function createOrderAndInitiatePayment(formData) {
 
                 // Show the modal
                 $("#paymentErrorModal").modal("show");
+                
+                // Auto-close the modal after 2 seconds
+                setTimeout(() => {
+                    $("#paymentErrorModal").modal("hide");
+                }, 2000);
 
                 // ✅ Send failed payment status to the backend
                 handleFailedPayment(data.yourOrderId);
@@ -1033,6 +1001,7 @@ function verifyPayment(paymentData) {
         alert('An error occurred during payment verification: ' + error.message);
     });
 }
+
 function handleFailedPayment(orderId) {
     fetch('/handle-failed-payment', {
         method: 'POST',
@@ -1050,6 +1019,11 @@ function handleFailedPayment(orderId) {
             data.message || "Your payment was not successful. Please try again.";
         
         $("#paymentErrorModal").modal("show");
+        
+        // Auto-close the modal after 2 seconds
+        setTimeout(() => {
+            $("#paymentErrorModal").modal("hide");
+        }, 1000);
     })
     .catch(error => {
         console.error("Error handling failed payment:", error);
@@ -1057,6 +1031,10 @@ function handleFailedPayment(orderId) {
             "An error occurred while processing your payment. Please try again.";
 
         $("#paymentErrorModal").modal("show");
+        
+        setTimeout(() => {
+            $("#paymentErrorModal").modal("hide");
+        }, 1000);
     });
 }
 
@@ -1077,7 +1055,6 @@ function submitOrderThroughRegularCheckout(formData) {
     })
     .then(data => {
         if (data.success) {
-            // Show success modal - make sure we're accessing the right properties
             document.getElementById('modalOrderId').textContent = data.orderId || data._id || 'N/A';
             document.getElementById('modalOrderTotal').textContent = data.finalAmount || data.amount || 'N/A'; // ✅ Fix: Using finalAmount
 
@@ -1086,7 +1063,6 @@ function submitOrderThroughRegularCheckout(formData) {
                 keyboard: false
             });
 
-            // Redirect to the orders page after a delay
             setTimeout(() => {
                 window.location.href = '/';
             }, 5000);
@@ -1099,15 +1075,11 @@ function submitOrderThroughRegularCheckout(formData) {
         alert('An error occurred: ' + error.message);
     });
 }
-// 1. First, add code to fetch and display wallet balance when page loads
 document.addEventListener('DOMContentLoaded', function() {
-  // Fetch wallet balance when page loads
   fetchWalletBalance();
   
-  // Other existing event listeners...
 });
 
-// Function to fetch wallet balance from server
 function fetchWalletBalance() {
   fetch('/wallet/balance')
     .then(response => {
@@ -1118,13 +1090,10 @@ function fetchWalletBalance() {
     })
     .then(data => {
       if (data.success) {
-        // Update wallet balance display
         document.getElementById('walletBalance').textContent = data.balance.toFixed(2);
         
-        // Store balance for later use
         document.body.dataset.walletBalance = data.balance;
         
-        // Check if wallet balance is sufficient for current order
         checkWalletBalance();
       } else {
         document.getElementById('walletBalance').textContent = '0.00';
@@ -1137,7 +1106,6 @@ function fetchWalletBalance() {
     });
 }
 
-// Function to check if wallet balance is sufficient for order total
 function checkWalletBalance() {
   const walletBalance = parseFloat(document.body.dataset.walletBalance || 0);
   const orderTotal = parseFloat(document.getElementById('finalAmountInput').value || 0);
@@ -1150,24 +1118,20 @@ function checkWalletBalance() {
   }
 }
 
-// Add event listener to payment method collapsible sections
 document.querySelectorAll('#accordion-payment .card-header').forEach(header => {
   header.addEventListener('click', function() {
-    // Delay to allow collapse animation to complete
     setTimeout(() => {
       const walletPaymentSelected = document.getElementById('collapse-wallet').classList.contains('show');
       
       if (walletPaymentSelected) {
         checkWalletBalance();
       } else {
-        // Hide insufficient balance message if wallet not selected
         document.getElementById('insufficient-balance-msg').style.display = 'none';
       }
     }, 300);
   });
 });
 
-// Modify the existing place order function to handle wallet payments
 document.getElementById('btn-place-order').addEventListener('click', function(e) {
     e.preventDefault();
 
@@ -1222,10 +1186,8 @@ document.getElementById('btn-place-order').addEventListener('click', function(e)
     if (selectedPaymentMethod.includes('Razorpay')) {
         createOrderAndInitiatePayment(formData);
     } else if (selectedPaymentMethod.toLowerCase().includes('wallet')) {
-        // Fix: Convert "Wallet" to lowercase "wallet"
         formData.paymentMethod = 'wallet';
 
-        // Check wallet balance before proceeding
         const walletBalance = parseFloat(document.body.dataset.walletBalance || 0);
         const finalAmount = parseFloat(formData.finalAmount);
 
@@ -1240,8 +1202,6 @@ document.getElementById('btn-place-order').addEventListener('click', function(e)
     }
 });
 
-// Fix: Match the API endpoint with the backend route (assuming '/wallet/pay' is the correct endpoint)
-// Function to submit wallet payment
 function submitWalletPayment(formData) {
     formData.paymentMethod = 'wallet';
     

@@ -1,12 +1,14 @@
 // filter.js - Enhanced with date and status filtering functions
 
 function categoryFilter(categoryId) {
-    if (categoryId && categoryId !== 'All Categories') {
+    if (categoryId && categoryId !== "All Categories") {
         window.location.href = `/admin/orderFilterByCategory?categoryId=${categoryId}`;
-    } else if (categoryId === 'All Categories') {
-        window.location.href = '/admin/home';
+    } else {
+        // ✅ Redirect correctly to show all orders
+        window.location.href = `/admin/orderFilterByCategory`;
     }
 }
+
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize date filter event listener

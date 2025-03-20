@@ -817,7 +817,7 @@ const verifyRazorPay = async (req, res) => {
             .digest("hex");
 
         if (generated_signature !== razorpay_signature) {
-            console.error(" Signature verification failed for payment:", razorpay_payment_id);
+            console.error("❌ Signature verification failed for payment:", razorpay_payment_id);
 
             await Order.findByIdAndUpdate(order_id, {
                 paymentStatus: "Failed",
@@ -838,10 +838,11 @@ const verifyRazorPay = async (req, res) => {
             });
         }
 
-        order.paymentStatus = "Completed";
+        order.paymentStatus = "completed";
         order.orderStatus = "Confirmed";
         order.razorpayPaymentId = razorpay_payment_id;
 
+        // ✅ 1. Update product stock & sales count
         for (const item of order.products) {
             const product = await Product.findById(item.productId);
             if (product) {
@@ -855,8 +856,19 @@ const verifyRazorPay = async (req, res) => {
             }
         }
 
+        // ✅ 2. Clear the user's cart after successful payment
         if (order.userId) {
             await Cart.findOneAndUpdate({ userId: order.userId }, { $set: { product: [], totalPrice: 0 } });
+        }
+
+        // ✅ 3. Update coupon count if a coupon was used
+        if (order.couponCode) {
+            const coupon = await Coupon.findOne({ code: order.couponCode });
+            if (coupon) {
+                coupon.count = (coupon.count || 0) + 1; // Increment count
+                await coupon.save();
+                console.log(`✅ Coupon ${order.couponCode} usage count updated.`);
+            }
         }
 
         await order.save();
@@ -865,14 +877,15 @@ const verifyRazorPay = async (req, res) => {
             success: true,
             orderId: order._id,
             total: order.totalAmount,
-            message: "Payment verified, order confirmed, and stock updated."
+            message: "Payment verified, order confirmed, stock updated, and coupon count updated."
         });
 
     } catch (error) {
-        console.error(" Error verifying payment:", error);
+        console.error("❌ Error verifying payment:", error);
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
 
 const handleFailedPayments = async (req, res) => {
     try {

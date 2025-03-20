@@ -225,7 +225,7 @@
                                                     <% }); %>
                                                 <% } else { %>
                                                     <tr>
-                                                        <td colspan="2" class="text-center">No top-selling products available.</td>
+                                                        <td colspan="2" class="text-center">No top-selling products available</td>
                                                     </tr>
                                                 <% } %>
                                             </tbody>
@@ -280,7 +280,7 @@
                             <!-- Category Filter -->
                             <div class="col-md-3 col-12">
                                 <select id="categoryFilter" class="form-select" onchange="categoryFilter(this.value)">
-                                    <option value="All Categories" <%= selectedCategory === 'All Categories' ? 'selected' : '' %>>
+                                    <option value="All Categories" <%= !selectedCategory || selectedCategory === 'All Categories' ? 'selected' : '' %>>
                                         All Categories
                                     </option>
                                     <% categories.forEach(category => { %>
@@ -290,15 +290,17 @@
                                     <% }) %>
                                 </select>
                             </div>
+                            
                 
                             <!-- Date Filter -->
                             <div class="col-md-3 col-12">
                                 <div class="custom_select">
                                     <select id="dateFilter" class="form-select select-nice">
+                                        <option value="yearly">Yearly</option>
                                         <option value="daily">Daily</option>
                                         <option value="weekly">Weekly</option>
                                         <option value="monthly">Monthly</option>
-                                        <option value="yearly">Yearly</option>
+                                        
                                         <option value="custom">Custom Date</option>
                                     </select>
                                 </div>
@@ -325,13 +327,14 @@
                         <div class="table-responsive">
                             <!-- Buttons Section (Aligned Right) -->
                             <div class="d-flex justify-content-end gap-2 mb-3">
-                                <a href="/admin/downloadOrdersPDF" class="btn btn-primary">
+                                <a id="downloadPdfBtn" href="/admin/downloadOrdersPDF" class="btn btn-primary">
                                     <i class="material-icons md-file_download"></i> Download PDF
                                 </a>
-                                <a href="/admin/downloadOrdersExcel" class="btn btn-success">
+                                <a id="downloadExcelBtn" href="/admin/downloadOrdersExcel" class="btn btn-success">
                                     <i class="material-icons md-table_view"></i> Download Excel
                                 </a>
                             </div>
+                            
                 
                             <div class="table-responsive">
                                 <table class="table align-middle table-nowrap mb-0">

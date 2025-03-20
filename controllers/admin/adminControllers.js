@@ -21,7 +21,7 @@ const adminLogin = async (req, res) => {
 const getHome = async (req, res) => {
     try {
         if (req.session.admin) {
-            const orderCount = await Order.countDocuments({ orderStatus: "Delivered" }); 
+            const orderCount = await Order.countDocuments({ orderStatus: { $in: ["Delivered", "Pending", "Shipped"] }  }); 
             const productCount = await Products.countDocuments();
             const categories = await Category.find();
             const orderStatuses = await Order.distinct('orderStatus');
@@ -30,14 +30,14 @@ const getHome = async (req, res) => {
             const limit = 5;
             const skip = (page - 1) * limit;
 
-            const recentOrders = await Order.find({ orderStatus: "Delivered" })
+            const recentOrders = await Order.find({ orderStatus: { $in: ["Delivered", "Pending", "Shipped"] }  })
                 .populate('userId', 'name email')
                 .populate('products.productId', 'title price')
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit);
 
-            const totalOrders = await Order.countDocuments({ orderStatus: "Delivered" });
+            const totalOrders = await Order.countDocuments({ orderStatus: { $in: ["Delivered", "Pending", "Shipped","Confirmed"] }  });
             const totalPages = Math.ceil(totalOrders / limit);
 
             const topSellingProducts = await Products.find()
@@ -127,27 +127,31 @@ const filterCategoryList = async (req, res) => {
         const { categoryId } = req.query;
         const isAjaxRequest = req.xhr || req.headers.accept.indexOf('json') > -1;
 
-        let orderCount = await Order.countDocuments({ orderStatus: "Delivered" }); 
+        let orderCount = await Order.countDocuments({ orderStatus: "Delivered" });
         let productCount = await Products.countDocuments();
         let categories = await Category.find();
-        let orderStatuses = ['Delivered'];
-        let paymentStatus = ['completed'];
+        let orderStatuses = ["Delivered"];
+        let paymentStatus = ["completed"];
 
         const page = parseInt(req.query.page) || 1;
         const limit = 5;
         const skip = (page - 1) * limit;
 
-        let query = { orderStatus: "Delivered" }; 
+        let query = { orderStatus: { $in: ["Delivered"] } };
 
-        if (categoryId && categoryId !== 'All Categories') {
+        // ✅ Fetch all orders if "All Categories" is selected
+        if (categoryId && categoryId !== "All Categories" && categoryId !== "") {
             const products = await Products.find({ category: categoryId });
             const productIds = products.map(product => product._id);
-            query['products.productId'] = { $in: productIds };
+            query["products.productId"] = { $in: productIds };
+        } else {
+            // ✅ Show all orders (no category filter applied)
+            delete query["products.productId"];
         }
 
         const recentOrders = await Order.find(query)
-            .populate('userId', 'name email')
-            .populate('products.productId', 'title price')
+            .populate("userId", "name email")
+            .populate("products.productId", "title price")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
@@ -156,7 +160,7 @@ const filterCategoryList = async (req, res) => {
         const totalPages = Math.ceil(totalOrders / limit);
 
         const totalSalesResult = await Order.aggregate([
-            { $match: { orderStatus: "Delivered" } }, 
+            { $match: { orderStatus: "Delivered" } },
             { $group: { _id: null, totalSales: { $sum: "$totalAmount" } } }
         ]);
 
@@ -174,7 +178,7 @@ const filterCategoryList = async (req, res) => {
             });
         }
 
-        return res.render('adminPanel', {
+        return res.render("adminPanel", {
             orderCount,
             productCount,
             recentOrders,
@@ -182,7 +186,7 @@ const filterCategoryList = async (req, res) => {
             orderStatuses,
             currentPage: page,
             totalPages,
-            selectedCategory: categoryId || 'All Categories',
+            selectedCategory: categoryId || "All Categories",
             totalSales,
             topSellingProducts,
             totalOrders,
@@ -190,136 +194,95 @@ const filterCategoryList = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error filtering orders by category:', error);
-        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-            return res.status(500).json({ error: 'Server error while filtering orders' });
+        console.error("Error filtering orders by category:", error);
+        if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+            return res.status(500).json({ error: "Server error while filtering orders" });
         }
-        return res.status(500).json({ message: 'Internal server error' });
+        return res.status(500).json({ message: "Internal server error" });
     }
 };
 
+
+
 const getFilterByDate = async (req, res) => {
     try {
-      // Log all request parameters
-      console.log("Filter by date request parameters:", req.query);
-      
-      const { filter, startDate, endDate } = req.query;
-      console.log('this is the start and end',startDate);
-      let start, end;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-  
-      switch (filter) {
-        case "daily":
-          start = new Date(today);
-          end = new Date(today);
-          end.setHours(23, 59, 59, 999);
-          break;
-        case "weekly":
-          start = new Date(today);
-          start.setDate(today.getDate() - 7);
-          end = new Date(today);
-          end.setHours(23, 59, 59, 999);
-          break;
-        case "monthly":
-          start = new Date(today.getFullYear(), today.getMonth(), 1);
-          end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-          end.setHours(23, 59, 59, 999);
-          break;
-        case "yearly":
-          start = new Date(today.getFullYear(), 0, 1);
-          end = new Date(today.getFullYear(), 11, 31);
-          end.setHours(23, 59, 59, 999);
-          break;
-          case "custom":
-            if (!startDate || !endDate) {
-              return res.status(400).json({ success: false, message: "Start and end date required" });
-            }
-          
-            // Validate date format
-            const isValidDate = (dateString) => /^\d{4}-\d{2}-\d{2}$/.test(dateString);
-            if (!isValidDate(startDate) || !isValidDate(endDate)) {
-              return res.status(400).json({ success: false, message: "Invalid date format. Use YYYY-MM-DD." });
-            }
-          
-            try {
-              // Parse dates in local timezone (not UTC)
-              start = new Date(`${startDate}T00:00:00.000`);
-              end = new Date(`${endDate}T23:59:59.999`);
-          
-              console.log("Parsed custom dates:", start, end);
-          
-              if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-                console.error("Invalid date parsing:", startDate, endDate);
-                return res.status(400).json({ success: false, message: "Invalid date format. Use YYYY-MM-DD." });
-              }
-            } catch (error) {
-              console.error("Error parsing custom dates:", error);
-              return res.status(400).json({ success: false, message: "Error parsing custom dates." });
-            }
-            break;
-          
-          default:
-            return res.status(400).json({ success: false, message: "Invalid filter type" });
-          }
-          
-          console.log(`Filtering delivered orders from ${start.toISOString()} to ${end.toISOString()}`);
-          
-          // Query for orders within the date range
-          const query = {
-            orderStatus: "Delivered",
+        console.log("Filter by date request parameters:", req.query);
+
+        const { filter, startDate, endDate } = req.query;
+        let start, end;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        switch (filter) {
+            case "daily":
+                start = new Date(today);
+                end = new Date(today);
+                end.setHours(23, 59, 59, 999);
+                break;
+            case "weekly":
+                start = new Date(today);
+                start.setDate(today.getDate() - 7);
+                end = new Date(today);
+                end.setHours(23, 59, 59, 999);
+                break;
+            case "monthly":
+                start = new Date(today.getFullYear(), today.getMonth(), 1);
+                end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                end.setHours(23, 59, 59, 999);
+                break;
+            case "yearly":
+                start = new Date(today.getFullYear(), 0, 1, 0, 0, 0, 0); // ✅ January 1st, 00:00:00
+                end = new Date(today.getFullYear(), 11, 31, 23, 59, 59, 999); // ✅ December 31st, 23:59:59
+                break;
+            case "custom":
+                if (!startDate || !endDate) {
+                    return res.status(400).json({ success: false, message: "Start and end date required" });
+                }
+                start = new Date(`${startDate}T00:00:00.000`);
+                end = new Date(`${endDate}T23:59:59.999`);
+                break;
+            default:
+                return res.status(400).json({ success: false, message: "Invalid filter type" });
+        }
+
+        console.log(`Filtering orders from ${start.toISOString()} to ${end.toISOString()}`);
+
+        // Query orders within the selected date range
+        const query = {
+            orderStatus: { $in: ["Delivered"] }, // ✅ Include all relevant statuses
             createdAt: { $gte: start, $lte: end }
-          };
-          
-          console.log("MongoDB Query:", JSON.stringify(query));
-          
-          // Count matching documents
-          const count = await Order.countDocuments(query);
-          console.log(`Count of matching documents: ${count}`);
-          
-          // Fetch the actual orders
-          const orders = await Order.find(query)
-            .populate('userId', 'name email')
-            .populate({ path: 'products.productId', select: 'title price' })
+        };
+
+        const orders = await Order.find(query)
+            .populate("userId", "name email")
+            .populate({ path: "products.productId", select: "title price" })
             .sort({ createdAt: -1 })
             .lean(); // ✅ Use .lean() for better performance
-          
-          console.log(`Found ${orders.length} orders in the date range`);
-          
-          // Debug: Check first and last order dates
-          if (orders.length > 0) {
-            const firstOrderDate = new Date(orders[0].createdAt);
-            const lastOrderDate = new Date(orders[orders.length - 1].createdAt);
-            console.log(`First order date: ${firstOrderDate.toISOString()}`);
-            console.log(`Last order date: ${lastOrderDate.toISOString()}`);
-          }
-          
-          // Safely calculate total amount
-          let totalAmount = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-          const totalOrders = orders.length;
-          
-          res.json({
+
+        console.log(`Found ${orders.length} orders in the date range`);
+
+        let totalAmount = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+
+        res.json({
             success: true,
             orders,
-            totalOrders,
+            totalOrders: orders.length,
             totalAmount,
             currentPage: 1,
             totalPages: 1,
-            dateRange: {
-              start: start.toISOString(),
-              end: end.toISOString()
-            }
-          });
-          
+            dateRange: { start: start.toISOString(), end: end.toISOString() }
+        });
+
     } catch (error) {
-      console.error("Error fetching delivered orders by date:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Internal server error",
-        error: error.message
-      });
+        console.error("Error fetching orders by date:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
     }
 };
+
   
 
 
@@ -371,7 +334,7 @@ const logoutAdmin = (req, res) => {
       res.render("adminLogin"); 
     });
   };
-  const downloadOrdersPDF = async (req, res) => {
+const downloadOrdersPDF = async (req, res) => {
     try {
         const orders = await Order.find().populate('userId');
 
