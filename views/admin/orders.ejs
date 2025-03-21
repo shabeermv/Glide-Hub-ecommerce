@@ -10,14 +10,12 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Recent Orders</h2>
-        <a href="/admin/returnRequests" class="btn btn-warning">Return Requests</a>
+        <div class="d-flex">
+            <a href="/admin/returnRequests" class="btn btn-warning me-2">Return Requests</a>
+            <a href="/admin/cancelRequests" class="btn btn-warning">Cancel Requests</a>
+        </div>
     </div>
     
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Recent Orders</h2>
-        <a href="/admin/cancelRequests" class="btn btn-warning">Cancel Request</a>
-    </div>
-
     <% if (typeof error !== 'undefined') { %>
         <div class="alert alert-danger">
             <%= error %>

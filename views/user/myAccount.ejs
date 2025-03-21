@@ -3,11 +3,11 @@
 <body>
     <div class="page-wrapper">
         <main class="main">
-        	<div class="page-header text-center" style="background-image: url('/asset3/images/page-header-bg.jpg')">
-        		<div class="container">
-        			<h1 class="page-title">My Account<span>Shop</span></h1>
-        		</div><!-- End .container -->
-        	</div><!-- End .page-header -->
+            <div class="page-header text-center" style="background-image: url('/asset3/images/page-header-bg.jpg')">
+                <div class="container">
+                    <h1 class="page-title">My Account<span>Shop</span></h1>
+                </div><!-- End .container -->
+            </div><!-- End .page-header -->
             <nav aria-label="breadcrumb" class="breadcrumb-nav mb-3">
                 <div class="container">
                     <ol class="breadcrumb">
@@ -17,36 +17,36 @@
                     </ol>
                 </div><!-- End .container -->
             </nav><!-- End .breadcrumb-nav -->
-
+        
             <div class="page-content">
-            	<div class="dashboard">
-	                <div class="container">
-	                	<div class="row">
-	                		<aside class="col-md-4 col-lg-3">
-	                			<ul class="nav nav-dashboard flex-column mb-3 mb-md-0" role="tablist">
-								    <li class="nav-item">
-								        <a class="nav-link active" id="tab-dashboard-link" data-toggle="tab" href="#tab-dashboard" role="tab" aria-controls="tab-dashboard" aria-selected="true">Personal Information</a>
-								    </li>
-								    <li class="nav-item">
-								        <a class="nav-link" id="tab-orders-link" data-toggle="tab" href="#tab-orders" role="tab" aria-controls="tab-orders" aria-selected="false">Orders</a>
-								    </li>
-								    <li class="nav-item">
+                <div class="dashboard">
+                    <div class="container">
+                        <div class="row">
+                            <aside class="col-md-4 col-lg-3">
+                                <ul class="nav nav-dashboard flex-column mb-3 mb-md-0" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" id="tab-dashboard-link" data-toggle="tab" href="#tab-dashboard" role="tab" aria-controls="tab-dashboard" aria-selected="true">Personal Information</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="tab-orders-link" data-toggle="tab" href="#tab-orders" role="tab" aria-controls="tab-orders" aria-selected="false">Orders</a>
+                                    </li>
+                                    <li class="nav-item">
                                         <a class="nav-link" id="tab-wallet-link" data-toggle="tab" href="#tab-wallet" role="tab" aria-controls="tab-wallet" aria-selected="false">Wallet</a>
                                     </li>
-								    <li class="nav-item">
-								        <a class="nav-link" id="tab-address-link" data-toggle="tab" href="#tab-address" role="tab" aria-controls="tab-address" aria-selected="false">Adresses</a>
-								    </li>
                                     <li class="nav-item">
-								        <a class="nav-link" id="tab-coupons-link" data-toggle="tab" href="#tab-coupons" role="tab" aria-controls="tab-coupons" aria-selected="false">Coupons & Offers</a>
-								    </li>
-								    <li class="nav-item">
-								        <a class="nav-link" href="/logout">Sign Out</a>
-								    </li>
-								</ul>
-	                		</aside><!-- End .col-lg-3 -->
-
-	                		<div class="col-md-8 col-lg-9">
-	                			<div class="tab-content">
+                                        <a class="nav-link" id="tab-address-link" data-toggle="tab" href="#tab-address" role="tab" aria-controls="tab-address" aria-selected="false">Adresses</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="tab-coupons-link" data-toggle="tab" href="#tab-coupons" role="tab" aria-controls="tab-coupons" aria-selected="false">Coupons & Offers</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/logout">Sign Out</a>
+                                    </li>
+                                </ul>
+                            </aside><!-- End .col-lg-3 -->
+        
+                            <div class="col-md-8 col-lg-9">
+                                <div class="tab-content">
                                     <!-- Dashboard Tab -->
                                     <div class="tab-pane fade show active" id="tab-dashboard" role="tabpanel" aria-labelledby="tab-dashboard-link">
                                         <div style="margin-top: 30px;">
@@ -80,14 +80,7 @@
                                             </div>
                                         </div>
                                     
-                                        <div class="mt-4">
-                                            <a href="/shop" class="btn btn-outline-primary-2">
-                                                <span>GO SHOP</span>
-                                                <i class="icon-long-arrow-right"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                        <!-- Move referral code section here -->
+                                        <!-- Referral code section -->
                                         <div class="mt-4">
                                             <label for="referralCode"><strong>My Referral Code:</strong></label>
                                             <div class="input-group" style="max-width: 300px;">
@@ -97,7 +90,15 @@
                                                 </button>
                                             </div>
                                         </div>
+        
+                                        <div class="mt-4">
+                                            <a href="/shop" class="btn btn-outline-primary-2">
+                                                <span>GO SHOP</span>
+                                                <i class="icon-long-arrow-right"></i>
+                                            </a>
+                                        </div>
                                     </div><!-- End .tab-pane -->
+        
                                     <!-- Orders Tab -->
                                     <div class="tab-pane fade" id="tab-orders" role="tabpanel" aria-labelledby="tab-orders-link">
                                         <div class="container">
@@ -124,13 +125,17 @@
                                                                         <ul class="list-unstyled mb-0">
                                                                             <% order.products.forEach(product => { %>
                                                                                 <li class="mb-1">
-                                                                                    <%= product.productId ? product.productId.title : 'Product Not Found' %>
+                                                                                    <%= product.productId ? product.productId.title : 'Product Not Found' %> 
+                                                                                    - ₹<%= product.productId.price %> 
+                                                                                    <% if (product.status === "Cancelled") { %>
+                                                                                        <span class="text-danger">(Cancelled)</span>
+                                                                                    <% } %>
                                                                                 </li>
                                                                             <% }) %>
                                                                         </ul>
                                                                     </td>
                                                                     <td>
-                                                                        <strong><%= order.totalAmount %></strong>
+                                                                        <strong>₹<%= order.totalAmount %></strong>
                                                                     </td>
                                                                     <td>
                                                                         <span class="badge badge-<%= 
@@ -139,7 +144,8 @@
                                                                             order.orderStatus === 'Pending' ? 'warning' : 
                                                                             order.orderStatus === 'Cancelled' ? 'danger' :
                                                                             order.orderStatus === 'Returned' ? 'secondary' :
-                                                                            order.orderStatus === 'Return Requested' ? 'info' : 'info' 
+                                                                            order.orderStatus === 'Return Requested' ? 'info' :
+                                                                            order.orderStatus === 'Cancel Requested' ? 'info' : 'info' 
                                                                         %> p-2">
                                                                             <%= order.orderStatus %>
                                                                         </span>
@@ -150,17 +156,18 @@
                                                                             <a href="/order/details/<%= order._id %>" class="btn btn-sm btn-info" style="margin-right: 5px;">
                                                                                 View Details
                                                                             </a>
-                                                                            
+                                                        
                                                                             <% if (order.orderStatus === 'Delivered') { %>
                                                                                 <!-- Show Return button only for Delivered orders -->
                                                                                 <button class="btn btn-sm btn-warning return-order-btn"
-                                                                                 data-order-id="<%= order._id %>">
-                                                                                 Return Order
+                                                                                    data-order-id="<%= order._id %>">
+                                                                                    Return Order
                                                                                 </button>
-
+                                                        
                                                                             <% } else if (order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Completed' && 
-                                                                                         order.orderStatus !== 'Returned' && order.orderStatus !== 'Return Requested') { %>
-                                                                                <!-- Show Cancel button for orders not in final states -->
+                                                                                         order.orderStatus !== 'Returned' && order.orderStatus !== 'Return Requested' && 
+                                                                                         order.orderStatus !== 'Cancel Requested') { %>
+                                                                                <!-- Show Cancel button for orders not in final states and not in 'Cancel Requested' -->
                                                                                 <button class="btn btn-sm btn-danger cancel-order-btn"
                                                                                         data-order-id="<%= order._id %>">
                                                                                     Cancel Order
@@ -171,6 +178,7 @@
                                                                 </tr>
                                                             <% }) %>
                                                         </tbody>
+                                                        
                                                     </table>
                                                 </div>
                                             <% } else { %>
@@ -180,7 +188,7 @@
                                             <% } %>
                                         </div>
                                     </div><!-- End .tab-pane -->
-
+        
                                     <!-- Wallet Tab -->
                                     <div class="tab-pane fade" id="tab-wallet" role="tabpanel" aria-labelledby="tab-wallet-link">
                                         <div class="container">
@@ -193,7 +201,7 @@
                                                                 <h2 class="text-primary">₹<%= user.wallet ? user.wallet.toFixed(2) : '0.00' %></h2>
                                                                 <p class="text-muted">Available Balance</p>
                                                             </div>
-
+        
                                                             <div class="wallet-actions mb-4">
                                                                 <button class="btn btn-primary mr-2" data-toggle="modal" data-target="#addMoneyModal">
                                                                     <i class="icon-plus"></i> Add Money
@@ -202,7 +210,7 @@
                                                                     <i class="icon-minus"></i> Withdraw
                                                                 </button>
                                                             </div>
-
+        
                                                             <div class="wallet-transactions">
                                                                 <h4 class="mb-3">Recent Transactions</h4>
                                                                 <% if (user.walletTransactions && user.walletTransactions.length > 0) { %>
@@ -246,7 +254,7 @@
                                             </div>
                                         </div>
                                     </div><!-- End .tab-pane -->
-
+        
                                     <!-- Address Tab -->
                                     <div class="tab-pane fade" id="tab-address" role="tabpanel" aria-labelledby="tab-address-link">
                                         <p>The following addresses will be used on the checkout page by default.</p>
@@ -322,13 +330,12 @@
                                         </div>
                                     </div><!-- End .tab-pane -->
                                 </div><!-- End .tab-content -->
-	                		</div><!-- End .col-lg-9 -->
-	                	</div><!-- End .row -->
-	                </div><!-- End .container -->
+                            </div><!-- End .col-lg-9 -->
+                        </div><!-- End .row -->
+                    </div><!-- End .container -->
                 </div><!-- End .dashboard -->
             </div><!-- End .page-content -->
         </main><!-- End .main -->
-
         <!-- Add Money Modal -->
         <div class="modal fade" id="addMoneyModal" tabindex="-1" role="dialog" aria-labelledby="addMoneyModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
@@ -556,6 +563,40 @@
         </div>
     </div>
 </div>
+<!-- Cancel Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelModalLabel">Cancel Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="cancelOrderForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="cancelReasonSelect" class="form-label">Select a Reason:</label>
+                        <select class="form-select" id="cancelReasonSelect" required>
+                            <option value="">Please select a reason</option>
+                            <option value="Changed my mind">Changed my mind</option>
+                            <option value="Found better price elsewhere">Found better price elsewhere</option>
+                            <option value="Ordered by mistake">Ordered by mistake</option>
+                            <option value="Taking too long to ship">Taking too long to ship</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cancelAdditionalDetails" class="form-label">Additional Details (Optional):</label>
+                        <textarea class="form-control" id="cancelAdditionalDetails" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelModalCloseBtn">Close</button>
+                    <button type="submit" class="btn btn-danger">Submit Cancellation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <!-- Order Cancellation Success Modal -->
 <div class="modal fade" id="cancelRequestModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -704,10 +745,10 @@ async function submitReturn() {
                 addressForm.style.display = 'none';
             }
         });
-    </script>
+    
     
 
-    <script>
+    
        // Add click event listeners to all cancel order buttons
        document.querySelectorAll('.view-details-btn').forEach(button => {
     button.addEventListener('click', async function() {
@@ -746,38 +787,95 @@ async function submitReturn() {
     });
 });
 
-// Keep the existing cancel order functionality
+// Frontend JavaScript for Cancel Order Functionality
+
+// Button click handler to open the modal
 document.querySelectorAll('.cancel-order-btn').forEach(button => {
-    button.addEventListener('click', async function() {
+    button.addEventListener('click', function() {
         const orderId = this.getAttribute('data-order-id');
         
-        if (confirm('Are you sure you want to cancel this order?')) {
-            try {
-                const response = await fetch(`/cancelOrder/${orderId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    // Hide confirmation prompt and show success modal
-                    const successModal = new bootstrap.Modal(document.getElementById('cancelRequestModal'));
-                    successModal.show();
-                } else {
-                    alert(result.message || 'Failed to cancel order');
-                }
-            } catch (error) {
-                console.error('Error cancelling order:', error);
-                alert('An error occurred while cancelling the order');
-            }
-        }
+        // Store the orderId in the cancel modal for later use
+        const cancelModal = document.getElementById('cancelModal');
+        cancelModal.setAttribute('data-order-id', orderId);
+        
+        // Show the cancel modal
+        const modal = new bootstrap.Modal(cancelModal);
+        modal.show();
     });
 });
 
+// Handle form submission in the cancel modal
+document.getElementById('cancelOrderForm').addEventListener('submit', async function(event) {
+    // Prevent the default form submission behavior
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const cancelModal = document.getElementById('cancelModal');
+    const orderId = cancelModal.getAttribute('data-order-id');
+    
+    // Get selected reason
+    const reasonSelect = document.getElementById('cancelReasonSelect');
+    const reason = reasonSelect.value;
+    
+    // Get additional details if provided
+    const additionalDetails = document.getElementById('cancelAdditionalDetails').value;
+    
+    try {
+        const response = await fetch(`/cancelOrder/${orderId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                reason: reason,
+                additionalDetails: additionalDetails
+            })
+        });
+        
+        const result = await response.json();
+        
+        // Hide the cancel modal
+        const modalInstance = bootstrap.Modal.getInstance(cancelModal);
+        if (modalInstance) {
+            modalInstance.hide();
+        }
+        
+        if (result.success) {
+            const successModal = new bootstrap.Modal(document.getElementById('cancelRequestModal'));
+            successModal.show();
+        } else {
+            alert(result.message || 'Failed to cancel order');
+        }
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        alert('An error occurred while cancelling the order');
+    }
+    
+    return false;
+});
 
+document.getElementById('cancelModalCloseBtn').addEventListener('click', function() {
+    const cancelModal = document.getElementById('cancelModal');
+    const modalInstance = bootstrap.Modal.getInstance(cancelModal);
+    if (modalInstance) {
+        modalInstance.hide();
+    }
+});
+
+// Additional handler for the submit button inside the form (as a backup)
+document.getElementById('submitCancelButton').addEventListener('click', function(event) {
+    event.preventDefault();
+    
+    // Manually trigger the form submit event
+    const form = document.getElementById('cancelOrderForm');
+    const submitEvent = new Event('submit', {
+        bubbles: true,
+        cancelable: true
+    });
+    form.dispatchEvent(submitEvent);
+    
+    return false;
+});
 document.getElementById('colorfulAddressForm').addEventListener('submit', async function (event) {
     event.preventDefault(); // Prevent the default form submission
 

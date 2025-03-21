@@ -525,19 +525,19 @@ const userProfileInfo = async (req, res) => {
     const orders = await Order.find({ userId: userId })
       .populate({
         path: 'products.productId',
-        select: 'title price' 
+        select: 'title price' // Get product title & price
       })
       .sort({ createdAt: -1 });
 
     orders.forEach(order => {
-      const calculatedTotal = order.products.reduce((sum, product) => {
-        return sum + (product.price * product.quantity);
+      // Calculate total amount only for non-cancelled products
+      const confirmedProducts = order.products.filter(product => product.status !== "Cancelled");
+
+      order.totalAmount = confirmedProducts.reduce((sum, product) => {
+        return sum + (product.productId.price * product.quantity);
       }, 0);
-      
-      order.totalAmount = order.totalAmount || calculatedTotal;
     });
 
-    // Render the template with user and orders data
     res.render("myAccount", { 
       user, 
       orders, 
@@ -549,6 +549,7 @@ const userProfileInfo = async (req, res) => {
     return res.json({ message: 'Internal server error' });
   }
 };
+
 const updateUserDetails = async (req, res) => {
   try {
       const userId = req.session.userId; // Get user ID from session

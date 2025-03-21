@@ -16,7 +16,8 @@ const orderSchema = new mongoose.Schema({
         }
     },
     cancellationReason: {
-        type: String
+        type: String,
+        default:""
     },
     isGuestCheckout: {
         type: Boolean,
@@ -103,6 +104,13 @@ const orderSchema = new mongoose.Schema({
     },
     razorpayPaymentId: {
         type: String
+    },
+    coupon: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Coupon"
+    },
+    couponCode: {
+        type: String // ✅ Add this field to store the actual coupon code
     }
 });
 

@@ -436,6 +436,8 @@ const cancelOrder = async (req, res) => {
     try {
         const orderId = req.params.id;
         const userId = req.session.userId;
+        const { reason, additionalDetails } = req.body;
+        console.log(req.body,'this is the body..')
 
         const order = await Order.findById(orderId);
 
@@ -446,6 +448,7 @@ const cancelOrder = async (req, res) => {
             });
         }
 
+        // Update inventory by returning items to stock
         for (const item of order.products) {
             const product = await Product.findById(item.productId);
 
@@ -472,26 +475,19 @@ const cancelOrder = async (req, res) => {
             }
         }
         
-        if (order.paymentStatus === 'completed' && order.userId) {
-            const user = await User.findById(order.userId);
-            if (user) {
-                user.wallet += order.totalAmount; 
-                user.walletBalance += order.totalAmount;
-                user.walletHistory.push({
-                    date: new Date(),
-                    amount: order.totalAmount
-                });
-
-                await user.save();
-            }
-        }
-
+        
+        // Update product statuses
         order.products.forEach(product => {
             product.status = "Cancel Requested";
         });
 
-        order.markModified("products"); 
-
+        // Save cancellation reason
+        order.cancellationReason = reason;
+        if (additionalDetails) {
+            order.cancelDetails = additionalDetails;
+        }
+        
+        order.markModified("products");
         order.orderStatus = "Cancel Requested";
         
         await order.save();
@@ -546,87 +542,87 @@ const viewPurchaseDetails = async (req, res) => {
 
 const cancelPartialProduct = async (req, res) => {
     try {
-        const { orderId, productOrderId } = req.params;
-        const { productId } = req.body;
+        const { orderId } = req.params;
+        const { productId, reason, customReason } = req.body;
 
-        console.log(`Processing cancellation for Order ID: ${orderId}, Product Order ID: ${productOrderId}, Product ID: ${productId}`);
+        console.log(`Processing cancellation for Order ID: ${orderId}, Product ID: ${productId}`);
+        console.log(`Reason: ${reason}, Details: ${customReason}`);
 
+        // Validate required fields
+        if (!orderId || !productId) {
+            return res.status(400).json({ success: false, message: "Missing required fields." });
+        }
+
+        // Fetch the order
         const order = await Order.findById(orderId);
         if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' });
+            return res.status(404).json({ success: false, message: "Order not found." });
         }
 
-        if (!order.products || order.products.length === 0) {
-            return res.status(404).json({ success: false, message: 'No products found in order' });
+        if (!Array.isArray(order.products) || order.products.length === 0) {
+            return res.status(404).json({ success: false, message: "No products found in order." });
         }
 
-        const product = order.products.find(p => p.productOrderId.toString() === productOrderId && p.productId.toString() === productId);
+        // Find the product within the order
+        const product = order.products.find(p => p.productId.toString() === productId);
+
         if (!product) {
-            return res.status(404).json({ success: false, message: 'Product not found in order' });
+            return res.status(404).json({ success: false, message: "Product not found in order." });
         }
 
-        console.log('Product found in order:', product);
+        console.log("✅ Product found in order:", product);
 
-        if (product.status === "Cancel Requested") {
-            return res.status(400).json({ success: false, message: 'Product already cancelled' });
+        if (["Cancel Requested", "Cancelled"].includes(product.status)) {
+            return res.status(400).json({ success: false, message: "Product already cancelled." });
         }
 
+        // Update product with cancellation info
         product.status = "Cancel Requested";
-        order.markModified('products'); 
+        product.cancelReason = reason || "Not specified";
+        product.cancelDetails = customReason || "";
+        product.cancelRequestDate = new Date();
+        order.markModified("products");
 
-        // Restore stock quantity
+        // Restore stock quantity if applicable
         const productData = await Product.findById(productId);
-        if (productData) {
-            if (!Array.isArray(productData.sizes)) {
-                console.warn(`Product ${productData._id} has no sizes array`);
+        if (productData && Array.isArray(productData.sizes)) {
+            const sizeObj = productData.sizes.find(s => s.size === product.size);
+            if (sizeObj) {
+                sizeObj.stock += product.quantity;
             } else {
-                const sizeObj = productData.sizes.find(sizeObj => sizeObj.size === product.size);
-                if (sizeObj) {
-                    sizeObj.stock += product.quantity;
-                } else {
-                    console.warn(`Size ${product.size} not found for Product ${productData._id}`);
-                }
+                console.warn(`⚠️ Size ${product.size} not found for Product ${productData._id}`);
             }
-
             await productData.save();
+        } else {
+            console.warn(`⚠️ Product ${productId} has no sizes array or doesn't exist.`);
         }
 
-        // ✅ Refund to wallet if payment was completed
-        if (order.paymentStatus === "completed" && order.userId) {
-            const user = await User.findById(order.userId);
-            if (user) {
-                user.wallet += product.price * product.quantity; 
-                user.walletBalance += product.price * product.quantity;
-                user.walletHistory.push({
-                    date: new Date(),
-                    amount: product.price * product.quantity
-                });
+        // Check if all products are cancelled
+        const allCancelled = order.products.every(p => ["Cancel Requested", "Cancelled"].includes(p.status));
 
-                await user.save();
-            }
-        }
-
-        // If all products are cancelled, cancel the entire order
-        const allCancelled = order.products.every(p => p.status === "Cancel Requested");
         if (allCancelled) {
             order.orderStatus = "Cancel Requested";
-            order.markModified('orderStatus');
+            order.cancelReason = reason || "All products cancelled";
+            order.cancelDetails = customReason || "";
+            order.cancelRequestDate = new Date();
         }
 
         await order.save();
 
-        return res.status(200).json({ success: true, message: 'Product cancelled successfully' });
+        return res.status(200).json({ success: true, message: "Product cancellation requested successfully." });
 
     } catch (error) {
-        console.error('Error in cancelPartialProduct:', error);
-        return res.status(500).json({ success: false, message: 'Internal server error' });
+        console.error("❌ Error in cancelPartialProduct:", error);
+        return res.status(500).json({ success: false, message: "Internal server error." });
     }
 };
 
-
 const orderCancel = async (req, res) => {
     const orderId = req.params.id;
+    const { reason, additionalDetails } = req.body;
+    
     console.log('Cancelling order with ID:', orderId);
+    console.log(`Reason: ${reason}, Details: ${additionalDetails}`);
 
     try {
         const order = await Order.findById(orderId);
@@ -634,10 +630,24 @@ const orderCancel = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        for (const product of order.products) {
-            product.status = "Cancel Requested"; 
-            order.markModified('products'); 
+        let hasUpdatedProduct = false; // To track if any product was updated
 
+        for (const product of order.products) {
+            // Skip products that are already "Cancelled" or "Cancel Requested"
+            if (product.status === "Cancelled" || product.status === "Cancel Requested") {
+                console.log(`Skipping product ${product.productId} as it is already cancelled or cancel requested.`);
+                continue;
+            }
+
+            // Update the product status
+            product.status = "Cancel Requested"; 
+            product.cancelReason = reason || 'Order cancelled';
+            product.cancelDetails = additionalDetails || '';
+            product.cancelRequestDate = new Date();
+            order.markModified('products'); 
+            hasUpdatedProduct = true; // At least one product was updated
+
+            // Restore stock for the product
             const productData = await Product.findById(product.productId);
             if (productData) {
                 if (!Array.isArray(productData.sizes)) {
@@ -655,36 +665,26 @@ const orderCancel = async (req, res) => {
             }
         }
 
-        // ✅ Refund to wallet if payment was completed
-        if (order.paymentStatus === "completed" && order.userId) {
-            const user = await User.findById(order.userId);
-            if (user) {
-                user.wallet += order.totalAmount;
-                user.walletBalance += order.totalAmount;
-                user.walletHistory.push({
-                    date: new Date(),
-                    amount: order.totalAmount
-                });
+        // Only update the order status if at least one product was updated
+        if (hasUpdatedProduct) {
+            order.orderStatus = "Cancel Requested";
+            order.cancelReason = reason || 'Not specified';
+            order.cancelDetails = additionalDetails || '';
+            order.cancelRequestDate = new Date();
+            order.markModified('orderStatus'); 
+            
+            await order.save();
 
-                await user.save();
-            }
+            return res.status(200).json({ success: true, message: 'Order cancellation request submitted successfully' });
+        } else {
+            return res.status(400).json({ success: false, message: 'All products are already cancelled or in cancel requested state' });
         }
-
-        order.orderStatus = "Cancel Requested";
-        order.markModified('orderStatus'); 
-        
-        await order.save();
-
-        return res.status(200).json({ success: true, message: 'Order cancelled successfully' });
 
     } catch (error) {
         console.error('Error in orderCancel:', error);
         return res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
-
-
-
 
 
 //   console.log('Environment variables check:');
@@ -842,7 +842,6 @@ const verifyRazorPay = async (req, res) => {
             });
         }
 
-        // Update the order and remove the temporary flag
         order.paymentStatus = "completed";
         order.orderStatus = "Confirmed";
         order.razorpayPaymentId = razorpay_payment_id;
@@ -930,42 +929,75 @@ const returnOrder = async (req, res) => {
         if (!orderId) {
             return res.status(400).json({ success: false, message: 'Order ID is required' });
         }
+
+        let order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        let hasUpdatedProduct = false; // Track if any product status changed
+
+        order.products.forEach(product => {
+            if (product.status === "Return Requested") {
+                console.log(`Skipping product ${product.productId}, already return requested.`);
+                return; // Skip already return requested products
+            }
+
+            // If the product is not "Return Requested", update it
+            product.status = "Return Requested";
+            hasUpdatedProduct = true;
+        });
+
+        if (!hasUpdatedProduct) {
+            return res.status(400).json({ success: false, message: 'All products are already return requested' });
+        }
+
+        order.orderStatus = 'Return Requested';
+        order.returnReason = customReason;
         
-       let order=await Order.findById(orderId);
-       if(!order){
-        return res.status(404).json({success:false,message:'order not found'})
-       }
-       order.orderStatus="Return Requested"
         await order.save();
         
         return res.status(200).json({ 
             success: true, 
             message: 'Return request for entire order submitted successfully' 
         });
-        
+
     } catch (error) {
         console.error('Error processing full order return request:', error);
         return res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
 
+
 const returnRequest = async (req, res) => {
     const Id = req.params.id;
     const { customReason } = req.body; 
 
     console.log('Order ID:', Id);
-    console.log('Return Reason:', reason);
-    console.log('Additional Details:', customReason);
-    
+    console.log('Return Reason:', customReason);
+
     try {
         const order = await Order.findById(Id);
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
-        if (order.orderStatus === "Return Requested") {
-            return res.status(400).json({ success: false, message: 'Product already return requested' });
+
+        let hasUpdatedProduct = false; 
+
+        order.products.forEach(product => {
+            if (product.status === "Return Requested") {
+                console.log(`Skipping product ${product.productId}, already return requested.`);
+                return; 
+            }
+
+            product.status = "Return Requested";
+            hasUpdatedProduct = true;
+        });
+
+        if (!hasUpdatedProduct) {
+            return res.status(400).json({ success: false, message: 'All products are already return requested' });
         }
-        
+
         order.orderStatus = 'Return Requested';
         order.returnReason = customReason;
         
@@ -973,15 +1005,17 @@ const returnRequest = async (req, res) => {
         
         return res.status(200).json({ success: true, message: "Product return requested successfully" });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error("Error in returnRequest:", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
+
 const returnPartialRequest = async (req, res) => {
-    const { orderId, productOrderId } = req.params;
+    const { orderId } = req.params;
     const { productId, reason, customReason } = req.body;
 
     try {
-        console.log(`Processing return for Order ID: ${orderId}, Product Order ID: ${productOrderId}, Product ID: ${productId}`);
+        console.log(`Processing return for Order ID: ${orderId}, Product ID: ${productId}`);
 
         const order = await Order.findById(orderId);
         if (!order) {
@@ -992,7 +1026,8 @@ const returnPartialRequest = async (req, res) => {
             return res.status(404).json({ success: false, message: 'No products found in order' });
         }
 
-        const product = order.products.find(p => p.productOrderId.toString() === productOrderId && p.productId.toString() === productId);
+        // Find the product by `productId`
+        const product = order.products.find(p => p.productId.toString() === productId);
         if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found in order' });
         }
@@ -1001,6 +1036,7 @@ const returnPartialRequest = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Product already returned' });
         }
 
+        // Update product status to "Return Requested"
         product.status = "Return Requested";
         product.returnReason = reason;
         product.additionalDetails = customReason;
@@ -1013,6 +1049,7 @@ const returnPartialRequest = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Server error, please try again.' });
     }
 };
+
 
 const getWalletBalance = async (req, res) => {
     try {

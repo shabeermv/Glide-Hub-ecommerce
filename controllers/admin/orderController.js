@@ -61,46 +61,55 @@ const userOrdersInfo = async (req, res) => {
 
 
 
-const changeOrderStatus = async (req, res) => {
+const changeOrderStatus = async (req, res, next) => {
   const { orderId, status } = req.body;
-  console.log("req.body vannnn", req.body);
+  console.log("req.body received:", req.body);
 
   try {
     const order = await Order.findById(orderId);
-    console.log("order kittiii", order);
+    console.log("Order found:", order);
 
     if (!order) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
+      return res.status(404).json({ success: false, message: "Order not found" });
     }
 
     const validStatuses = ["Pending", "Shipped", "Delivered", "Cancelled"];
     if (!validStatuses.includes(status)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid status provided" });
+      return res.status(400).json({ success: false, message: "Invalid status provided" });
     }
 
+    // Update the order status
     order.orderStatus = status;
-    if(order.orderStatus==="Delivered"){
-      order.paymentStatus='completed'
+
+    // Update payment status if order is delivered
+    if (status === "Delivered") {
+      order.paymentStatus = "completed";
     }
+
+    // Update each product's status based on the order status
+    order.products.forEach(product => {
+      if (status === "Cancelled") {
+        product.status = "Cancelled";
+      } else if (status === "Shipped") {
+        product.status = "Shipped";
+      } else if (status === "Delivered") {
+        product.status = "Delivered";
+      }
+    });
 
     await order.save();
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Order status updated successfully",
-        order,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Order status and product statuses updated successfully",
+      order,
+    });
   } catch (error) {
-    console.log(error.message, "feeling error in order");
-    next(error)
-    }
+    console.log(error.message, "Error updating order status");
+    next(error);
+  }
 };
+
 
 const viewOrderDetails = async (req, res) => {
   const id = req.params.id;
@@ -215,144 +224,146 @@ const getCancelRequests = async (req, res) => {
   try {
     const orders = await Order.find({
       $or: [
-        { orderStatus: "Cancel Requested" }, 
-        { "products.status": "Cancel Requested" }
+        { orderStatus: "Cancel Requested" },
+        { "products": { "$elemMatch": { "status": "Cancel Requested" } } } // ✅ Only fetch "Cancel Requested"
       ]
     })
     .populate("userId")
     .populate("products.productId");
 
-    const returnOrders = [];
+    const cancelRequests = [];
 
     orders.forEach(order => {
       if (order.orderStatus === "Cancel Requested") {
-        returnOrders.push({
+        cancelRequests.push({
           _id: order._id,
           orderId: order.orderId,
-          returnReason: order.returnReason || "Not specified",
+          cancelReason: order.cancelReason || "Not specified",
           totalAmount: order.totalAmount,
           createdAt: order.createdAt,
           products: order.products.map(product => ({
             ...product._doc,
-            isFullOrderReturn: true,
-            returnReason: order.returnReason || product.returnReason || "Not specified"
+            isFullOrderCancel: true,
+            cancelReason: order.cancelReason || product.cancelReason || "Not specified"
           }))
         });
       } else {
-        const returnRequestedProducts = order.products.filter(
-          product => product.status === "Cancel Requested"
+        const cancelRequestedProducts = order.products.filter(
+          product => product.status === "Cancel Requested" // ✅ Only fetch "Cancel Requested"
         );
 
-        if (returnRequestedProducts.length > 0) {
-          returnOrders.push({
+        if (cancelRequestedProducts.length > 0) {
+          cancelRequests.push({
             _id: order._id,
             orderId: order.orderId,
             totalAmount: order.totalAmount,
             createdAt: order.createdAt,
-            products: returnRequestedProducts.map(product => ({
+            products: cancelRequestedProducts.map(product => ({
               ...product._doc,
-              isFullOrderReturn: false,
-              returnReason: product.returnReason || "Not specified"
+              isFullOrderCancel: false,
+              cancelReason: product.cancelReason || "Not specified"
             }))
           });
         }
       }
     });
 
-    console.log("Return Orders Data:", returnOrders); // Debugging
-    res.render("cancelRequests", { returnOrders });
+    console.log("Cancel Requests Data:", cancelRequests);
+    res.render("cancelRequests", { cancelRequests });
 
   } catch (error) {
-    console.error("Error fetching return requests:", error);
+    console.error("Error fetching cancel requests:", error);
     res.status(500).send("Internal Server Error");
   }
 };
 
 const setUpReturnRequest = async (req, res) => {
   try {
-    const { orderId, productOrderId, action, isFullOrder } = req.body;
+    const { orderId, productId, action } = req.body; // `action` determines approval or rejection
+    console.log("Processing return request:", { orderId, productId, action });
 
-    const order = await Order.findById(orderId).populate("userId");
+    // Fetch the order with populated product information
+    const order = await Order.findById(orderId).populate("userId").populate("products.productId");
     if (!order) {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    const user = order.userId; 
+    const user = order.userId;
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    let refundAmount = 0;
+    console.log("Products in order:", order.products.map(p => ({
+      productId: String(p.productId._id),
+      status: p.status,
+      price: p.price,
+      productTitle: p.productId ? p.productId.title : 'Unknown'
+    })));
 
-    if (isFullOrder) {
-      if (action === "approved") {
-        order.orderStatus = "Returned";
+    // Find the specific product using `productId`
+    const productToReturn = order.products.find(p => String(p.productId._id) === String(productId));
 
-        order.products.forEach(product => {
-          product.status = "Returned";
-          refundAmount += product.price * product.quantity;  
-        });
-      } else {
-        order.orderStatus = "Return Rejected";
-
-        order.products.forEach(product => {
-          product.status = "Return Rejected";
-        });
-      }
-    } else {
-      const productIndex = order.products.findIndex(p => p.productOrderId === productOrderId);
-
-      if (productIndex === -1) {
-        return res.status(404).json({
-          success: false,
-          message: "Product not found in order"
-        });
-      }
-
-      const returnedProduct = order.products[productIndex];
-
-      if (action === "approved") {
-        returnedProduct.status = "Returned";
-        refundAmount = returnedProduct.price * returnedProduct.quantity; 
-      } else {
-        returnedProduct.status = "Return Rejected";
-      }
-
-      // ✅ Check if all products are returned or rejected
-      const allReturned = order.products.every(p => p.status === "Returned");
-      const allRejected = order.products.every(p => p.status === "Return Rejected");
-
-      if (allReturned) {
-        order.orderStatus = "Returned";
-      } else if (allRejected) {
-        order.orderStatus = "Return Rejected";
-      }
+    if (!productToReturn) {
+      return res.status(404).json({ 
+        success: false, 
+        message: `Product with ID ${productId} not found in order`
+      });
     }
 
-    if (action === "approved" && refundAmount > 0) {
+    console.log("Found product:", {
+      productId: String(productToReturn.productId._id),
+      status: productToReturn.status,
+      title: productToReturn.productId ? productToReturn.productId.title : 'Unknown'
+    });
+
+    // Check if the product is already returned
+    if (productToReturn.status === "Returned") {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Product has already been returned`
+      });
+    }
+
+    // Handle return approval or rejection
+    let refundAmount = 0;
+
+    if (action === "approved") {
+      productToReturn.status = "Returned";
+      refundAmount = productToReturn.price * productToReturn.quantity;
+
+      // Push refund amount to user wallet
       user.wallet += refundAmount;
 
       user.walletHistory.push({
         date: new Date(),
-        amount: refundAmount
+        amount: refundAmount,
+        description: `Refund for product: ${productToReturn.productId.title} (Order #${order.orderId})`
       });
 
-      await user.save();
+      await user.save(); // ✅ Save the updated wallet balance
+    } else {
+      productToReturn.status = "Return Rejected";
     }
 
-    await order.save();
+    await order.save(); // ✅ Save the updated order
 
-    res.json({ success: true, refundAmount });
+    res.status(200).json({ 
+      success: true, 
+      message: action === "approved" ? "Return approved and refunded successfully" : "Return rejected successfully",
+      refundAmount
+    });
 
   } catch (error) {
-    console.error("Error handling return action:", error);
+    console.error("Error processing return request:", error);
     res.status(500).json({
       success: false,
       message: "Internal Server Error"
     });
   }
 };
-const setCancelAction = async(req,res)=>{
+
+
+const setCancelAction = async(req, res) => {
   try {
     const { orderId, productOrderId, action, isFullOrder } = req.body;
 
@@ -384,7 +395,13 @@ const setCancelAction = async(req,res)=>{
         });
       }
     } else {
-      const productIndex = order.products.findIndex(p => p.productOrderId === productOrderId);
+      // Fixed this section to correctly identify the product
+      const productIndex = order.products.findIndex(p => 
+        p.productId && p.productId._id && p.productId._id.toString() === productOrderId
+      );
+
+      // If the above doesn't work, try this alternative:
+      // const productIndex = order.products.findIndex(p => p._id.toString() === productOrderId);
 
       if (productIndex === -1) {
         return res.status(404).json({
@@ -402,7 +419,7 @@ const setCancelAction = async(req,res)=>{
         returnedProduct.status = "Cancel Rejected";
       }
 
-      // ✅ Check if all products are returned or rejected
+      // Check if all products are returned or rejected
       const allReturned = order.products.every(p => p.status === "Cancelled");
       const allRejected = order.products.every(p => p.status === "Cancel Rejected");
 
@@ -418,7 +435,9 @@ const setCancelAction = async(req,res)=>{
 
       user.walletHistory.push({
         date: new Date(),
-        amount: refundAmount
+        amount: refundAmount,
+        type: "credit", 
+        description: "Refund for cancelled order #" + order.orderId
       });
 
       await user.save();
@@ -435,7 +454,6 @@ const setCancelAction = async(req,res)=>{
       message: "Internal Server Error"
     });
   }
-
 }
 
 
