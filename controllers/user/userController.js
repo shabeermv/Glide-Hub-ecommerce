@@ -1,6 +1,6 @@
 const User = require("../../models/userSchema");
 const bcrypt = require("bcryptjs");
-const crypto = require("crypto"); // Import crypto for generating random referral codes
+const crypto = require("crypto"); 
 const nodemailer = require("nodemailer");
 const env = require("dotenv").config();
 const Cart = require("../../models/cartSchema");
@@ -10,6 +10,7 @@ const ProductOffer = require('../../models/productOffer');
 const CategoryOffer = require('../../models/categoryOffer')
 const Product = require("../../models/productSchema");
 const Order = require("../../models/orderSchema");
+const Coupon = require('../../models/couponSchema')
 
 
 
@@ -24,7 +25,7 @@ const loadHome = async (req, res) => {
     let user = null;
 
     if (userId) {
-      user = await User.findById(userId); // Fetch user details if logged in
+      user = await User.findById(userId); 
     }
     
     const categoryIds = [...new Set(products.map((p) => p.category?._id?.toString()).filter(Boolean))];
@@ -43,7 +44,6 @@ const loadHome = async (req, res) => {
     }).lean();
 
     const updatedProducts = products.map((product) => {
-      // Convert Mongoose document to plain JavaScript object
       const plainProduct = product.toObject ? product.toObject() : product;
       
       let discountedPrice = plainProduct.price;
@@ -127,7 +127,6 @@ const loadHome = async (req, res) => {
     });
     
     
-    // Only pass updatedProducts to the template, not both products and updatedProducts
     res.render("home", { category, updatedProducts: updatedProducts.slice(0, 4), user });
   } catch (error) {
     console.log("Home page not found", error);
@@ -153,7 +152,6 @@ const postLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user by email
     const findUser = await User.findOne({ email: email.toLowerCase() });
     if (!findUser) {
       return res.json({ success: false, message: "Incorrect email" });
@@ -166,13 +164,11 @@ const postLogin = async (req, res) => {
       return res.json({success:false,message:'you are admin'})
     }
 
-    // Compare the password
     const isPasswordValid = await bcrypt.compare(password, findUser.password);
     if (!isPasswordValid) {
       return res.json({ success: false, message: "Password not valid" });
     }
 
-    // Set session for the user
     req.session.userId = findUser.id;
     req.session.user = findUser;
 
@@ -293,30 +289,27 @@ const postOtp = async (req, res, next) => {
       return res.json({ success: false, message: "Invalid OTP" });
     }
 
-    // Generate a unique referral code for the new user
     let newReferralCode;
     let isUnique = false;
     
     while (!isUnique) {
-      newReferralCode = crypto.randomBytes(4).toString("hex").toUpperCase(); // Example: 'A1B2C3D4'
+      newReferralCode = crypto.randomBytes(4).toString("hex").toUpperCase(); 
       const existingUser = await User.findOne({ referalCode: newReferralCode });
       if (!existingUser) isUnique = true;
     }
 
-    // Check if the user was referred by someone (using the referral code they entered)
     if (referalCode) {
       const referrer = await User.findOne({ referalCode: referalCode });
       if (referrer) {
-        // Add 100 to referrer's wallet
         referrer.wallet += 100;
         
-        // Add a record to the wallet history
+        
         referrer.walletHistory.push({
           date: new Date(),
           amount: 100
         });
         
-        // Save the referrer with updated wallet
+        
         await referrer.save();
         console.log('Referrer rewarded:', referrer.email, 'New wallet balance:', referrer.wallet);
       } else {
@@ -324,13 +317,13 @@ const postOtp = async (req, res, next) => {
       }
     }
 
-    // Create new user with their own referral code
+    
     const newUser = new User({
       email,
       username: userName,
       contact,
       password,
-      referalCode: newReferralCode, // Assign the generated referral code
+      referalCode: newReferralCode, 
     });
 
     const user = await newUser.save();
@@ -343,7 +336,7 @@ const postOtp = async (req, res, next) => {
     return res.json({
       success: true,
       message: "OTP verified and user created successfully",
-      referralCode: user.referalCode, // Return the referral code in the response
+      referralCode: user.referalCode, 
     });
   } catch (error) {
     console.error("Error verifying OTP:", error);
@@ -525,23 +518,26 @@ const userProfileInfo = async (req, res) => {
     const orders = await Order.find({ userId: userId })
       .populate({
         path: 'products.productId',
-        select: 'title price' // Get product title & price
+        select: 'title price' 
       })
       .sort({ createdAt: -1 });
 
     orders.forEach(order => {
-      // Calculate total amount only for non-cancelled products
       const confirmedProducts = order.products.filter(product => product.status !== "Cancelled");
-
       order.totalAmount = confirmedProducts.reduce((sum, product) => {
         return sum + (product.productId.price * product.quantity);
       }, 0);
     });
 
+    const coupons = await Coupon.find({
+      expireDate: { $gte: new Date() } // Only show active coupons
+    }).sort({ expireDate: 1 }); // Sort by soonest expiry first
+
     res.render("myAccount", { 
       user, 
       orders, 
-      referralCode: user.referalCode 
+      referralCode: user.referalCode, 
+      coupons // 
     });
 
   } catch (error) {
@@ -549,10 +545,9 @@ const userProfileInfo = async (req, res) => {
     return res.json({ message: 'Internal server error' });
   }
 };
-
 const updateUserDetails = async (req, res) => {
   try {
-      const userId = req.session.userId; // Get user ID from session
+      const userId = req.session.userId; 
 
       if (!userId) {
           return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -560,7 +555,6 @@ const updateUserDetails = async (req, res) => {
 
       const { fullName, mobileNumber } = req.body;
 
-      // Update only full name and mobile number (email remains unchanged)
       const updatedUser = await User.findByIdAndUpdate(
           userId,
           { username: fullName, contact: mobileNumber },
@@ -587,38 +581,43 @@ const updateUserDetails = async (req, res) => {
 };
 
 
-const addAccountDetails = async (req, res) => {
-  // console.log(req.body, 'controllersil ethi.........');
-
+const addAccountDetails = async (req, res, next) => {
   try {
+    console.log("📥 Received Request to Add Address"); // Debugging
+    console.log("📝 Request Body:", req.body); // Debugging
+
     const { fullName, address, city, state, postCode, country } = req.body;
 
     if (!fullName || !address || !city || !state || !postCode || !country) {
-      return res
-        .status(400)
-        .json({ success: false, message: "All fields are required." });
+      console.warn("⚠️ Missing Fields:", req.body); // Debugging
+      return res.status(400).json({ success: false, message: "All fields are required." });
     }
 
-    const user = await User.findById(req.session.user._id);
+    const user = await User.findById(req.session.userId);
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found." });
+      console.warn("⚠️ User Not Found:", req.session.userId); // Debugging
+      return res.status(404).json({ success: false, message: "User not found." });
     }
 
-    if (fullName !== user.fullName) {
-      user.fullName = fullName;
+    if (!Array.isArray(user.address)) {
+      user.address = [];
     }
 
-    user.address.push({ fullName, address, city, state, postCode, country });
+    user.address.push({ address, city, state, postCode, country });
+
     await user.save();
+    console.log("Address Added Successfully for User:", user._id);
 
     return res.json({ success: true, message: "Address added successfully!" });
+
   } catch (error) {
-    console.error("Error adding address:", error);
-    next(error)
-    }
+    console.error("Error Adding Address:", error);
+    next(error);
+  }
 };
+
+
+
 
 const editProfileInfo = async (req, res) => {
   let user = null;
@@ -767,7 +766,6 @@ const sendMessage = async(req,res)=>{
     }
 
     try {
-        // Configure the email transporter (using Gmail SMTP)
         let transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {

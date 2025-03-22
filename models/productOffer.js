@@ -24,7 +24,7 @@ const offerSchema = new mongoose.Schema({
     },
     productId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product', // Ensure it matches your actual Product model name
+        ref: 'Product', 
         required: true
     },
 });

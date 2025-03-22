@@ -177,13 +177,11 @@ const addCategoryOffer = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Invalid discount type' });
         }
 
-        // Check if an offer already exists for the category
         const existingOffer = await categoryOffer.findOne({ categoryId: selectedCategory });
         if (existingOffer) {
             return res.status(400).json({ success: false, message: 'An offer already exists for this category' });
         }
 
-        // Create and save category offer
         const offerCategory = new categoryOffer({
             description,
             discountType,
@@ -195,7 +193,6 @@ const addCategoryOffer = async (req, res, next) => {
 
         await offerCategory.save();
 
-        // ✅ Apply discount to all products in the category
         const products = await Product.find({ categoryId: selectedCategory });
         for (const product of products) {
             let discountedPrice;
@@ -230,11 +227,10 @@ const deleteCategoryOffer = async (req, res, next) => {
 
         await categoryOffer.findByIdAndDelete(id);
 
-        // ✅ Remove discount from all products in the category
         const products = await Product.find({ categoryId: categoryOfferToDelete.categoryId });
         for (const product of products) {
             product.hasDiscount = false;
-            product.discountedPrice = product.price; // Reset to original price
+            product.discountedPrice = product.price; 
             await product.save();
         }
 
@@ -274,7 +270,6 @@ const updateCategoryOffer = async (req, res, next) => {
             });
         }
 
-        // Check for overlapping offers
         const existingOffer = await categoryOffer.findOne({
             _id: { $ne: id },
             categoryId: selectedCategory,
@@ -292,7 +287,6 @@ const updateCategoryOffer = async (req, res, next) => {
             });
         }
 
-        // Update the category offer
         const updatedOffer = await categoryOffer.findByIdAndUpdate(
             id,
             {
@@ -310,7 +304,6 @@ const updateCategoryOffer = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Category offer not found' });
         }
 
-        // ✅ Update all product prices in the category
         const products = await Product.find({ categoryId: selectedCategory });
         for (const product of products) {
             let newDiscountedPrice;

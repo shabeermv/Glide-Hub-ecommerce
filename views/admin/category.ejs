@@ -168,17 +168,14 @@
         const errorMessageDiv = document.getElementById('error-message');
         
         if (data.success) {
-          // Show Bootstrap Modal
           const successModal = new bootstrap.Modal(document.getElementById('successModal'));
           successModal.show();
 
-          // Automatically hide modal and redirect after 2 seconds
           setTimeout(() => {
             successModal.hide();
             window.location.href = '/admin/categories';
           }, 2000);
         } else {
-          // Display the error message
           errorMessageDiv.style.display = 'block';
           errorMessageDiv.innerText = data.message || 'Error adding category';
         }
@@ -188,7 +185,6 @@
       });
   });
 
-  // Rest of the previous JavaScript remains the same
   document.querySelectorAll('.delete-category').forEach((button) => {
     button.addEventListener('click', function () {
       const categoryId = this.getAttribute('data-id');

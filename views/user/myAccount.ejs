@@ -259,28 +259,33 @@
                                     <div class="tab-pane fade" id="tab-address" role="tabpanel" aria-labelledby="tab-address-link">
                                         <p>The following addresses will be used on the checkout page by default.</p>
                                         <div class="row">
-                                            <% user.address.forEach(function(address, index) { %>
-                                                <div class="col-lg-6">
-                                                    <div class="card card-dashboard">
-                                                        <div class="card-body">
-                                                            <h3 class="card-title">Address <%= index + 1 %></h3>
-                                                            <br>
-                                                            <p>
-                                                                <%= user.username %><br>
-                                                                <%= user.contact %><br>
-                                                                <%= user.email %><br>
-                                                                <%= address.address %><br>
-                                                                <%= address.city %><br>
-                                                                <%= address.state %><br>
-                                                                <%= address.postCode %><br>
-                                                                <%= address.country %><br>
-                                                                <a href="/editProfile/<%= address._id %>">Edit <i class="icon-edit"></i></a>
-                                                                <button type="submit" class="btn btn-danger" data-address-id="<%= address._id %>">Delete</button>
-                                                            </p>
-                                                        </div><!-- End .card-body -->
-                                                    </div><!-- End .card-dashboard -->
-                                                </div><!-- End .col-lg-6 -->
-                                            <% }); %>
+                                            <% if (user && user.address && user.address.length > 0) { %>
+                                                <% user.address.forEach(function(address, index) { %>
+                                                    <div class="col-lg-6">
+                                                        <div class="card card-dashboard">
+                                                            <div class="card-body">
+                                                                <h3 class="card-title">Address <%= index + 1 %></h3>
+                                                                <br>
+                                                                <p>
+                                                                    <%= user.username %><br>
+                                                                    <%= user.contact %><br>
+                                                                    <%= user.email %><br>
+                                                                    <%= address.address %><br>
+                                                                    <%= address.city %><br>
+                                                                    <%= address.state %><br>
+                                                                    <%= address.postCode %><br>
+                                                                    <%= address.country %><br>
+                                                                    <a href="/editProfile/<%= address._id %>">Edit <i class="icon-edit"></i></a>
+                                                                    <button type="submit" class="btn btn-danger" data-address-id="<%= address._id %>">Delete</button>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <% }); %>
+                                            <% } else { %>
+                                                <p class="text-danger">No saved addresses found.</p>
+                                            <% } %>
+                                            
                                         </div>
                                         <div class="col-12">
                                             <a href="javascript:void(0)" id="showAddressForm" class="btn btn-outline-primary-2 mt-4">
@@ -290,45 +295,81 @@
                                         </div>
                                         
                                         <div id="addressFormContainer" class="mt-4">
-                                            <form action="#" id="colorfulAddressForm" style="background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); width: 100%; max-width: 600px; margin-top: 40px;">
+                                            <form id="newAddressForm" class="address-form" style="background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); width: 100%; max-width: 600px; margin-top: 40px;">
                                                 <h2 style="text-align: center; color: #3a3b3d; margin-bottom: 20px;">Add Address</h2>
                                         
-                                                <label for="fullName" style="color: #343a40; font-weight: bold;">Full Name *</label>
-                                                <input type="text" id="fullName" name="fullName" class="form-control" style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                                <label for="newFullName" style="color: #343a40; font-weight: bold;">Full Name *</label>
+                                                <input type="text" id="newFullName" name="fullName" class="form-control" required>
                                         
-                                                <label for="address" style="color: #343a40; font-weight: bold;">Address *</label>
-                                                <input type="text" id="address" name="address" class="form-control" style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                                <label for="newAddress" style="color: #343a40; font-weight: bold;">Address *</label>
+                                                <input type="text" id="newAddress" name="address" class="form-control" required>
                                         
-                                                <label for="city" style="color: #343a40; font-weight: bold;">City *</label>
-                                                <input type="text" id="city" name="city" class="form-control" style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                                <label for="newCity" style="color: #343a40; font-weight: bold;">City *</label>
+                                                <input type="text" id="newCity" name="city" class="form-control" required>
                                         
-                                                <label for="state" style="color: #343a40; font-weight: bold;">State *</label>
-                                                <input type="text" id="state" name="state" class="form-control" style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                                <label for="newState" style="color: #343a40; font-weight: bold;">State *</label>
+                                                <input type="text" id="newState" name="state" class="form-control" required>
                                         
-                                                <label for="postCode" style="color: #3a3b3d; font-weight: bold;">Post Code *</label>
-                                                <input type="text" id="postCode" name="postCode" class="form-control" style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                                <label for="newPostCode" style="color: #3a3b3d; font-weight: bold;">Post Code *</label>
+                                                <input type="text" id="newPostCode" name="postCode" class="form-control" required>
                                         
-                                                <label for="country" style="color: #3a3b3d; font-weight: bold;">Country *</label>
-                                                <input type="text" id="country" name="country" class="form-control" style="width: 100%; border: 2px solid #3a3b3d; margin-bottom: 20px; border-radius: 5px; padding: 20px; font-size: 1.1rem;">
+                                                <label for="newCountry" style="color: #3a3b3d; font-weight: bold;">Country *</label>
+                                                <input type="text" id="newCountry" name="country" class="form-control" required>
                                         
-                                                <button id="confirm" type="submit" class="btn btn-block" style="background-color: #3a3b3d; color: #fff; font-weight: bold; padding: 15px; border-radius: 8px; width: 100%; font-size: 1.2rem;">
+                                                <button id="saveNewAddress" type="submit" class="btn btn-block" style="background-color: #3a3b3d; color: #fff; font-weight: bold;">
                                                     SAVE CHANGES
                                                 </button>
                                         
                                                 <div id="response-message" class="mt-3" style="text-align: center;"></div>
                                             </form>
                                         </div>
+                                        
                                     </div><!-- End .tab-pane -->
                                     
                                     <!-- Coupons & Offers Tab -->
                                     <div class="tab-pane fade" id="tab-coupons" role="tabpanel" aria-labelledby="tab-coupons-link">
                                         <div class="container">
                                             <h3 class="mb-4">Your Coupons & Offers</h3>
-                                            <div class="alert alert-info">
-                                                <p class="mb-0">You don't have any active coupons or offers at the moment.</p>
-                                            </div>
+                                    
+                                            <% if (coupons.length === 0) { %>
+                                                <div class="alert alert-info">
+                                                    <p class="mb-0">You don't have any active coupons or offers at the moment.</p>
+                                                </div>
+                                            <% } else { %>
+                                                <div class="row">
+                                                    <% coupons.forEach(coupon => { %>
+                                                        <div class="col-md-6">
+                                                            <div class="card mb-3">
+                                                                <div class="card-body">
+                                                                    <h5 class="card-title">
+                                                                        <strong><%= coupon.name %></strong> 
+                                                                        <span class="badge badge-success"><%= coupon.discountValue %> 
+                                                                            <%= coupon.discount === 'percentage' ? '%' : '₹' %> OFF
+                                                                        </span>
+                                                                    </h5>
+                                                                    <p class="card-text">
+                                                                        <strong>Code:</strong> <span class="text-primary"><%= coupon.code %></span><br>
+                                                                        <strong>Min Purchase:</strong> ₹<%= coupon.minPurchase.toFixed(2) %><br>
+                                                                        <strong>Expires:</strong> <%= new Date(coupon.expireDate).toLocaleDateString() %>
+                                                                    </p>
+                                                                    <button class="btn btn-outline-primary btn-sm" onclick="copyCoupon('<%= coupon.code %>')">
+                                                                        Copy Code
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    <% }); %>
+                                                </div>
+                                            <% } %>
                                         </div>
-                                    </div><!-- End .tab-pane -->
+                                    </div>
+                                    
+                                    <script>
+                                    function copyCoupon(code) {
+                                        navigator.clipboard.writeText(code);
+                                        alert("Coupon code copied: " + code);
+                                    }
+                                    </script>
                                 </div><!-- End .tab-content -->
                             </div><!-- End .col-lg-9 -->
                         </div><!-- End .row -->
@@ -730,23 +771,69 @@ async function submitReturn() {
         alert('Something went wrong. Please try again.');
     }
 }
+document.addEventListener("DOMContentLoaded", function () {
+    const showAddressFormButton = document.getElementById("showAddressForm");
+    const addressFormContainer = document.getElementById("addressFormContainer");
+    const addressForm = document.getElementById("newAddressForm");
 
 
-        // Select the button and form
-        const showAddressFormButton = document.getElementById('showAddressForm');
-        const addressForm = document.getElementById('addressForm');
+    // Initially hide the form
+    addressFormContainer.style.display = "none";
+
+    showAddressFormButton.addEventListener("click", function () {
+        // Toggle form visibility
+        if (addressFormContainer.style.display === "none" || addressFormContainer.style.display === "") {
+            addressFormContainer.style.display = "block";
+            showAddressFormButton.innerHTML = '<span>HIDE FORM</span> <i class="icon-minus"></i>';
+        } else {
+            addressFormContainer.style.display = "none";
+            showAddressFormButton.innerHTML = '<span>ADD NEW ADDRESS</span> <i class="icon-plus"></i>';
+        }
+    });
     
-        // Add an event listener to the button
-        showAddressFormButton.addEventListener('click', function () {
-            // Toggle the display of the address form
-            if (addressForm.style.display === 'none') {
-                addressForm.style.display = 'flex';
-            } else {
-                addressForm.style.display = 'none';
-            }
+    addressForm.addEventListener("submit", async function (e) {
+    e.preventDefault(); // Prevent default form submission
+
+    const form = e.target;
+    const addressData = {
+    fullName: document.getElementById("newFullName").value.trim(),
+    address: document.getElementById("newAddress").value.trim(),
+    city: document.getElementById("newCity").value.trim(),
+    state: document.getElementById("newState").value.trim(),
+    postCode: document.getElementById("newPostCode").value.trim(),
+    country: document.getElementById("newCountry").value.trim(),
+};
+
+
+    console.log("📤 Sending Address Data:", addressData);
+
+    try {
+        const response = await fetch("/accountDetails", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(addressData), 
         });
-    
-    
+
+        const result = await response.json();
+        console.log("📥 Server Response:", result);
+
+        if (response.ok && result.success) {
+            showMessage(result.message || "Address added successfully!", "green");
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showMessage(result.message || "Failed to add address.", "red");
+        }
+    } catch (error) {
+        console.error("Fetch error:", error);
+        showMessage("An unexpected error occurred. Please try again.", "red");
+    }
+});
+});
 
     
        // Add click event listeners to all cancel order buttons
@@ -831,7 +918,7 @@ document.getElementById('cancelOrderForm').addEventListener('submit', async func
                 additionalDetails: additionalDetails
             })
         });
-        
+        console.log('this is the page',reason);
         const result = await response.json();
         
         // Hide the cancel modal
@@ -876,50 +963,23 @@ document.getElementById('submitCancelButton').addEventListener('click', function
     
     return false;
 });
-document.getElementById('colorfulAddressForm').addEventListener('submit', async function (event) {
-    event.preventDefault(); // Prevent the default form submission
 
-    // Collect form data
-    const address = {
-        fullName: document.querySelector('[name="fullName"]').value,
-        address: document.querySelector('[name="address"]').value,
-        city: document.querySelector('[name="city"]').value,
-        state: document.querySelector('[name="state"]').value,
-        postCode: document.querySelector('[name="postCode"]').value,
-        country: document.querySelector('[name="country"]').value,
-    };
 
-    try {
-        // Send the data to the backend using fetch
-        const response = await fetch('/accountDetails', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(address), // Send the address object as a JSON string
-        });
+// Add this helper function if you're using the showMessage function
+function showMessage(message, color) {
+    const messageElement = document.getElementById("response-message");
+    messageElement.textContent = message;
+    messageElement.style.color = color;
+}
+// Add this helper function if you're using the showMessage function
+function showMessage(message, color) {
+    const messageElement = document.getElementById("response-message");
+    messageElement.textContent = message;
+    messageElement.style.color = color;
+}
 
-        // Handle the response
-        const result = await response.json();
 
-        const messageElement = document.getElementById('response-message');
-        if (response.ok && result.success) {
-            messageElement.textContent = result.message || 'Changes saved successfully!';
-            messageElement.style.color = 'green';
 
-            // Show the success modal
-            showModal(result.message || 'Address added successfully!');
-        } else {
-            messageElement.textContent = result.message || 'Failed to save changes.';
-            messageElement.style.color = 'red';
-        }
-    } catch (error) {
-        const messageElement = document.getElementById('response-message');
-        messageElement.textContent = error.message || 'An unexpected error occurred.';
-        messageElement.style.color = 'red';
-        console.error('Fetch error:', error);
-    }
-});
 function copyReferralCode() {
   const referralCodeInput = document.getElementById('referralCode');
   referralCodeInput.select();

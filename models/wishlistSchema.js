@@ -9,12 +9,12 @@ const wishlistSchema = new mongoose.Schema({
     products: [{
         productId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Product',  // Ensure 'Product' is correctly referenced here (case-sensitive)
+            ref: 'Product',  
             required: true,
         },
         
     }],
-}, { timestamps: true }); // Fixed the capitalization of timestamps
+}, { timestamps: true }); 
 
 const Wishlist = mongoose.model('Wishlist', wishlistSchema);
 

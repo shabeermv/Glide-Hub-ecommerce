@@ -2,7 +2,7 @@ const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const CategoryOffer = require("../../models/categoryOffer");
 const ProductOffer = require("../../models/productOffer");
-const User=require('../../models/userSchema') // Add this import
+const User = require('../../models/userSchema') 
 
 const shopInfo = async (req, res) => {
   try {
@@ -184,6 +184,165 @@ const shopInfo = async (req, res) => {
     console.error("shopInfo error:", error);
     res.status(500).json({message:'internal server error'}) }
 };
+const getFilteredProducts = async (req, res) => {
+  try {
+    const searchValue = req.query.search || "";
+    const categoryFilter = req.query.category || "";
+    const sortBy = req.query.sort || "";
+    const priceRange = req.query.priceRange || "all";
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
+
+    let query = { isDeleted: false };
+
+    if (searchValue) {
+      query.$or = [
+        { title: { $regex: searchValue, $options: "i" } },
+        { description: { $regex: searchValue, $options: "i" } }
+      ];
+    }
+
+    if (priceRange !== "all") {
+      const [minPrice, maxPrice] = priceRange.split("-").map(Number);
+      query.price = {
+        $gte: minPrice,
+        ...(maxPrice ? { $lte: maxPrice } : {})
+      };
+    }
+
+    if (categoryFilter) {
+      const category = await Category.findOne({ name: categoryFilter });
+      if (category) {
+        query.category = category._id;
+      }
+    }
+
+    let sortOption = {};
+    if (sortBy === "lowToHigh") {
+      sortOption = { price: 1 };
+    } else if (sortBy === "highToLow") {
+      sortOption = { price: -1 };
+    }
+
+    const totalProducts = await Product.countDocuments(query);
+
+    const products = await Product.find(query)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit)
+      .populate("category")
+      .lean();
+
+    const categoryIds = [...new Set(products.map((p) => p.category?._id?.toString()).filter(Boolean))];
+    const productIds = products.map((p) => p._id);
+
+    const categoryOffers = await CategoryOffer.find({
+      categoryId: { $in: categoryIds },
+      startDate: { $lte: new Date() },
+      endDate: { $gte: new Date() }
+    }).lean();
+
+    const productOffers = await ProductOffer.find({
+      productId: { $in: productIds },
+      startDate: { $lte: new Date() },
+      endDate: { $gte: new Date() }
+    }).lean();
+
+    const updatedProducts = products.map((product) => {
+      let discountedPrice = product.price;
+      let appliedOffer = null;
+      let offerType = null;
+    
+      if (!product._id) {
+        return {
+          ...product,
+          image: product.image || [],
+          originalPrice: product.price,
+          discountedPrice: product.price,
+          hasDiscount: false,
+          appliedOffer: null,
+          offerType: null
+        };
+      }
+    
+      const productOffer = productOffers.find(
+        (offer) => offer.productId.toString() === product._id.toString()
+      );
+    
+      let categoryOffer = null;
+      if (product.category && product.category._id) {
+        categoryOffer = categoryOffers.find(
+          (offer) => offer.categoryId.toString() === product.category._id.toString()
+        );
+      }
+    
+      let productDiscountAmount = 0;
+      let categoryDiscountAmount = 0;
+    
+      if (productOffer) {
+        if (productOffer.discountType === "percentage") {
+          productDiscountAmount = (product.price * productOffer.discountValue) / 100;
+        } else if (productOffer.discountType === "fixed") {
+          productDiscountAmount = productOffer.discountValue;
+        }
+      }
+    
+      if (categoryOffer) {
+        if (categoryOffer.discountType === "percentage") {
+          categoryDiscountAmount = (product.price * categoryOffer.discountValue) / 100;
+        } else if (categoryOffer.discountType === "fixed") {
+          categoryDiscountAmount = categoryOffer.discountValue;
+        }
+      }
+    
+      if (productDiscountAmount > 0 || categoryDiscountAmount > 0) {
+        if (productDiscountAmount >= categoryDiscountAmount) {
+          discountedPrice = product.price - productDiscountAmount;
+          appliedOffer = {
+            discountType: productOffer.discountType,
+            discountValue: productOffer.discountValue,
+            discountAmount: productDiscountAmount,
+            description: productOffer.description
+          };
+          offerType = "product";
+        } else {
+          discountedPrice = product.price - categoryDiscountAmount;
+          appliedOffer = {
+            discountType: categoryOffer.discountType,
+            discountValue: categoryOffer.discountValue,
+            discountAmount: categoryDiscountAmount,
+            description: categoryOffer.description || `${product.category.name} Category Offer`
+          };
+          offerType = "category";
+        }
+    
+        if (discountedPrice < 1) discountedPrice = 1;
+      }
+    
+      return {
+        ...product,
+        originalPrice: product.price,
+        discountedPrice: discountedPrice,
+        hasDiscount: !!appliedOffer,
+        appliedOffer: appliedOffer,
+        offerType: offerType
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      products: updatedProducts,
+      currentPage: page,
+      totalPages: Math.ceil(totalProducts / limit),
+      totalProducts: totalProducts
+    });
+  } catch (error) {
+    console.error("API Error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
 
 const getDetailInfo = async (req, res) => {
   try {
@@ -293,5 +452,6 @@ const getDetailInfo = async (req, res) => {
 };
 module.exports = {
   shopInfo,
+  getFilteredProducts,
   getDetailInfo,
 };

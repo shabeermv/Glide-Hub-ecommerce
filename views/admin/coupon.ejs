@@ -149,19 +149,14 @@ document.getElementById('submit').addEventListener('click', async function(e) {
         const data = await response.json();
 
         if (response.ok) {
-            // Hide the coupon form modal
             addCouponModal.hide();
             
-            // Reset the form
             document.getElementById('couponForm').reset();
             
-            // Set success message
             document.getElementById('successMessage').textContent = data.message || 'Coupon created successfully!';
             
-            // Show success modal
             successModal.show();
             
-            // Set a listener for when success modal is closed to reload the page
             document.getElementById('successModal').addEventListener('hidden.bs.modal', function () {
                 location.reload();
             }, { once: true });
@@ -187,7 +182,6 @@ document.getElementById('discount').addEventListener('change', function() {
     }
 });
     
-// Reset form when modal is closed
 document.getElementById('addCouponModal').addEventListener('hidden.bs.modal', function () {
     document.getElementById('couponForm').reset();
     document.getElementById('couponId').value = '';
@@ -210,13 +204,10 @@ document.querySelectorAll(".delete-btn").forEach(button => {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Set success message
                     document.getElementById('successMessage').textContent = "Coupon deleted successfully!";
                     
-                    // Show success modal
                     successModal.show();
                     
-                    // Reload page when modal is closed
                     document.getElementById('successModal').addEventListener('hidden.bs.modal', function () {
                         location.reload();
                     }, { once: true });

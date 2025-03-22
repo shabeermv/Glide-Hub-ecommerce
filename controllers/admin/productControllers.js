@@ -406,13 +406,10 @@ const addProductOffer = async (req, res, next) => {
             discountedPrice = product.price - discountValue;
         }
 
-        // Ensure discounted price is not negative
         discountedPrice = Math.max(0, discountedPrice);
 
-        // ✅ Round the discounted price to an integer
         discountedPrice = Math.round(discountedPrice);
 
-        // Save the product offer
         const offerProduct = new ProductOffer({
             description,
             discountType,
@@ -424,7 +421,6 @@ const addProductOffer = async (req, res, next) => {
 
         await offerProduct.save();
 
-        // ✅ Update the product with the discounted price
         product.hasDiscount = true;
         product.discountedPrice = discountedPrice;
         await product.save();
@@ -450,11 +446,10 @@ const deleteProductOffer = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Offer not found.' });
         }
 
-        // ✅ Remove discount from the associated product
         const product = await Product.findById(deletedOffer.productId);
         if (product) {
             product.hasDiscount = false;
-            product.discountedPrice = product.price; // Reset price to original
+            product.discountedPrice = product.price; 
             await product.save();
         }
 
@@ -480,7 +475,6 @@ const editProductOffer = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Offer not found.' });
         }
 
-        // ✅ Update discounted price if offer is changed
         const product = await Product.findById(updatedOffer.productId);
         if (product) {
             let newDiscountedPrice;

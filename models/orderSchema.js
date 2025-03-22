@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { v4: uuidv4 } = require('uuid'); // Import UUID for unique IDs
+const { v4: uuidv4 } = require('uuid'); 
 
 const orderSchema = new mongoose.Schema({
     orderId: {
@@ -33,7 +33,7 @@ const orderSchema = new mongoose.Schema({
         {
             productOrderId: { 
                 type: String, 
-                default: uuidv4() // ✅ Ensure uuidv4() is called as a function
+                default: uuidv4() 
             },
             productId: {
                 type: mongoose.Schema.Types.ObjectId,
@@ -62,7 +62,7 @@ const orderSchema = new mongoose.Schema({
     ],
     orderStatus: {
         type: String,
-        enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Return Requested','Return Rejected',"Cancel Requested","Cancel Rejected"],
+        enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Return Requested','Return Rejected',"Cancel Requested","Cancel Rejected","Order Pending"],
         default: 'Pending'
     },
     shippingAddress: {
@@ -76,7 +76,7 @@ const orderSchema = new mongoose.Schema({
     },
     paymentMethod: [{
         type: String,
-        enum: ['cod', 'RazorPay', 'wallet'],  // Add all valid payment methods
+        enum: ['cod', 'RazorPay', 'wallet'],  
         required: true
     }],
     paymentStatus: {
@@ -110,7 +110,7 @@ const orderSchema = new mongoose.Schema({
         ref: "Coupon"
     },
     couponCode: {
-        type: String // ✅ Add this field to store the actual coupon code
+        type: String 
     }
 });
 

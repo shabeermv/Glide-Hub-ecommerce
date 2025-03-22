@@ -16,7 +16,6 @@
         </div><!-- End .container -->
     </nav>
    
-
     <div class="page-content">
         <div class="checkout">
             <div class="container">
@@ -77,12 +76,11 @@
 
                                 <label>Country *</label>
                                 <input type="text" class="form-control" id="country" required
-                                    value="<%= user.address ? user.address.country : '' %>" style="height: 50px;">
+                                    value="<%= user.address.length > 0 ? user.address[0].country : '' %>" style="height: 50px;">
 
                                 <label>Street address *</label>
-                                <input type="text" class="form-control" 
-                                    placeholder="House number and Street name" id="sAddress" required 
-                                    value="<%= user.address ? user.address.address : '' %>" style="height: 50px;">
+                                <input type="text" class="form-control" placeholder="House number and Street name" id="sAddress" required 
+                                    value="<%= user.address.length > 0 ? user.address[0].address : '' %>" style="height: 50px;">
 
                                 <label>Land mark *</label>
                                 <input type="text" id="lMark" class="form-control" style="height: 50px;" 
@@ -92,13 +90,13 @@
                                     <div class="col-sm-6">
                                         <label>Town / City *</label>
                                         <input type="text" class="form-control" id="city" required 
-                                            value="<%= user.address ? user.address.city : '' %>" style="height: 50px;">
+                                            value="<%= user.address.length > 0 ? user.address[0].city : '' %>" style="height: 50px;">
                                     </div>
 
                                     <div class="col-sm-6">
                                         <label>State / County *</label>
                                         <input type="text" class="form-control" id="state" required 
-                                            value="<%= user.address ? user.address.state : '' %>" style="height: 50px;">
+                                            value="<%= user.address.length > 0 ? user.address[0].state : '' %>" style="height: 50px;">
                                     </div>
                                 </div>
 
@@ -106,7 +104,7 @@
                                     <div class="col-sm-6">
                                         <label>Postcode / ZIP *</label>
                                         <input type="text" class="form-control" id="pCode" required 
-                                            value="<%= user.address ? user.address.postCode : '' %>" style="height: 50px;">
+                                            value="<%= user.address.length > 0 ? user.address[0].postCode : '' %>" style="height: 50px;">
                                     </div>
 
                                     <div class="col-sm-6">
@@ -123,17 +121,18 @@
                                 <div class="custom-control custom-checkbox">
                                     <input type="checkbox" class="custom-control-input" id="checkout-create-acc">
                                     <label class="custom-control-label" for="checkout-create-acc">Create an account?</label>
-                                </div><!-- End .custom-checkbox -->
+                                </div>
 
                                 <div class="custom-control custom-checkbox">
                                     <input type="checkbox" class="custom-control-input" id="checkout-diff-address">
                                     <label class="custom-control-label" for="checkout-diff-address">Ship to a different address?</label>
-                                </div><!-- End .custom-checkbox -->
+                                </div>
 
                                 <label>Order notes (optional)</label>
-                                <textarea class="form-control" id="orderNote" cols="30" rows="4" placeholder="Notes about your order, e.g. special notes for delivery"></textarea>
+                                <textarea class="form-control" id="orderNote" cols="30" rows="4" 
+                                    placeholder="Notes about your order, e.g. special notes for delivery"></textarea>
                             </div>
-                            
+
                             <!-- New Address Form (Initially Hidden) -->
                             <div id="new-address-form" style="display: none;">
                                 <h2 class="checkout-title">Add New Address</h2>
@@ -156,8 +155,7 @@
                                 <input type="text" class="form-control" id="new-country" required style="height: 50px;">
 
                                 <label>Street address *</label>
-                                <input type="text" class="form-control" 
-                                    placeholder="House number and Street name" id="new-sAddress" required style="height: 50px;">
+                                <input type="text" class="form-control" placeholder="House number and Street name" id="new-sAddress" required style="height: 50px;">
 
                                 <label>Land mark *</label>
                                 <input type="text" id="new-lMark" class="form-control" style="height: 50px;" 
@@ -198,7 +196,6 @@
                                     </div>
                                 </div>
                             </div>
-
                         </div><!-- End .col-lg-9 -->
                         <aside class="col-lg-3">
                             <div class="summary">
@@ -263,8 +260,6 @@
                                             <td>₹<%= subtotal.toFixed(2) %></td>
                                         </tr>
                                     </tbody>
-                                    
-                                    
                                 </table>
                                 
                                 <!-- Hidden input for total amount -->
@@ -307,7 +302,6 @@
                                             </div><!-- End .card-body -->
                                         </div><!-- End .collapse -->
                                     </div><!-- End .card -->
-
                                     
                                     <% if (subtotal > 1000) { %>
                                         <div class="card">
@@ -325,9 +319,8 @@
                                             </div><!-- End .collapse -->
                                         </div><!-- End .card -->
                                     <% } %>
-                                    
-
-                                    
+                                </div><!-- End .accordion-summary -->
+                                
                                 <button type="button" id="btn-place-order" class="btn btn-outline-primary-2 btn-order btn-block" style="height: 50px;">
                                     <span class="btn-text">Place Order</span>
                                     <span class="btn-hover-text">Proceed to Checkout</span>
@@ -367,7 +360,7 @@
                             <h4 class="text-success mb-4">Order Placed Successfully!</h4>
                             <div class="order-details mb-4">
                                 <p class="mb-2">Order ID: <strong><span id="modalOrderId"></span></strong></p>
-                                <p class="mb-2">Total Amount: <strong>₹<span id="modalOrderTotal"></span></strong></p>
+                                <p class="mb-2">Total Amount: <strong><span id="modalOrderTotal"></span></strong></p>
                                 <p class="mb-4">A confirmation email has been sent to your registered email address.</p>
                             </div>
                             <div class="next-steps">
@@ -854,7 +847,6 @@ function createOrderAndInitiatePayment(formData) {
                 notes: { address: formData.streetAddress },
                 theme: { color: "#3399cc" },
                 
-                // ✅ SUCCESS HANDLER
                 handler: function (response) {
                     verifyPayment({
                         razorpay_payment_id: response.razorpay_payment_id,
@@ -868,25 +860,19 @@ function createOrderAndInitiatePayment(formData) {
             const rzp = new Razorpay(options);
             rzp.open();
 
-            // ✅ PAYMENT FAILURE HANDLER
             rzp.on("payment.failed", function (response) {
-                console.error("❌ Payment failed:", response.error);
+    console.error("Payment failed:", response.error);
 
-                // Update modal message
-                document.getElementById("paymentErrorMessage").textContent =
-                    response.error.description || "Your payment was not successful. Please try again.";
+    // Update modal message
+    document.getElementById("paymentErrorMessage").textContent =
+        response.error.description || "Your payment was not successful. Please try again.";
 
-                // Show the modal
-                $("#paymentErrorModal").modal("show");
-                
-                // Auto-close the modal after 2 seconds
-                setTimeout(() => {
-                    $("#paymentErrorModal").modal("hide");
-                }, 2000);
-
-                // ✅ Send failed payment status to the backend
-                handleFailedPayment(data.yourOrderId);
-            });
+    // Show the modal
+    $("#paymentErrorModal").modal("show");
+    
+    // Send failed payment status to the backend
+    handleFailedPayment(data.yourOrderId);
+});
 
         } else {
             alert(data.message || 'Failed to create order. Please try again.');
@@ -948,17 +934,18 @@ function handleFailedPayment(orderId) {
         if (!data.success) {
             console.error("Error updating failed payment status:", data.message);
         }
-
-        // ✅ Show the failure modal
+        
+        // Show the failure modal
         document.getElementById("paymentErrorMessage").textContent = 
             data.message || "Your payment was not successful. Please try again.";
         
         $("#paymentErrorModal").modal("show");
         
-        // Auto-close the modal after 2 seconds
+        // Redirect to checkout page after showing the modal
         setTimeout(() => {
             $("#paymentErrorModal").modal("hide");
-        }, 1000);
+            window.location.href = '/cart-checkout'; // Redirect back to checkout page
+        }, 2000);
     })
     .catch(error => {
         console.error("Error handling failed payment:", error);
@@ -969,10 +956,10 @@ function handleFailedPayment(orderId) {
         
         setTimeout(() => {
             $("#paymentErrorModal").modal("hide");
-        }, 1000);
+            window.location.href = '/cart-checkout'; // Redirect back to checkout page
+        }, 5000);
     });
 }
-
 function submitOrderThroughRegularCheckout(formData) {
     fetch('/place-order', {
         method: 'POST',
@@ -990,7 +977,7 @@ function submitOrderThroughRegularCheckout(formData) {
     .then(data => {
         if (data.success) {
             document.getElementById('modalOrderId').textContent = data.orderId || data._id || 'N/A';
-            document.getElementById('modalOrderTotal').textContent = data.finalAmount || data.amount || 'N/A'; // ✅ Fix: Using finalAmount
+            document.getElementById('modalOrderTotal').textContent = data.finalAmount || data.amount || 'N/A'; 
 
             $('#successModal').modal({
                 backdrop: 'static',

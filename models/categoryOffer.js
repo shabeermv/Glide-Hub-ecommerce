@@ -5,9 +5,9 @@ const categoryOfferSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    discountType: {  // Added Discount Type Field
+    discountType: {  
         type: String,
-        enum: ['percentage', 'fixed'],  // Only allow these two values
+        enum: ['percentage', 'fixed'],  
         required: true
     },
     discountValue: {

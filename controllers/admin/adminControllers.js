@@ -139,13 +139,11 @@ const filterCategoryList = async (req, res) => {
 
         let query = { orderStatus: { $in: ["Delivered"] } };
 
-        // ✅ Fetch all orders if "All Categories" is selected
         if (categoryId && categoryId !== "All Categories" && categoryId !== "") {
             const products = await Products.find({ category: categoryId });
             const productIds = products.map(product => product._id);
             query["products.productId"] = { $in: productIds };
         } else {
-            // ✅ Show all orders (no category filter applied)
             delete query["products.productId"];
         }
 
@@ -231,8 +229,8 @@ const getFilterByDate = async (req, res) => {
                 end.setHours(23, 59, 59, 999);
                 break;
             case "yearly":
-                start = new Date(today.getFullYear(), 0, 1, 0, 0, 0, 0); // ✅ January 1st, 00:00:00
-                end = new Date(today.getFullYear(), 11, 31, 23, 59, 59, 999); // ✅ December 31st, 23:59:59
+                start = new Date(today.getFullYear(), 0, 1, 0, 0, 0, 0); 
+                end = new Date(today.getFullYear(), 11, 31, 23, 59, 59, 999); 
                 break;
             case "custom":
                 if (!startDate || !endDate) {
@@ -247,9 +245,8 @@ const getFilterByDate = async (req, res) => {
 
         console.log(`Filtering orders from ${start.toISOString()} to ${end.toISOString()}`);
 
-        // Query orders within the selected date range
         const query = {
-            orderStatus: { $in: ["Delivered"] }, // ✅ Include all relevant statuses
+            orderStatus: { $in: ["Delivered"] },
             createdAt: { $gte: start, $lte: end }
         };
 
@@ -257,7 +254,7 @@ const getFilterByDate = async (req, res) => {
             .populate("userId", "name email")
             .populate({ path: "products.productId", select: "title price" })
             .sort({ createdAt: -1 })
-            .lean(); // ✅ Use .lean() for better performance
+            .lean(); 
 
         console.log(`Found ${orders.length} orders in the date range`);
 

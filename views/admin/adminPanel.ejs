@@ -362,7 +362,7 @@
                                             let totalOrdersCount = recentOrders.length;
                                     
                                             recentOrders.forEach((order, index) => { 
-                                                if (order.orderStatus === "Delivered") { // ✅ Ensure only Delivered orders are shown
+                                                if (order.orderStatus === "Delivered") { 
                                                     totalOrdersAmount += order.totalAmount || 0;
                                             %>
                                                 <tr>
@@ -480,7 +480,6 @@
             
             const salesData = await response.json();
 
-            // Format dates for better display
             const labels = salesData.map(data => {
                 const date = new Date(data._id);
                 return date.toLocaleDateString();
@@ -489,17 +488,15 @@
             const totalSales = salesData.map(data => data.totalSales);
             const orderCount = salesData.map(data => data.orderCount);
 
-            // Calculate summary statistics
             const totalSalesSum = totalSales.reduce((sum, value) => sum + value, 0);
             const totalOrdersSum = orderCount.reduce((sum, value) => sum + value, 0);
             const avgOrderValue = totalOrdersSum > 0 ? totalSalesSum / totalOrdersSum : 0;
 
-            // Update summary statistics in the UI
             document.getElementById("totalSalesValue").textContent = `₹${totalSalesSum.toLocaleString('en-IN')}`;
             document.getElementById("totalOrdersValue").textContent = totalOrdersSum;
             document.getElementById("avgOrderValue").textContent = `₹${avgOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 
-            if (myChart) myChart.destroy(); // Destroy old chart before creating a new one
+            if (myChart) myChart.destroy(); 
 
             myChart = new Chart(ctx, {
                 type: "line",
@@ -580,13 +577,11 @@
                 }
             });
 
-            // Handle case where no data is returned
             if (salesData.length === 0) {
                 document.getElementById("totalSalesValue").textContent = "₹0";
                 document.getElementById("totalOrdersValue").textContent = "0";
                 document.getElementById("avgOrderValue").textContent = "₹0";
                 
-                // You could also display a "No data" message in the chart
                 ctx.font = "20px Arial";
                 ctx.fillStyle = "gray";
                 ctx.textAlign = "center";
@@ -595,12 +590,10 @@
 
         } catch (error) {
             console.error("Error fetching sales data:", error);
-            // Display error message to user
             alert("Failed to fetch sales data. Please try again.");
         }
     }
 
-    // Fetch default sales data (last 7 days)
     const today = new Date().toISOString().split("T")[0];
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 20);
@@ -610,7 +603,6 @@
     document.getElementById("chartEndDate").value = today;
     fetchSalesData(defaultStartDate, today);
 
-    // Fetch new data when user selects a date range
     document.getElementById("fetchSales").addEventListener("click", () => {
         const startDate = document.getElementById("chartStartDate").value;
         const endDate = document.getElementById("chartEndDate").value;

@@ -20,11 +20,11 @@ function authMiddleware(req, res, next) {
   async function distroyByBlocking(req, res, next) {
     if (req.session.userId) {
       try {
-        const user = await User.findById(req.session.userId); // Await DB query
+        const user = await User.findById(req.session.userId); 
         console.log(user, 'user found');
         if (user && user.isBlocked) {
           req.session.destroy(() => {
-            return res.redirect('/login'); // Redirect after destroying session
+            return res.redirect('/login'); 
           });
         } else {
           next();

@@ -173,31 +173,25 @@
 <%- include("../../views/partials/admin/footer.ejs") %>
 
 <script>
-    // Toggle create form visibility
     document.getElementById('createOfferBtn').addEventListener('click', function() {
         document.getElementById('createFormCard').style.display = 'block';
         this.style.display = 'none';
         
-        // Hide edit form if it's visible
         document.getElementById('editFormCard').style.display = 'none';
     });
 
     document.getElementById('closeCreateFormBtn').addEventListener('click', function() {
         document.getElementById('createFormCard').style.display = 'none';
         document.getElementById('createOfferBtn').style.display = 'block';
-        // Reset form
         document.getElementById('createOfferForm').reset();
     });
     
-    // Close edit form
     document.getElementById('closeEditFormBtn').addEventListener('click', function() {
         document.getElementById('editFormCard').style.display = 'none';
         document.getElementById('createOfferBtn').style.display = 'block';
-        // Reset form
         document.getElementById('editOfferForm').reset();
     });
 
-    // Create form submission
     document.getElementById('createOfferForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
@@ -229,7 +223,6 @@
         });
     });
     
-    // Edit form submission
     document.getElementById('editOfferForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -262,7 +255,6 @@
         });
     });
 
-    // Delete offer functionality
     document.querySelectorAll('.delete-offer').forEach(button => {
         button.addEventListener('click', function() {
             const offerId = this.getAttribute('data-id');
@@ -283,15 +275,12 @@
         });
     });
 
-    // Edit offer functionality - ALTERNATIVE APPROACH
     document.querySelectorAll('.edit-offer').forEach(button => {
         button.addEventListener('click', function() {
             const offerId = this.getAttribute('data-id');
             
-            // Find the parent offer card element
             const offerCard = this.closest('.offer-card');
             
-            // Get the offer data directly from the data attribute
             let offerData;
             try {
                 offerData = JSON.parse(offerCard.getAttribute('data-offer'));
@@ -301,26 +290,21 @@
                 return;
             }
             
-            // Hide the create button and create form
             document.getElementById('createOfferBtn').style.display = 'none';
             document.getElementById('createFormCard').style.display = 'none';
             
-            // Show edit form
             const editForm = document.getElementById('editFormCard');
             editForm.style.display = 'block';
             
-            // Populate form with offer data
             document.getElementById('edit_offerId').value = offerData._id;
             document.getElementById('edit_description').value = offerData.description;
             document.getElementById('edit_selectedCategory').value = offerData.categoryId._id || offerData.categoryId;
             document.getElementById('edit_discountType').value = offerData.discountType;
             document.getElementById('edit_discountValue').value = offerData.discountValue;
             
-            // Format dates properly
             let startDate = offerData.startDate;
             let endDate = offerData.endDate;
             
-            // If dates include time component (e.g., "2023-01-01T00:00:00.000Z")
             if (typeof startDate === 'string' && startDate.includes('T')) {
                 startDate = startDate.split('T')[0];
             } else if (startDate instanceof Date) {

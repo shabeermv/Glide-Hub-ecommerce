@@ -20,7 +20,6 @@ const wishlistPageInfo = async (req, res) => {
             .select('products')
             .lean();
 
-        // If wishlist is empty, return empty array
         if (!wishlist || !wishlist.products || wishlist.products.length === 0) {
             return res.render('wishlist', {
                 wishlist: [],
@@ -30,7 +29,6 @@ const wishlistPageInfo = async (req, res) => {
             });
         }
 
-        // Calculate total pages
         const totalProducts = await Wishlist.aggregate([
             { $match: { userId: req.session.userId } },
             { $project: { totalItems: { $size: "$products" } } }
@@ -38,10 +36,8 @@ const wishlistPageInfo = async (req, res) => {
 
         const totalPages = Math.ceil((totalProducts[0]?.totalItems || 0) / limit);
 
-        // Fetch user details
         const user = await User.findById(req.session.userId);
 
-        // Render the wishlist page with data
         res.render('wishlist', {
             wishlist: wishlist.products, 
             currentPage: page,
@@ -52,11 +48,9 @@ const wishlistPageInfo = async (req, res) => {
     } catch (error) {
         console.error("Error in wishlistPageInfo:", error);
 
-        // Render an error page if `views/user/error.ejs` exists
         return res.status(500).render('user/error', { message: "Internal server error" });
 
-        // If no error page exists, fallback to JSON response
-        // return res.status(500).json({ success: false, message: "Internal server error" });
+        
     }
 };
 
@@ -99,7 +93,6 @@ const removeWishlistItem = async (req, res) => {
         // console.log('Product ID:', productId);
         // console.log('User ID:', userId);
 
-        // Validate input
         if (!userId || !productId) {
             return res.status(400).json({
                 success: false,

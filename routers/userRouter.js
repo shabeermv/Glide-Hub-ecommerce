@@ -33,6 +33,7 @@ userRouter.get('/auth/google/callback',passport.authenticate('google',{failureRe
 
 userRouter.get('/show/:id',authMiddleware.authMiddleware,productController.getDetailInfo)
 userRouter.get('/shop',authMiddleware.authMiddleware,productController.shopInfo);
+userRouter.get("/products", authMiddleware.authMiddleware, productController.getFilteredProducts);
 
 userRouter.get('/profile',authMiddleware.authMiddleware,userController.userProfileInfo);
 userRouter.post('/updateUserDetails',authMiddleware.authMiddleware,userController.updateUserDetails);
@@ -66,8 +67,8 @@ userRouter.post('/process-wallet-payment',checkoutController.payWithWallet);
 
 userRouter.delete('/cancelOrder/:id',authMiddleware.authMiddleware,checkoutController.cancelOrder);
 userRouter.get('/order/details/:id',authMiddleware.authMiddleware,checkoutController.viewPurchaseDetails);
-userRouter.post('/cancelProduct/:orderId/:productOrderId',checkoutController.cancelPartialProduct)
-userRouter.post('/orderCancel/:id',checkoutController.orderCancel);
+userRouter.post('/cancelProduct/:orderId', checkoutController.cancelPartialProduct);
+userRouter.post('/orderCancel/:id', checkoutController.orderCancel);
 userRouter.post('/requestReturn/:id',checkoutController.returnOrder);
 userRouter.post('/returnRequested/:orderId/:productOrderId',checkoutController.returnPartialRequest);
 userRouter.post('/returnOrder/:id',checkoutController.returnOrder)

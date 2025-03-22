@@ -7,7 +7,7 @@ const customerController = require('../controllers/admin/customerController');
 const categoryController = require('../controllers/admin/categoryControllers');
 const couponController = require('../controllers/admin/couponController');
 const orderController = require('../controllers/admin/orderController');
-const middleware = require('../middleware/middlewares');  // Import middleware
+const middleware = require('../middleware/middlewares');  
 
 // Admin routes
 adminRouter.get('/adminLogin', adminController.adminLogin);

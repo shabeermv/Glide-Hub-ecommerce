@@ -78,15 +78,12 @@ const changeOrderStatus = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Invalid status provided" });
     }
 
-    // Update the order status
     order.orderStatus = status;
 
-    // Update payment status if order is delivered
     if (status === "Delivered") {
       order.paymentStatus = "completed";
     }
 
-    // Update each product's status based on the order status
     order.products.forEach(product => {
       if (status === "Cancelled") {
         product.status = "Cancelled";
@@ -225,7 +222,7 @@ const getCancelRequests = async (req, res) => {
     const orders = await Order.find({
       $or: [
         { orderStatus: "Cancel Requested" },
-        { "products": { "$elemMatch": { "status": "Cancel Requested" } } } // ✅ Only fetch "Cancel Requested"
+        { "products": { "$elemMatch": { "status": "Cancel Requested" } } } 
       ]
     })
     .populate("userId")
@@ -249,7 +246,7 @@ const getCancelRequests = async (req, res) => {
         });
       } else {
         const cancelRequestedProducts = order.products.filter(
-          product => product.status === "Cancel Requested" // ✅ Only fetch "Cancel Requested"
+          product => product.status === "Cancel Requested"  
         );
 
         if (cancelRequestedProducts.length > 0) {
@@ -279,13 +276,20 @@ const getCancelRequests = async (req, res) => {
 
 const setUpReturnRequest = async (req, res) => {
   try {
-    const { orderId, productId, action } = req.body; // `action` determines approval or rejection
+    const { orderId, productId, action } = req.body;
     console.log("Processing return request:", { orderId, productId, action });
 
-    // Fetch the order with populated product information
-    const order = await Order.findById(orderId).populate("userId").populate("products.productId");
+    const order = await Order.findById(orderId)
+      .populate("userId")
+      .populate("products.productId")
+      .populate("coupon");
+
     if (!order) {
       return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    if (order.paymentStatus !== "completed") {
+      return res.status(400).json({ success: false, message: "Refund cannot be processed. Payment is not completed." });
     }
 
     const user = order.userId;
@@ -293,45 +297,33 @@ const setUpReturnRequest = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    console.log("Products in order:", order.products.map(p => ({
-      productId: String(p.productId._id),
-      status: p.status,
-      price: p.price,
-      productTitle: p.productId ? p.productId.title : 'Unknown'
-    })));
-
-    // Find the specific product using `productId`
     const productToReturn = order.products.find(p => String(p.productId._id) === String(productId));
 
     if (!productToReturn) {
-      return res.status(404).json({ 
-        success: false, 
-        message: `Product with ID ${productId} not found in order`
-      });
+      return res.status(404).json({ success: false, message: `Product not found in order` });
     }
 
-    console.log("Found product:", {
-      productId: String(productToReturn.productId._id),
-      status: productToReturn.status,
-      title: productToReturn.productId ? productToReturn.productId.title : 'Unknown'
-    });
-
-    // Check if the product is already returned
     if (productToReturn.status === "Returned") {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Product has already been returned`
-      });
+      return res.status(400).json({ success: false, message: `Product has already been returned` });
     }
 
-    // Handle return approval or rejection
-    let refundAmount = 0;
+    let refundAmount = productToReturn.price * productToReturn.quantity;
+
+    if (order.coupon) {
+      const coupon = await Coupon.findById(order.coupon);
+      if (coupon) {
+        if (coupon.discount === "percentage") {
+          refundAmount -= (refundAmount * coupon.discountValue) / 100;
+        } else if (coupon.discount === "fixed") {
+          const productShare = refundAmount / order.totalAmount;
+          refundAmount -= productShare * coupon.discountValue;
+        }
+        console.log(`Applying ${coupon.discountValue}${coupon.discount === 'percentage' ? '%' : '₹'} discount. New refund: ₹${refundAmount}`);
+      }
+    }
 
     if (action === "approved") {
       productToReturn.status = "Returned";
-      refundAmount = productToReturn.price * productToReturn.quantity;
-
-      // Push refund amount to user wallet
       user.wallet += refundAmount;
 
       user.walletHistory.push({
@@ -340,12 +332,12 @@ const setUpReturnRequest = async (req, res) => {
         description: `Refund for product: ${productToReturn.productId.title} (Order #${order.orderId})`
       });
 
-      await user.save(); // ✅ Save the updated wallet balance
+      await user.save();
     } else {
       productToReturn.status = "Return Rejected";
     }
 
-    await order.save(); // ✅ Save the updated order
+    await order.save();
 
     res.status(200).json({ 
       success: true, 
@@ -355,21 +347,24 @@ const setUpReturnRequest = async (req, res) => {
 
   } catch (error) {
     console.error("Error processing return request:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error"
-    });
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
 
-const setCancelAction = async(req, res) => {
+
+const setCancelAction = async (req, res) => {
   try {
     const { orderId, productOrderId, action, isFullOrder } = req.body;
 
-    const order = await Order.findById(orderId).populate("userId");
+    const order = await Order.findById(orderId).populate("userId").populate("coupon");
+
     if (!order) {
       return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    if (order.paymentStatus !== "completed") {
+      return res.status(400).json({ success: false, message: "Refund cannot be processed. Payment is not completed." });
     }
 
     const user = order.userId; 
@@ -379,47 +374,63 @@ const setCancelAction = async(req, res) => {
 
     let refundAmount = 0;
 
+    const coupon = order.coupon ? await Coupon.findById(order.coupon) : null;
+    const discountType = coupon ? coupon.discount : null;
+    const discountValue = coupon ? coupon.discountValue : 0;
+
     if (isFullOrder) {
       if (action === "approved") {
         order.orderStatus = "Cancelled";
 
         order.products.forEach(product => {
           product.status = "Cancelled";
-          refundAmount += product.price * product.quantity;  
+          let refund = product.price * product.quantity;
+
+          if (coupon) {
+            if (discountType === "percentage") {
+              refund -= (refund * discountValue) / 100;
+            } else if (discountType === "fixed") {
+              const productShare = refund / order.totalAmount;
+              refund -= productShare * discountValue;
+            }
+          }
+
+          refundAmount += refund;
         });
+
       } else {
         order.orderStatus = "Cancel Rejected";
-
         order.products.forEach(product => {
           product.status = "Cancel Rejected";
         });
       }
     } else {
-      // Fixed this section to correctly identify the product
-      const productIndex = order.products.findIndex(p => 
-        p.productId && p.productId._id && p.productId._id.toString() === productOrderId
-      );
-
-      // If the above doesn't work, try this alternative:
-      // const productIndex = order.products.findIndex(p => p._id.toString() === productOrderId);
+      const productIndex = order.products.findIndex(p => p.productId && p.productId._id.toString() === productOrderId);
 
       if (productIndex === -1) {
-        return res.status(404).json({
-          success: false,
-          message: "Product not found in order"
-        });
+        return res.status(404).json({ success: false, message: "Product not found in order" });
       }
 
       const returnedProduct = order.products[productIndex];
 
       if (action === "approved") {
         returnedProduct.status = "Cancelled";
-        refundAmount = returnedProduct.price * returnedProduct.quantity; 
+        let refund = returnedProduct.price * returnedProduct.quantity;
+
+        if (coupon) {
+          if (discountType === "percentage") {
+            refund -= (refund * discountValue) / 100;
+          } else if (discountType === "fixed") {
+            const productShare = refund / order.totalAmount;
+            refund -= productShare * discountValue;
+          }
+        }
+
+        refundAmount = refund;
       } else {
         returnedProduct.status = "Cancel Rejected";
       }
 
-      // Check if all products are returned or rejected
       const allReturned = order.products.every(p => p.status === "Cancelled");
       const allRejected = order.products.every(p => p.status === "Cancel Rejected");
 
@@ -437,7 +448,7 @@ const setCancelAction = async(req, res) => {
         date: new Date(),
         amount: refundAmount,
         type: "credit", 
-        description: "Refund for cancelled order #" + order.orderId
+        description: `Refund for cancelled order #${order.orderId}`
       });
 
       await user.save();
@@ -448,13 +459,10 @@ const setCancelAction = async(req, res) => {
     res.json({ success: true, refundAmount });
 
   } catch (error) {
-    console.error("Error handling return action:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error"
-    });
+    console.error("Error handling cancel action:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
-}
+};
 
 
 

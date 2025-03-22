@@ -82,7 +82,7 @@
   document.querySelectorAll(".approve-return").forEach(button => {
     button.addEventListener("click", function () {
       const orderId = this.getAttribute("data-order-id");
-      const productId = this.getAttribute("data-product-id"); // ✅ Use productId
+      const productId = this.getAttribute("data-product-id"); 
       const isFullOrder = this.getAttribute("data-is-full-order") === "true";
 
       console.log("Approving return:", { orderId, productId, isFullOrder });
@@ -94,7 +94,7 @@
   document.querySelectorAll(".reject-return").forEach(button => {
     button.addEventListener("click", function () {
       const orderId = this.getAttribute("data-order-id");
-      const productId = this.getAttribute("data-product-id"); // ✅ Use productId
+      const productId = this.getAttribute("data-product-id"); 
       const isFullOrder = this.getAttribute("data-is-full-order") === "true";
 
       console.log("Rejecting return:", { orderId, productId, isFullOrder });
@@ -109,7 +109,7 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
         orderId, 
-        productId, // ✅ Send productId instead of productOrderId
+        productId, 
         action,
         isFullOrder 
       })

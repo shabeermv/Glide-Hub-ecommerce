@@ -4,13 +4,12 @@ const errorHandler = (err, req, res, next) => {
     const isAdmin = req.originalUrl.includes('/admin');
     let user = null;
     
-    // Get user from session if available
     if (req.session && req.session.userId) {
-        user = { id: req.session.userId }; // Basic user object
+        user = { id: req.session.userId }; 
     }
     
     try {
-        // Set status code based on error type
+        
         const statusCode = err.statusCode || 500;
         
         if (isAdmin) {
