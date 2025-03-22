@@ -846,7 +846,7 @@ const verifyRazorPay = async (req, res) => {
             });
         }
 
-        order.paymentStatus = "Completed";
+        order.paymentStatus = "completed";
         order.orderStatus = "Confirmed";
         order.razorpayPaymentId = razorpay_payment_id;
         order.isTemporary = false; // Remove temporary flag

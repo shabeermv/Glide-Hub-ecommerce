@@ -204,7 +204,7 @@ const filterCategoryList = async (req, res) => {
 
 const getFilterByDate = async (req, res) => {
     try {
-        console.log("Filter by date request parameters:", req.query);
+        // console.log("Filter by date request parameters:", req.query);
 
         const { filter, startDate, endDate } = req.query;
         let start, end;
@@ -243,7 +243,7 @@ const getFilterByDate = async (req, res) => {
                 return res.status(400).json({ success: false, message: "Invalid filter type" });
         }
 
-        console.log(`Filtering orders from ${start.toISOString()} to ${end.toISOString()}`);
+        // console.log(`Filtering orders from ${start.toISOString()} to ${end.toISOString()}`);
 
         const query = {
             orderStatus: { $in: ["Delivered"] },
@@ -256,7 +256,7 @@ const getFilterByDate = async (req, res) => {
             .sort({ createdAt: -1 })
             .lean(); 
 
-        console.log(`Found ${orders.length} orders in the date range`);
+        // console.log(`Found ${orders.length} orders in the date range`);
 
         let totalAmount = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
 

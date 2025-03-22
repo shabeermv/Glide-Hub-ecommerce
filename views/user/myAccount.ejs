@@ -61,15 +61,19 @@
                                             <div class="card-body">
                                                 <h5 class="card-title">User Details</h5>
                                         
+                                                <!-- Error message container -->
+                                                <div id="errorMessages" class="text-danger mb-3"></div>
+                                        
                                                 <p class="card-text"><strong>Full Name:</strong> 
                                                     <span id="fullName"><%= user.username %></span>
                                                     <input type="text" id="editFullName" class="form-control d-none" value="<%= user.username %>">
                                                 </p>
+                                                
                                                 <p class="card-text"><strong>Email:</strong> 
                                                     <span id="email"><%= user.email %></span>
                                                     <input type="email" id="editEmail" class="form-control d-none" value="<%= user.email %>" readonly>
                                                 </p>
-                                                
+                                        
                                                 <p class="card-text"><strong>Mobile Number:</strong> 
                                                     <span id="mobileNumber"><%= user.contact %></span>
                                                     <input type="text" id="editMobileNumber" class="form-control d-none" value="<%= user.contact %>">
@@ -79,6 +83,7 @@
                                                 <button class="btn btn-success mt-2 d-none" id="saveButton" onclick="saveChanges()">Save</button>
                                             </div>
                                         </div>
+                                        
                                     
                                         <!-- Referral code section -->
                                         <div class="mt-4">
@@ -538,6 +543,11 @@
             .modal-lg {
                 max-width: 800px;
             }
+            #errorMessages, #errorMessages p {
+    color: red !important;
+    font-weight: bold;
+}
+
         </style>
 <!-- End .row -->
                                         
@@ -684,22 +694,54 @@ function enableEdit() {
 }
 
 function saveChanges() {
-    const newFullName = document.getElementById("editFullName").value;
-    const newMobileNumber = document.getElementById("editMobileNumber").value;
+    const fullNameInput = document.getElementById("editFullName");
+    const mobileNumberInput = document.getElementById("editMobileNumber");
+    const errorMessagesDiv = document.getElementById("errorMessages");
 
+    const newFullName = fullNameInput.value.trim();
+    const newMobileNumber = mobileNumberInput.value.trim();
+
+    const nameRegex = /^[A-Za-z\s]+$/; // Only letters and spaces
+    const mobileRegex = /^[0-9]{10,}$/; // Only numbers, at least 10 digits
+
+    // Clear previous error messages
+    errorMessagesDiv.innerHTML = "";
+
+    let errors = [];
+
+    // Validation
+    if (!newFullName) {
+        errors.push("Full Name cannot be empty.");
+    } else if (!nameRegex.test(newFullName)) {
+        errors.push("Full Name can only contain letters and spaces.");
+    }
+
+    if (!newMobileNumber) {
+        errors.push("Mobile Number cannot be empty.");
+    } else if (!mobileRegex.test(newMobileNumber)) {
+        errors.push("Mobile Number must contain only numbers and be at least 10 digits.");
+    }
+
+    // If there are errors, display them and stop execution
+    if (errors.length > 0) {
+        errorMessagesDiv.innerHTML = errors.map(error => `<p>${error}</p>`).join("");
+        return;
+    }
+
+    // Update the UI
     document.getElementById("fullName").textContent = newFullName;
     document.getElementById("mobileNumber").textContent = newMobileNumber;
 
     document.getElementById("fullName").classList.remove("d-none");
     document.getElementById("mobileNumber").classList.remove("d-none");
 
-    document.getElementById("editFullName").classList.add("d-none");
-    document.getElementById("editMobileNumber").classList.add("d-none");
+    fullNameInput.classList.add("d-none");
+    mobileNumberInput.classList.add("d-none");
 
     document.getElementById("editButton").classList.remove("d-none");
     document.getElementById("saveButton").classList.add("d-none");
 
-    // Send updated data to the backend (excluding email)
+    // Send updated data to the backend
     fetch('/updateUserDetails', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -712,7 +754,6 @@ function saveChanges() {
     .then(data => console.log("User details updated:", data))
     .catch(error => console.error("Error updating user details:", error));
 }
-
 
  // Add event listeners to return buttons
 document.querySelectorAll('.return-order-btn').forEach(button => {
