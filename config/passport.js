@@ -6,13 +6,16 @@ const User = require('../models/userSchema');
 console.log(process.env.GOOGLE_CLIENT_ID,'blabal');
 console.log(process.env.GOOGLE_CLIENT_SECRET,'bla')
 
+let serverURL="https://shabeerali.online/auth/google/callback";
+let localURL='http://localhost:3000/auth/google/callback'
+
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
 clientSecret: process.env.GOOGLE_CLIENT_SECRET,
 
-      callbackURL: 'http://localhost:3000/auth/google/callback'
+      callbackURL: serverURL
         },
         async (req, accessToken, refreshToken, profile, done) => {
           try {
