@@ -1,4 +1,4 @@
-require('dotenv').config();
+
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth2').Strategy;
 const User = require('../models/userSchema');
@@ -6,13 +6,13 @@ const User = require('../models/userSchema');
 console.log(process.env.GOOGLE_CLIENT_ID,'blabal');
 console.log(process.env.GOOGLE_CLIENT_SECRET,'bla')
 
-let serverURL="https://shabeerali.online/auth/google/callback";
+let serverURL="http://shabeerali.online/auth/google/callback";
 let localURL='http://localhost:3000/auth/google/callback'
 
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientID:process.env.GOOGLE_CLIENT_ID,
 clientSecret: process.env.GOOGLE_CLIENT_SECRET,
 
       callbackURL: serverURL
