@@ -1,13 +1,15 @@
 const express=require('express')
 const userRouter=express.Router();
 const userController=require('../controllers/user/userController');
+const passport=require('../config/passport')
+const passportController=require('../controllers/user/passportController')
+
 const productController=require('../controllers/user/productControllers')
 const cartController=require('../controllers/user/cartController')
 const authMiddleware=require('../middleware/middlewares');
 const wishlistController=require('../controllers/user/wishlistController')
 const checkoutController=require('../controllers/user/checkoutController');
 const couponController = require('../controllers/admin/couponController')
-const passport=require('../config/passport')
 
 
 userRouter.get('/',userController.loadHome);
@@ -25,9 +27,11 @@ userRouter.post('/resetPassOtp',userController.postOtpForPasswordReset);
 userRouter.get('/resetPasswordByOtp',userController.resetPasswordForm);
 userRouter.patch('/resetPasswordByOtp',userController.postResetPasswordByOtp)
 userRouter.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}));
-userRouter.get('/auth/google/callback',passport.authenticate('google',{failureRedirect:'/signup'}),(req,res)=>{
-    res.redirect('/');
-});
+userRouter.get('/auth/google/callback', 
+    passport.authenticate('google', { failureRedirect: '/signup' }), 
+    passportController.successLogin
+);
+
 
 //product
 

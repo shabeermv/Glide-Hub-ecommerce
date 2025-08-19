@@ -1,62 +1,96 @@
-// app.js
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-const dotenv = require('dotenv').config();
 const userRouter = require('./routers/userRouter');
-const errorHandler=require('./middleware/errorHandler')
+const errorHandler = require('./middleware/errorHandler');
 const connectDb = require('./config/db');
+
 const adminRouter = require('./routers/adminRouter');
 const nocache = require('nocache');
-const passport = require('./config/passport');
-const methodOverride=require('method-override')
-const cors=require('cors');
 
+require('./config/passport');
+const passport = require('passport'); 
+const methodOverride = require('method-override');
+const cors = require('cors');
 
 connectDb();
 
 const app = express();
+
+// View engine setup
 app.set('view engine', 'ejs');
-app.set('views', [path.join(__dirname, 'views/user'), path.join(__dirname, 'views/admin')]);
+app.set('views', [
+  path.join(__dirname, 'views/user'), 
+  path.join(__dirname, 'views/admin')
+]);
 
+// Trust proxy (important for production)
+app.set('trust proxy', 1);
 
+// CORS setup (before other middleware)
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL 
+    : 'http://localhost:3000', // Changed: environment-based origin
+  credentials: true
+}));
+
+// Basic middleware
 app.use(nocache());
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(methodOverride('_method'));
+
+// Session configuration - improved for Google Auth
 app.use(
-    session({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 60 * 60 * 1000
-        },
-    })
+  session({
+    secret: process.env.SESSION_SECRET ,
+    resave: false,
+    saveUninitialized: false,
+    name: 'sessionId', // Added: custom session name for security
+    cookie: {
+      secure: process.env.NODE_ENV === 'production', // Changed: environment-based secure flag
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax' // Added: helps with OAuth redirects
+    }
+  })
 );
 
-
+// Passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(cors());
-app.use('/uploads',express.static(path.join(__dirname, 'uploads')));
 
+// Static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public/asset1')));
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-app.use('/', userRouter);
-app.use('/admin', adminRouter); 
-app.use(methodOverride('_method'))
-
-app.use(errorHandler);
-app.use((req, res) => {
-    res.status(404).render('404');
+// Global middleware for user data
+app.use((req, res, next) => {
+  res.locals.user = req.user || null;
+  res.locals.isAuthenticated = req.isAuthenticated(); // Added: helper for templates
+  
+  next();
 });
 
-const PORT = process.env.PORT || 3001;
+// Routes
+app.use('/', userRouter);
+app.use('/admin', adminRouter);
+
+// Error handling
+app.use(errorHandler);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).render('404');
+});
+
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running successfully on port ${PORT}`);
+  console.log(`Server running successfully on port ${PORT}`);
+  // console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 module.exports = app;
