@@ -188,44 +188,50 @@ const loadSignUp = async (req, res) => {
   }
 };
 
-// Generate 6-digit OTP
 function generateOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return Math.floor(100000 + Math.random() * 90000).toString();
 }
 
-// Send verification email with OTP
 async function sendVerificationEmail(email, otp) {
   try {
     const transporter = nodemailer.createTransport({
       service: "gmail",
+      port: 587,
+      secure: false,
+      requireTLS: true,
       auth: {
         user: process.env.NODEMAILER_EMAIL,
         pass: process.env.NODEMAILER_PASSWORD,
       },
+      debug: true,
     });
 
     console.log("Sending email from:", process.env.NODEMAILER_EMAIL);
     console.log("Sending email to:", email);
 
-    const info = await transporter.sendMail({
-      from: `"GlideHub" <${process.env.NODEMAILER_EMAIL}>`,
-      to: email,
-      subject: "Verify your account",
-      text: `Your OTP is ${otp}`,
-      html: `<b>Your OTP: ${otp}</b>`,
-    });
+    await transporter.sendMail(
+      {
+        from: process.env.NODEMAILER_EMAIL,
+        to: email,
+        subject: "verify your account",
+        text: `your otp is ${otp}`,
+        html: `<b>your otp : ${otp}</b>`,
+      },
+      (error, info) => {
+        console.log(error, info);
+      }
+    );
 
-    console.log("Email sent successfully. Message ID:", info.messageId);
     return true;
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error sending email", error);
     return false;
   }
 }
 
-// Signup controller
-const postSignUp = async (req, res, next) => {
-  const { email, userName, contact, password, referalCode } = req.body;
+const postSignUp = async (req, res) => {
+  const { email, userName, contact, password,referalCode } = req.body;
+  // console.log("Received data:", req.body);
 
   try {
     const findUser = await User.findOne({ email });
@@ -233,7 +239,6 @@ const postSignUp = async (req, res, next) => {
       return res.json({ success: false, message: "User already exists" });
     }
 
-    // Generate OTP and send email
     const otp = generateOtp();
     const emailSent = await sendVerificationEmail(email, otp);
     if (!emailSent) {
@@ -242,26 +247,25 @@ const postSignUp = async (req, res, next) => {
 
     console.log("Generated OTP:", otp);
     req.session.userOtp = otp;
+    // console.log(password,"fkajkfsjkdjfaskdf");
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+    // console.log("Hashed password:", hashedPassword);
 
-    // Store signup data temporarily in session
     req.session.user = {
       email: email.toLowerCase(),
       userName,
       contact,
       password: hashedPassword,
-      referalCode,
+      referalCode
     };
 
     return res.json({ success: true });
   } catch (error) {
     console.error("Signup error:", error);
-    next(error);
-  }
+    next(error)
+    }
 };
-
 
 const loadOtp = async (req, res) => {
   try {
