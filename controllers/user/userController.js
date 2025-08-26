@@ -196,35 +196,24 @@ async function sendVerificationEmail(email, otp) {
   try {
     const transporter = nodemailer.createTransport({
       service: "gmail",
-      port: 587,
-      secure: false,
-      requireTLS: true,
       auth: {
         user: process.env.NODEMAILER_EMAIL,
         pass: process.env.NODEMAILER_PASSWORD,
       },
-      debug: true,
     });
 
-    console.log("Sending email from:", process.env.NODEMAILER_EMAIL);
-    console.log("Sending email to:", email);
+    const info = await transporter.sendMail({
+      from: `"GlideHub" <${process.env.NODEMAILER_EMAIL}>`,
+      to: email,
+      subject: "Verify your account",
+      text: `Your OTP is ${otp}`,
+      html: `<b>Your OTP: ${otp}</b>`,
+    });
 
-    await transporter.sendMail(
-      {
-        from: process.env.NODEMAILER_EMAIL,
-        to: email,
-        subject: "verify your account",
-        text: `your otp is ${otp}`,
-        html: `<b>your otp : ${otp}</b>`,
-      },
-      (error, info) => {
-        console.log(error, info);
-      }
-    );
-
+    console.log("✅ Email sent:", info.response);
     return true;
   } catch (error) {
-    console.error("Error sending email", error);
+    console.error("❌ Error sending email:", error.message);
     return false;
   }
 }
