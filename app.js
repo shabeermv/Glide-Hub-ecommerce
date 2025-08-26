@@ -87,7 +87,7 @@ app.use((req, res) => {
   res.status(404).render('404');
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running successfully on port ${PORT}`);
   // console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
