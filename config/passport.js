@@ -6,7 +6,7 @@ const User = require('../models/userSchema');
 console.log(process.env.GOOGLE_CLIENT_ID,'blabal');
 console.log(process.env.GOOGLE_CLIENT_SECRET,'bla')
 
-let serverURL="http://shabeerali.online/auth/google/callback";
+let serverURL="https://shabeerali.online/auth/google/callback";
 let localURL='http://localhost:3000/auth/google/callback'
 
 passport.use(
