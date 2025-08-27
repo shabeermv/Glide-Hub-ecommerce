@@ -184,7 +184,7 @@ const loadSignUp = async (req, res) => {
     res.render("userSignUp");
   } catch (error) {
     console.log("Facing error on signup page", error.message);
-    return res.json({message:'interal server error'})
+    return res.json({message:'internal server error'})
   }
 };
 
@@ -210,17 +210,17 @@ async function sendVerificationEmail(email, otp) {
       html: `<b>Your OTP: ${otp}</b>`,
     });
 
-    console.log("✅ Email sent:", info.response);
+    console.log("Email sent:", info.response);
     return true;
   } catch (error) {
-    console.error("❌ Error sending email:", error.message);
+    console.error("Error sending email:", error.message);
     return false;
   }
 }
 
 const postSignUp = async (req, res) => {
   const { email, userName, contact, password,referalCode } = req.body;
-  // console.log("Received data:", req.body);
+ 
 
   try {
     const findUser = await User.findOne({ email });
