@@ -32,6 +32,10 @@ const categorySchema = new mongoose.Schema({
     appliedOffer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'ProductOffer'
+    },
+    products:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:'Product'
     }
 });
 
