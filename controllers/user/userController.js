@@ -1,18 +1,16 @@
 const User = require("../../models/userSchema");
 const bcrypt = require("bcryptjs");
-const crypto = require("crypto"); 
+const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const env = require("dotenv").config();
 const Cart = require("../../models/cartSchema");
 const Wishlist = require("../../models/wishlistSchema");
 const Category = require("../../models/categorySchema");
-const ProductOffer = require('../../models/productOffer');
-const CategoryOffer = require('../../models/categoryOffer')
+const ProductOffer = require("../../models/productOffer");
+const CategoryOffer = require("../../models/categoryOffer");
 const Product = require("../../models/productSchema");
 const Order = require("../../models/orderSchema");
-const Coupon = require('../../models/couponSchema')
-
-
+const Coupon = require("../../models/couponSchema");
 
 const loadHome = async (req, res) => {
   try {
@@ -25,31 +23,35 @@ const loadHome = async (req, res) => {
     let user = null;
 
     if (userId) {
-      user = await User.findById(userId); 
+      user = await User.findById(userId);
     }
-    
-    const categoryIds = [...new Set(products.map((p) => p.category?._id?.toString()).filter(Boolean))];
+
+    const categoryIds = [
+      ...new Set(
+        products.map((p) => p.category?._id?.toString()).filter(Boolean)
+      ),
+    ];
     const productIds = products.map((p) => p._id);
-    
+
     const categoryOffers = await CategoryOffer.find({
       categoryId: { $in: categoryIds },
       startDate: { $lte: new Date() },
-      endDate: { $gte: new Date() }
+      endDate: { $gte: new Date() },
     }).lean();
 
     const productOffers = await ProductOffer.find({
       productId: { $in: productIds },
       startDate: { $lte: new Date() },
-      endDate: { $gte: new Date() }
+      endDate: { $gte: new Date() },
     }).lean();
 
     const updatedProducts = products.map((product) => {
       const plainProduct = product.toObject ? product.toObject() : product;
-      
+
       let discountedPrice = plainProduct.price;
       let appliedOffer = null;
       let offerType = null;
-    
+
       if (!plainProduct._id) {
         return {
           ...plainProduct,
@@ -58,40 +60,43 @@ const loadHome = async (req, res) => {
           discountedPrice: plainProduct.price,
           hasDiscount: false,
           appliedOffer: null,
-          offerType: null
+          offerType: null,
         };
       }
-    
+
       const productOffer = productOffers.find(
         (offer) => offer.productId.toString() === plainProduct._id.toString()
       );
-    
+
       let categoryOffer = null;
       if (plainProduct.category && plainProduct.category._id) {
         categoryOffer = categoryOffers.find(
-          (offer) => offer.categoryId.toString() === plainProduct.category._id.toString()
+          (offer) =>
+            offer.categoryId.toString() === plainProduct.category._id.toString()
         );
       }
-    
+
       let productDiscountAmount = 0;
       let categoryDiscountAmount = 0;
-    
+
       if (productOffer) {
         if (productOffer.discountType === "percentage") {
-          productDiscountAmount = (plainProduct.price * productOffer.discountValue) / 100;
+          productDiscountAmount =
+            (plainProduct.price * productOffer.discountValue) / 100;
         } else if (productOffer.discountType === "fixed") {
           productDiscountAmount = productOffer.discountValue;
         }
       }
-    
+
       if (categoryOffer) {
         if (categoryOffer.discountType === "percentage") {
-          categoryDiscountAmount = (plainProduct.price * categoryOffer.discountValue) / 100;
+          categoryDiscountAmount =
+            (plainProduct.price * categoryOffer.discountValue) / 100;
         } else if (categoryOffer.discountType === "fixed") {
           categoryDiscountAmount = categoryOffer.discountValue;
         }
       }
-    
+
       if (productDiscountAmount > 0 || categoryDiscountAmount > 0) {
         if (productDiscountAmount >= categoryDiscountAmount) {
           discountedPrice = plainProduct.price - productDiscountAmount;
@@ -99,7 +104,7 @@ const loadHome = async (req, res) => {
             discountType: productOffer.discountType,
             discountValue: productOffer.discountValue,
             discountAmount: productDiscountAmount,
-            description: productOffer.description
+            description: productOffer.description,
           };
           offerType = "product";
         } else {
@@ -108,33 +113,36 @@ const loadHome = async (req, res) => {
             discountType: categoryOffer.discountType,
             discountValue: categoryOffer.discountValue,
             discountAmount: categoryDiscountAmount,
-            description: categoryOffer.description || `${plainProduct.category.name} Category Offer`
+            description:
+              categoryOffer.description ||
+              `${plainProduct.category.name} Category Offer`,
           };
           offerType = "category";
         }
-    
+
         if (discountedPrice < 1) discountedPrice = 1;
       }
-      
+
       return {
         ...plainProduct,
         originalPrice: plainProduct.price,
         discountedPrice: discountedPrice,
         hasDiscount: !!appliedOffer,
         appliedOffer: appliedOffer,
-        offerType: offerType
+        offerType: offerType,
       };
     });
-    
-    
-    res.render("home", { category, updatedProducts: updatedProducts.slice(0, 4), user });
+
+    res.render("home", {
+      category,
+      updatedProducts: updatedProducts.slice(0, 4),
+      user,
+    });
   } catch (error) {
     console.log("Home page not found", error);
-    return res.json({message:'interal server error'})
+    return res.json({ message: "interal server error" });
   }
 };
-
-
 
 const loadLogin = async (req, res) => {
   try {
@@ -144,7 +152,7 @@ const loadLogin = async (req, res) => {
       res.render("userLogin");
     }
   } catch (error) {
-    return res.json({message:'interal server error'})
+    return res.json({ message: "interal server error" });
   }
 };
 
@@ -160,8 +168,8 @@ const postLogin = async (req, res) => {
     if (findUser.isBlocked) {
       return res.json({ success: false, message: "Your account is blocked" });
     }
-    if(findUser.isAdmin){
-      return res.json({success:false,message:'you are admin'})
+    if (findUser.isAdmin) {
+      return res.json({ success: false, message: "you are admin" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, findUser.password);
@@ -175,7 +183,7 @@ const postLogin = async (req, res) => {
     res.json({ success: true, message: "Login successful" });
   } catch (error) {
     console.error("Login error:", error);
-    return res.json({message:'interal server error'})
+    return res.json({ message: "interal server error" });
   }
 };
 
@@ -184,7 +192,7 @@ const loadSignUp = async (req, res) => {
     res.render("userSignUp");
   } catch (error) {
     console.log("Facing error on signup page", error.message);
-    return res.json({message:'internal server error'})
+    return res.json({ message: "internal server error" });
   }
 };
 
@@ -219,8 +227,7 @@ async function sendVerificationEmail(email, otp) {
 }
 
 const postSignUp = async (req, res) => {
-  const { email, userName, contact, password,referalCode } = req.body;
- 
+  const { email, userName, contact, password, referalCode } = req.body;
 
   try {
     const findUser = await User.findOne({ email });
@@ -246,14 +253,14 @@ const postSignUp = async (req, res) => {
       userName,
       contact,
       password: hashedPassword,
-      referalCode
+      referalCode,
     };
 
     return res.json({ success: true });
   } catch (error) {
     console.error("Signup error:", error);
-    next(error)
-    }
+    next(error);
+  }
 };
 
 const loadOtp = async (req, res) => {
@@ -261,15 +268,15 @@ const loadOtp = async (req, res) => {
     res.render("otp");
   } catch (error) {
     console.error("Error sharing OTP page", error);
-    next(error)
+    next(error);
   }
 };
-
 
 const postOtp = async (req, res, next) => {
   try {
     const { fillOtp } = req.body;
-    const { email, userName, password, contact, referalCode } = req.session.user;
+    const { email, userName, password, contact, referalCode } =
+      req.session.user;
 
     console.log("Received OTP:", fillOtp);
     console.log("Expected OTP:", req.session.userOtp);
@@ -280,9 +287,9 @@ const postOtp = async (req, res, next) => {
 
     let newReferralCode;
     let isUnique = false;
-    
+
     while (!isUnique) {
-      newReferralCode = crypto.randomBytes(4).toString("hex").toUpperCase(); 
+      newReferralCode = crypto.randomBytes(4).toString("hex").toUpperCase();
       const existingUser = await User.findOne({ referalCode: newReferralCode });
       if (!existingUser) isUnique = true;
     }
@@ -291,28 +298,30 @@ const postOtp = async (req, res, next) => {
       const referrer = await User.findOne({ referalCode: referalCode });
       if (referrer) {
         referrer.wallet += 100;
-        
-        
+
         referrer.walletHistory.push({
           date: new Date(),
-          amount: 100
+          amount: 100,
         });
-        
-        
+
         await referrer.save();
-        console.log('Referrer rewarded:', referrer.email, 'New wallet balance:', referrer.wallet);
+        console.log(
+          "Referrer rewarded:",
+          referrer.email,
+          "New wallet balance:",
+          referrer.wallet
+        );
       } else {
-        console.log('Invalid referral code used:', referalCode);
+        console.log("Invalid referral code used:", referalCode);
       }
     }
 
-    
     const newUser = new User({
       email,
       username: userName,
       contact,
       password,
-      referalCode: newReferralCode, 
+      referalCode: newReferralCode,
     });
 
     const user = await newUser.save();
@@ -325,7 +334,7 @@ const postOtp = async (req, res, next) => {
     return res.json({
       success: true,
       message: "OTP verified and user created successfully",
-      referralCode: user.referalCode, 
+      referralCode: user.referalCode,
     });
   } catch (error) {
     console.error("Error verifying OTP:", error);
@@ -366,7 +375,7 @@ const resendOtp = async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error("Error in resending OTP:", err);
-    next(error)
+    next(error);
   }
 };
 
@@ -375,7 +384,7 @@ const forgetPass = async (req, res) => {
     res.render("forgetPass");
   } catch (error) {
     console.log(error.message);
-    next(error)
+    next(error);
   }
 };
 
@@ -405,17 +414,15 @@ const postForgetEmail = async (req, res) => {
 
     req.session.userEmail = email.toLowerCase();
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "OTP sent to your email",
-        showOtpModal: true,
-      });
+    res.status(200).json({
+      success: true,
+      message: "OTP sent to your email",
+      showOtpModal: true,
+    });
   } catch (error) {
     console.error("Error in password reset OTP request:", error);
-    next(error)
-    }
+    next(error);
+  }
 };
 
 const postOtpForPasswordReset = async (req, res) => {
@@ -436,17 +443,15 @@ const postOtpForPasswordReset = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "OTP verified successfully, now you can reset your password",
-      });
+    res.status(200).json({
+      success: true,
+      message: "OTP verified successfully, now you can reset your password",
+    });
 
     delete req.session.userOtp;
   } catch (error) {
     console.error("Error resetting password:", error);
-    next(error)
+    next(error);
   }
 };
 
@@ -455,7 +460,7 @@ const resetPasswordForm = async (req, res) => {
     res.render("resetPassword");
   } catch (error) {
     console.log(error.message);
-    next(error)
+    next(error);
   }
 };
 const postResetPasswordByOtp = async (req, res) => {
@@ -489,7 +494,7 @@ const postResetPasswordByOtp = async (req, res) => {
       .json({ success: true, message: "Password reset successful" });
   } catch (error) {
     console.error("Error resetting password:", error);
-    next(error)
+    next(error);
   }
 };
 
@@ -499,93 +504,98 @@ const userProfileInfo = async (req, res) => {
   try {
     const userId = req.session.userId;
     const user = await User.findById(userId);
-    
+
     if (!user) {
       return res.redirect("/login");
     }
 
     const orders = await Order.find({ userId: userId })
       .populate({
-        path: 'products.productId',
-        select: 'title price' 
+        path: "products.productId",
+        select: "title price",
       })
       .sort({ createdAt: -1 });
 
-    orders.forEach(order => {
-      const confirmedProducts = order.products.filter(product => product.status !== "Cancelled");
+    orders.forEach((order) => {
+      const confirmedProducts = order.products.filter(
+        (product) => product.status !== "Cancelled"
+      );
       order.totalAmount = confirmedProducts.reduce((sum, product) => {
-        return sum + (product.productId.price * product.quantity);
+        return sum + product.productId.price * product.quantity;
       }, 0);
     });
 
     const coupons = await Coupon.find({
-      expireDate: { $gte: new Date() } // Only show active coupons
-    }).sort({ expireDate: 1 }); // Sort by soonest expiry first
+      expireDate: { $gte: new Date() },
+    }).sort({ expireDate: 1 });
 
-    res.render("myAccount", { 
-      user, 
-      orders, 
-      referralCode: user.referalCode, 
-      coupons // 
+    res.render("myAccount", {
+      user,
+      orders,
+      referralCode: user.referalCode,
+      coupons,
     });
-
   } catch (error) {
-    console.error('Error in userProfileInfo:', error);
-    return res.json({ message: 'Internal server error' });
+    console.error("Error in userProfileInfo:", error);
+    return res.json({ message: "Internal server error" });
   }
 };
 const updateUserDetails = async (req, res) => {
   try {
-      const userId = req.session.userId; 
+    const userId = req.session.userId;
 
-      if (!userId) {
-          return res.status(401).json({ success: false, message: "Unauthorized" });
-      }
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
 
-      const { fullName, mobileNumber } = req.body;
+    const { fullName, mobileNumber } = req.body;
 
-      const updatedUser = await User.findByIdAndUpdate(
-          userId,
-          { username: fullName, contact: mobileNumber },
-          { new: true }
-      );
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { username: fullName, contact: mobileNumber },
+      { new: true }
+    );
 
-      if (!updatedUser) {
-          return res.status(404).json({ success: false, message: "User not found" });
-      }
+    if (!updatedUser) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
 
-      res.json({ 
-          success: true, 
-          message: "User details updated successfully", 
-          user: {
-              fullName: updatedUser.username,
-              mobileNumber: updatedUser.contact
-          }
-      });
-
+    res.json({
+      success: true,
+      message: "User details updated successfully",
+      user: {
+        fullName: updatedUser.username,
+        mobileNumber: updatedUser.contact,
+      },
+    });
   } catch (error) {
-      console.error("Error updating user details:", error);
-      res.status(500).json({ success: false, message: "Internal server error" });
+    console.error("Error updating user details:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
-
 const addAccountDetails = async (req, res, next) => {
   try {
-    console.log("📥 Received Request to Add Address"); // Debugging
-    console.log("📝 Request Body:", req.body); // Debugging
+    console.log("📥 Received Request to Add Address");
+    console.log("📝 Request Body:", req.body);
 
     const { fullName, address, city, state, postCode, country } = req.body;
 
     if (!fullName || !address || !city || !state || !postCode || !country) {
-      console.warn("⚠️ Missing Fields:", req.body); // Debugging
-      return res.status(400).json({ success: false, message: "All fields are required." });
+      console.warn("⚠️ Missing Fields:", req.body);
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required." });
     }
 
     const user = await User.findById(req.session.userId);
     if (!user) {
-      console.warn("⚠️ User Not Found:", req.session.userId); // Debugging
-      return res.status(404).json({ success: false, message: "User not found." });
+      console.warn("⚠️ User Not Found:", req.session.userId);
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
     }
 
     if (!Array.isArray(user.address)) {
@@ -598,22 +608,17 @@ const addAccountDetails = async (req, res, next) => {
     console.log("Address Added Successfully for User:", user._id);
 
     return res.json({ success: true, message: "Address added successfully!" });
-
   } catch (error) {
     console.error("Error Adding Address:", error);
     next(error);
   }
 };
 
-
-
-
 const editProfileInfo = async (req, res) => {
   let user = null;
-              if (req.session.userId) {
-                user = await User.findById(req.session.userId);
-              }
-    
+  if (req.session.userId) {
+    user = await User.findById(req.session.userId);
+  }
 
   res.render("editProfile", { user });
 };
@@ -621,7 +626,7 @@ const editProfileInfo = async (req, res) => {
 const editProfile = async (req, res) => {
   const { fullName, address, city, state, postCode, country } = req.body;
 
-  console.log('all details achived here:',req.body);
+  console.log("all details achived here:", req.body);
   const userId = req.session.userId;
 
   if (!userId) {
@@ -656,7 +661,7 @@ const editProfile = async (req, res) => {
       .json({ success: true, message: "User details updated successfully" });
   } catch (error) {
     console.error("Error updating user:", error);
-    next(error)
+    next(error);
   }
 };
 const deleteAddress = async (req, res) => {
@@ -688,15 +693,18 @@ const deleteAddress = async (req, res) => {
     return res.json({ success: true, message: "Address deleted successfully" });
   } catch (error) {
     console.error("Error deleting address:", error);
-    return res.status(500).json({success:false,message:"internal server error"})
-    }
+    return res
+      .status(500)
+      .json({ success: false, message: "internal server error" });
+  }
 };
 
 const resetLoginedPasswrod = async (req, res) => {
   try {
-    res.render('resetNewPassword');
+    res.render("resetNewPassword");
   } catch (error) {
-    next(error)  }
+    next(error);
+  }
 };
 const postResetPassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body;
@@ -731,7 +739,7 @@ const postResetPassword = async (req, res) => {
   } catch (error) {
     console.log("internal server error....", error);
 
-    next(error)
+    next(error);
   }
 };
 
@@ -741,54 +749,52 @@ const blogInfo = async (req, res) => {
 
 const contactInfo = async (req, res) => {
   let user = null;
-            if (req.session.userId) {
-              user = await User.findById(req.session.userId);
-            }
-  
-  res.render("contact",{user});
+  if (req.session.userId) {
+    user = await User.findById(req.session.userId);
+  }
+
+  res.render("contact", { user });
 };
-const sendMessage = async(req,res)=>{
+const sendMessage = async (req, res) => {
   const { email, message } = req.body;
 
-    if (!email || !message) {
-        return res.status(400).json({ message: "All fields are required" });
-    }
+  if (!email || !message) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
 
-    try {
-        let transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-              user: process.env.NODEMAILER_EMAIL,
-              pass: process.env.NODEMAILER_PASSWORD,
-            }
-        });
+  try {
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.NODEMAILER_EMAIL,
+        pass: process.env.NODEMAILER_PASSWORD,
+      },
+    });
 
-        let mailOptions = {
-            from: email,
-            to: "glidehub.sales@gmail.com",
-            subject: "New Contact Form Submission",
-            text: `You have a new message from: ${email}\n\nMessage: ${message}`
-        };
+    let mailOptions = {
+      from: email,
+      to: "glidehub.sales@gmail.com",
+      subject: "New Contact Form Submission",
+      text: `You have a new message from: ${email}\n\nMessage: ${message}`,
+    };
 
-        await transporter.sendMail(mailOptions);
-        res.json({ message: "Email sent successfully!" });
-
-    } catch (error) {
-        console.error(error);
-        next(error)
-    }
-
-}
+    await transporter.sendMail(mailOptions);
+    res.json({ message: "Email sent successfully!" });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
 
 const aboutInfo = async (req, res) => {
   let user = null;
-            if (req.session.userId) {
-              user = await User.findById(req.session.userId);
-            }
-  
+  if (req.session.userId) {
+    user = await User.findById(req.session.userId);
+  }
+
   const categories = await Category.find({});
   const products = await Product.find({});
-  res.render("about",{categories,products,user});
+  res.render("about", { categories, products, user });
 };
 
 module.exports = {

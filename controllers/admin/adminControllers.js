@@ -243,7 +243,6 @@ const getFilterByDate = async (req, res) => {
                 return res.status(400).json({ success: false, message: "Invalid filter type" });
         }
 
-        // console.log(`Filtering orders from ${start.toISOString()} to ${end.toISOString()}`);
 
         const query = {
             orderStatus: { $in: ["Delivered"] },
@@ -256,7 +255,6 @@ const getFilterByDate = async (req, res) => {
             .sort({ createdAt: -1 })
             .lean(); 
 
-        // console.log(`Found ${orders.length} orders in the date range`);
 
         let totalAmount = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
 

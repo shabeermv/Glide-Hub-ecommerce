@@ -8,9 +8,9 @@ const cartPageInfo = async (req, res, next) => {
   try {
     const userId = req.session.userId;
     let user = null;
-          if (req.session.userId) {
-            user = await User.findById(req.session.userId);
-          }
+    if (req.session.userId) {
+      user = await User.findById(req.session.userId);
+    }
 
     const cartData = await Cart.findOne({ userId }).populate(
       "product.productId"
@@ -20,7 +20,7 @@ const cartPageInfo = async (req, res, next) => {
       cartData.product = cartData.product.filter(
         (item) => item.productId !== null
       );
-     
+
       const currentDate = new Date();
 
       for (const item of cartData.product) {
@@ -90,11 +90,11 @@ const cartPageInfo = async (req, res, next) => {
       await cartData.save();
     }
 
-    res.render("userCart", { cart: cartData,user });
+    res.render("userCart", { cart: cartData, user });
   } catch (error) {
-    console.log('this is the internal server error');
-    return res.status(500).json({message:'internal server errror'})
-    }
+    console.log("this is the internal server error");
+    return res.status(500).json({ message: "internal server errror" });
+  }
 };
 
 const addProductCart = async (req, res) => {
@@ -147,7 +147,7 @@ const addProductCart = async (req, res) => {
     }
 
     const existingProduct = cart.product.find(
-      (p) => p.productId.toString() === productId.toString() && p.size === size 
+      (p) => p.productId.toString() === productId.toString() && p.size === size
     );
 
     if (existingProduct) {
@@ -164,14 +164,13 @@ const addProductCart = async (req, res) => {
     } else {
       cart.product.push({
         productId,
-        size: size, 
+        size: size,
         quantity,
         price: product.price,
         totalPrice: product.price * quantity,
       });
     }
 
-    
     await product.save();
 
     cart.totalPrice = cart.product.reduce(
@@ -195,7 +194,7 @@ const addProductCart = async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding product to cart:", error);
-    next(error)
+    next(error);
   }
 };
 
@@ -301,7 +300,7 @@ const updateProductQuantity = async (req, res) => {
         message: "Product not found",
       });
     }
-    
+
     const sizeIndex = product.sizes.findIndex((s) => s.size === size);
     if (sizeIndex === -1) {
       return res.status(400).json({
@@ -309,11 +308,11 @@ const updateProductQuantity = async (req, res) => {
         message: `Size ${size} not available for this product`,
       });
     }
-    
+
     const availableStock = product.sizes[sizeIndex].stock;
     let updatedQuantity = cartItem.quantity;
     let stockWarning = null;
-    
+
     if (action === "increase") {
       if (updatedQuantity >= availableStock) {
         stockWarning = `Only ${availableStock} items available in size ${size}`;
@@ -354,7 +353,7 @@ const updateProductQuantity = async (req, res) => {
     });
   } catch (error) {
     console.error("Update quantity error:", error);
-    next(error)
+    next(error);
   }
 };
 
@@ -411,7 +410,7 @@ const deleteProductCart = async (req, res) => {
     });
   } catch (error) {
     console.error(error.message, "internal server error....");
-    next(error)
+    next(error);
   }
 };
 
