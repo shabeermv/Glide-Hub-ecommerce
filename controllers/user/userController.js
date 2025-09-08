@@ -202,15 +202,15 @@ function generateOtp() {
 
 async function sendVerificationEmail(email, otp) {
   try {
-    const transporter = nodemailer.createTransTransport({
+    const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.NODEMAILER_EMAIL,
-        pass: process.env.NODEMAILER_PASSWORD,
+        user: process.env.NODEMAILER_EMAIL, 
+        pass: process.env.NODEMAILER_PASSWORD, 
       },
     });
 
-    // Test the connection first
+    console.log("Testing SMTP connection...");
     await transporter.verify();
     console.log("SMTP connection verified");
 
@@ -222,13 +222,16 @@ async function sendVerificationEmail(email, otp) {
       html: `<b>Your OTP: ${otp}</b>`,
     });
 
-    console.log("Email sent successfully:", info.messageId);
+    console.log("✅ Email sent successfully:", info.messageId);
     return true;
   } catch (error) {
-    console.error("Detailed email error:", error);
-    // Log more specific error details
+    console.error("❌ Detailed email error:", error);
+    
+    
     if (error.code) console.error("Error code:", error.code);
     if (error.response) console.error("Error response:", error.response);
+    if (error.command) console.error("Failed command:", error.command);
+    
     return false;
   }
 }
