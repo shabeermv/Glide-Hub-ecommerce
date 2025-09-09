@@ -192,86 +192,134 @@ const loadSignUp = async (req, res) => {
     res.render("userSignUp");
   } catch (error) {
     console.log("Facing error on signup page", error.message);
-    return res.json({ message: "internal server error" });
+    return res.status(500).json({ message: "internal server error" });
   }
 };
 
 function generateOtp() {
-  return Math.floor(100000 + Math.random() * 90000).toString();
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
+
+// Create transporter outside the function for better performance
+const createTransporter = () => {
+  return nodemailer.createTransporter({
+    service: 'gmail', // Use service instead of manual config
+    auth: {
+      user: process.env.NODEMAILER_EMAIL,
+      pass: process.env.NODEMAILER_PASSWORD,
+    },
+  });
+};
 
 async function sendVerificationEmail(email, otp) {
   try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.NODEMAILER_EMAIL, 
-        pass: process.env.NODEMAILER_PASSWORD, 
-      },
-    });
+    const transporter = createTransporter();
 
+    // Test connection first
     console.log("Testing SMTP connection...");
     await transporter.verify();
-    console.log("SMTP connection verified");
+    console.log("SMTP connection verified successfully");
 
-    const info = await transporter.sendMail({
+    const mailOptions = {
       from: `"GlideHub" <${process.env.NODEMAILER_EMAIL}>`,
       to: email,
-      subject: "Verify your account",
-      text: `Your OTP is ${otp}`,
-      html: `<b>Your OTP: ${otp}</b>`,
-    });
+      subject: "Verify your GlideHub account",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Account Verification</h2>
+          <p>Welcome to GlideHub! Please use the following OTP to verify your account:</p>
+          <div style="background-color: #f4f4f4; padding: 20px; text-align: center; margin: 20px 0;">
+            <h1 style="color: #007bff; margin: 0; font-size: 32px; letter-spacing: 5px;">${otp}</h1>
+          </div>
+          <p>This OTP will expire in 10 minutes.</p>
+          <p>If you didn't request this, please ignore this email.</p>
+        </div>
+      `,
+    };
 
-    console.log("✅ Email sent successfully:", info.messageId);
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully:", info.messageId);
     return true;
   } catch (error) {
-    console.error("❌ Detailed email error:", error);
+    console.error("Email sending error:", error);
     
-    
-    if (error.code) console.error("Error code:", error.code);
-    if (error.response) console.error("Error response:", error.response);
-    if (error.command) console.error("Failed command:", error.command);
+    // More detailed error logging
+    if (error.code === 'EAUTH') {
+      console.error("Authentication failed. Check your email and app password.");
+    } else if (error.code === 'ENOTFOUND') {
+      console.error("SMTP server not found. Check your internet connection.");
+    } else if (error.code === 'ETIMEDOUT') {
+      console.error("Connection timed out. Try again later.");
+    }
     
     return false;
   }
 }
 
 const postSignUp = async (req, res) => {
-  const { email, userName, contact, password, referalCode } = req.body;
-
   try {
-    const findUser = await User.findOne({ email });
-    if (findUser) {
-      return res.json({ success: false, message: "User already exists" });
+    const { email, userName, contact, password, referalCode } = req.body;
+    console.log("Signup attempt for email:", email);
+
+    // Validate input
+    if (!email || !userName || !contact || !password) {
+      return res.json({ 
+        success: false, 
+        message: "All fields are required" 
+      });
     }
 
+    // Check if user already exists
+    const findUser = await User.findOne({ email: email.toLowerCase() });
+    if (findUser) {
+      return res.json({ 
+        success: false, 
+        message: "User already exists with this email" 
+      });
+    }
+
+    // Generate OTP
     const otp = generateOtp();
+    console.log("Generated OTP:", otp);
+
+    // Send verification email
     const emailSent = await sendVerificationEmail(email, otp);
     if (!emailSent) {
-      return res.json({ success: false, message: "Email not sent" });
+      return res.json({ 
+        success: false, 
+        message: "Failed to send verification email. Please try again." 
+      });
     }
 
-    console.log("Generated OTP:", otp);
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Store data in session with expiry
     req.session.userOtp = otp;
-    // console.log(password,"fkajkfsjkdjfaskdf");
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    // console.log("Hashed password:", hashedPassword);
-
-    req.session.user = {
+    req.session.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+    req.session.userData = {
       email: email.toLowerCase(),
       userName,
       contact,
       password: hashedPassword,
-      referalCode,
+      referalCode: referalCode || null,
     };
 
-    return res.json({ success: true });
+    console.log("OTP sent successfully, redirecting to verification page");
+    return res.json({ 
+      success: true, 
+      message: "OTP sent successfully. Please check your email." 
+    });
+
   } catch (error) {
     console.error("Signup error:", error);
-    next(error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error. Please try again." 
+    });
   }
 };
+
 
 const loadOtp = async (req, res) => {
   try {
