@@ -146,15 +146,142 @@ const loadHome = async (req, res) => {
 
 const loadLogin = async (req, res) => {
   try {
-    if (req.session.user) {
-      res.render("home");
+    if (req.session.userId) {
+      // 🔹 same as loadHome
+      const userId = req.session.userId;
+      const products = await Product.find();
+      const category = await Category.find();
+      const productOffer = await ProductOffer.find();
+      const categoryOffer = await CategoryOffer.find();
+
+      let user = null;
+      if (userId) {
+        user = await User.findById(userId);
+      }
+
+      const categoryIds = [
+        ...new Set(
+          products.map((p) => p.category?._id?.toString()).filter(Boolean)
+        ),
+      ];
+      const productIds = products.map((p) => p._id);
+
+      const categoryOffers = await CategoryOffer.find({
+        categoryId: { $in: categoryIds },
+        startDate: { $lte: new Date() },
+        endDate: { $gte: new Date() },
+      }).lean();
+
+      const productOffers = await ProductOffer.find({
+        productId: { $in: productIds },
+        startDate: { $lte: new Date() },
+        endDate: { $gte: new Date() },
+      }).lean();
+
+      const updatedProducts = products.map((product) => {
+        const plainProduct = product.toObject ? product.toObject() : product;
+
+        let discountedPrice = plainProduct.price;
+        let appliedOffer = null;
+        let offerType = null;
+
+        if (!plainProduct._id) {
+          return {
+            ...plainProduct,
+            image: plainProduct.image || [],
+            originalPrice: plainProduct.price,
+            discountedPrice: plainProduct.price,
+            hasDiscount: false,
+            appliedOffer: null,
+            offerType: null,
+          };
+        }
+
+        const productOffer = productOffers.find(
+          (offer) => offer.productId.toString() === plainProduct._id.toString()
+        );
+
+        let categoryOffer = null;
+        if (plainProduct.category && plainProduct.category._id) {
+          categoryOffer = categoryOffers.find(
+            (offer) =>
+              offer.categoryId.toString() === plainProduct.category._id.toString()
+          );
+        }
+
+        let productDiscountAmount = 0;
+        let categoryDiscountAmount = 0;
+
+        if (productOffer) {
+          if (productOffer.discountType === "percentage") {
+            productDiscountAmount =
+              (plainProduct.price * productOffer.discountValue) / 100;
+          } else if (productOffer.discountType === "fixed") {
+            productDiscountAmount = productOffer.discountValue;
+          }
+        }
+
+        if (categoryOffer) {
+          if (categoryOffer.discountType === "percentage") {
+            categoryDiscountAmount =
+              (plainProduct.price * categoryOffer.discountValue) / 100;
+          } else if (categoryOffer.discountType === "fixed") {
+            categoryDiscountAmount = categoryOffer.discountValue;
+          }
+        }
+
+        if (productDiscountAmount > 0 || categoryDiscountAmount > 0) {
+          if (productDiscountAmount >= categoryDiscountAmount) {
+            discountedPrice = plainProduct.price - productDiscountAmount;
+            appliedOffer = {
+              discountType: productOffer.discountType,
+              discountValue: productOffer.discountValue,
+              discountAmount: productDiscountAmount,
+              description: productOffer.description,
+            };
+            offerType = "product";
+          } else {
+            discountedPrice = plainProduct.price - categoryDiscountAmount;
+            appliedOffer = {
+              discountType: categoryOffer.discountType,
+              discountValue: categoryOffer.discountValue,
+              discountAmount: categoryDiscountAmount,
+              description:
+                categoryOffer.description ||
+                `${plainProduct.category.name} Category Offer`,
+            };
+            offerType = "category";
+          }
+
+          if (discountedPrice < 1) discountedPrice = 1;
+        }
+
+        return {
+          ...plainProduct,
+          originalPrice: plainProduct.price,
+          discountedPrice: discountedPrice,
+          hasDiscount: !!appliedOffer,
+          appliedOffer: appliedOffer,
+          offerType: offerType,
+        };
+      });
+
+      // 🔹 now render home with same data
+      res.render("home", {
+        category,
+        updatedProducts: updatedProducts.slice(0, 4),
+        user,
+      });
     } else {
+      // 🔹 if no session, just show login
       res.render("userLogin");
     }
   } catch (error) {
-    return res.json({ message: "interal server error" });
+    console.log("Login page error", error);
+    return res.json({ message: "internal server error" });
   }
 };
+
 
 const postLogin = async (req, res) => {
   try {

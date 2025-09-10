@@ -4,15 +4,30 @@
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header bg-danger text-white">
-                        <h2>Error</h2>
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-danger text-white text-center">
+                        <h2><i class="bi bi-exclamation-triangle-fill"></i> Oops! Something went wrong</h2>
                     </div>
-                    <div class="card-body">
-                        <h3><%= message || 'An error occurred' %></h3>
-                        <p><%= error?.stack || '' %></p>
-                        <a href="/" class="btn btn-primary">Return to Home</a>
+                    <div class="card-body text-center">
+                        <h4 class="text-danger"><%= message %></h4>
+                        <p class="text-muted mt-3">
+                            Don’t worry, this might be a temporary issue.  
+                            Please try again later or go back to the home page.
+                        </p>
+                        <div class="mt-4">
+                            <a href="/" class="btn btn-primary">
+                                <i class="bi bi-house-door-fill"></i> Back to Home
+                            </a>
+                            <a href="/login" class="btn btn-outline-danger ms-2">
+                                <i class="bi bi-box-arrow-in-right"></i> Login
+                            </a>
+                        </div>
                     </div>
+                    <% if (process.env.NODE_ENV === 'development' && error) { %>
+                        <div class="card-footer bg-light text-start">
+                            <pre><%= JSON.stringify(error, null, 2) %></pre>
+                        </div>
+                    <% } %>
                 </div>
             </div>
         </div>
