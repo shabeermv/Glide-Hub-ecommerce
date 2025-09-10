@@ -13,17 +13,18 @@ const errorHandler = (err, req, res, next) => {
         const statusCode = err.statusCode || 500;
         
         if (isAdmin) {
-            res.status(statusCode).render('admin/error', {
-                message: err.message || 'Internal Server Error',
-                error: process.env.NODE_ENV === 'development' ? err : {}
-            });
-        } else {
-            res.status(statusCode).render('user/error', {
-                message: err.message || 'Internal Server Error',
-                user: user,
-                error: process.env.NODE_ENV === 'development' ? err : {}
-            });
-        }
+    res.status(statusCode).render('admin/error', {
+        message: err.message || 'Internal Server Error',
+        error: process.env.NODE_ENV === 'development' ? err : {}
+    });
+} else {
+    res.status(statusCode).render('error', {
+        message: err.message || 'Internal Server Error',
+        user: user,
+        error: process.env.NODE_ENV === 'development' ? err : {}
+    });
+}
+
     } catch (renderError) {
         console.error('Error rendering error page:', renderError);
         res.status(500).send('Internal Server Error');
