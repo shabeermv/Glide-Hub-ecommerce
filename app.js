@@ -25,52 +25,49 @@ app.set('views', [
   path.join(__dirname, 'views/admin')
 ]);
 
-// Trust proxy (important for production)
 app.set('trust proxy', 1);
 
-// CORS setup (before other middleware)
+
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? process.env.FRONTEND_URL 
-    : 'http://localhost:3000', // Changed: environment-based origin
+    : 'http://localhost:3000', 
   credentials: true
 }));
 
-// Basic middleware
+
 app.use(nocache());
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.json({ limit: '50mb' }));
 app.use(methodOverride('_method'));
 
-// Session configuration - improved for Google Auth
 app.use(
   session({
     secret: process.env.SESSION_SECRET ,
     resave: false,
     saveUninitialized: false,
-    name: 'sessionId', // Added: custom session name for security
+    name: 'sessionId',
     cookie: {
-      secure: process.env.NODE_ENV === 'production', // Changed: environment-based secure flag
+      secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'lax' // Added: helps with OAuth redirects
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: 'lax'
     }
   })
 );
 
-// Passport middleware
+
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Static files
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public/asset1')));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Global middleware for user data
 app.use((req, res, next) => {
   res.locals.user = req.user || null;
-  res.locals.isAuthenticated = req.isAuthenticated(); // Added: helper for templates
+  res.locals.isAuthenticated = req.isAuthenticated(); 
   
   next();
 });
