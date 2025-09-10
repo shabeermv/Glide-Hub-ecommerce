@@ -900,8 +900,7 @@ function verifyPayment(paymentData) {
     })
     .then(data => {
         if (data.success) {
-            // Show success modal - make sure we're accessing the right properties
-            // These should match what your server is sending
+            
             document.getElementById('modalOrderId').textContent = data.orderId || data._id || 'N/A';
             document.getElementById('modalOrderTotal').textContent = data.total || data.amount || 'N/A';
 
