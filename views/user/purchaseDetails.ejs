@@ -106,7 +106,9 @@
 <% } else if (order.orderStatus === "Order Pending") { %>
     <button class="btn btn-danger mt-3" id="retryPayment" onclick="retryPayment('<%= order._id %>')">Retry Payment</button>
 <% } %>
-
+ <a href="/invoice/<%= order._id %>" class="btn btn-primary mt-3 ms-2">
+    Download Invoice PDF
+</a>
 
             <% if (!allProductsReturned && hasReturnableProducts) { %>
                 <button class="btn btn-danger mt-3" id="returnOrder" 

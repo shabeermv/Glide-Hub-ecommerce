@@ -9,7 +9,8 @@ const cartController=require('../controllers/user/cartController')
 const authMiddleware=require('../middleware/middlewares');
 const wishlistController=require('../controllers/user/wishlistController')
 const checkoutController=require('../controllers/user/checkoutController');
-const couponController = require('../controllers/admin/couponController')
+const couponController = require('../controllers/admin/couponController');
+const pdfDownloader = require("../controllers/user/pdfDownloader")
 
 
 userRouter.get('/',userController.loadHome);
@@ -75,7 +76,8 @@ userRouter.post('/cancelProduct/:orderId', checkoutController.cancelPartialProdu
 userRouter.post('/orderCancel/:id', checkoutController.orderCancel);
 userRouter.post('/requestReturn/:id',checkoutController.returnOrder);
 userRouter.post('/returnRequested/:orderId/:productOrderId',checkoutController.returnPartialRequest);
-userRouter.post('/returnOrder/:id',checkoutController.returnOrder)
+userRouter.post('/returnOrder/:id',checkoutController.returnOrder);
+userRouter.get("/invoice/:id",pdfDownloader.downloadInvoice);
 userRouter.post('/create-razorpay-order',checkoutController.razorpayCreation);
 userRouter.post('/verify-razorpay-payment',checkoutController.verifyRazorPay);
 userRouter.post('/handle-failed-payment',checkoutController.handleFailedPayments);
