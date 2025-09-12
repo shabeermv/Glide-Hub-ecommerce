@@ -3,7 +3,7 @@ const Product = require("../../models/productSchema");
 const User = require("../../models/userSchema");
 const CategoryOffer = require("../../models/categoryOffer");
 const ProductOffer = require("../../models/productOffer");
-
+const statusCode = require("../../utils/statusCodes");
 const cartPageInfo = async (req, res, next) => {
   try {
     const userId = req.session.userId;
@@ -93,7 +93,7 @@ const cartPageInfo = async (req, res, next) => {
     res.render("userCart", { cart: cartData, user });
   } catch (error) {
     console.log("this is the internal server error");
-    return res.status(500).json({ message: "internal server errror" });
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: "internal server errror" });
   }
 };
 
@@ -104,13 +104,13 @@ const addProductCart = async (req, res) => {
 
   if (!size) {
     return res
-      .status(400)
+      .status(statusCode.BAD_REQUEST)
       .json({ success: false, message: "Size is required" });
   }
 
   if (!userId) {
     return res
-      .status(401)
+      .status(statusCode.UNAUTHORIZED)
       .json({ success: false, message: "User not logged in" });
   }
 
@@ -118,20 +118,20 @@ const addProductCart = async (req, res) => {
     const product = await Product.findById(productId);
     if (!product) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Product not found" });
     }
 
     const sizeData = product.sizes.find((s) => s.size === size);
     if (!sizeData) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: `Size ${size} is not available for this product`,
       });
     }
 
     if (sizeData.stock < 1) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: `Size ${size} is out of stock`,
       });
@@ -152,7 +152,7 @@ const addProductCart = async (req, res) => {
 
     if (existingProduct) {
       if (existingProduct.quantity + quantity > sizeData.stock) {
-        return res.status(400).json({
+        return res.status(statusCode.BAD_REQUEST).json({
           success: false,
           message: `Only ${sizeData.stock} items available in this size`,
         });
@@ -184,7 +184,7 @@ const addProductCart = async (req, res) => {
       req.session.cart.push({ productId });
     }
 
-    return res.status(200).json({
+    return res.status(statusCode.OK).json({
       success: true,
       message: "Product added to cart successfully",
       cart: {
@@ -204,7 +204,7 @@ const addProductToCartFromWishlist = async (req, res) => {
 
   if (!userId) {
     return res
-      .status(401)
+      .status(statusCode.UNAUTHORIZED)
       .json({ success: false, message: "User not logged in" });
   }
 
@@ -212,7 +212,7 @@ const addProductToCartFromWishlist = async (req, res) => {
     const product = await Product.findById(productId);
     if (!product) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Product not found" });
     }
 
@@ -259,7 +259,7 @@ const addProductToCartFromWishlist = async (req, res) => {
     await cart.save();
 
     return res
-      .status(200)
+      .status(statusCode.OK)
       .json({ success: true, message: "Product added to cart successfully" });
   } catch (error) {
     console.error("Error adding product to cart:", error);
@@ -275,7 +275,7 @@ const updateProductQuantity = async (req, res) => {
 
     const cart = await Cart.findOne({ userId }).populate("product.productId");
     if (!cart) {
-      return res.status(404).json({
+      return res.status(statusCode.NOT_FOUND).json({
         success: false,
         message: "Cart not found",
       });
@@ -287,7 +287,7 @@ const updateProductQuantity = async (req, res) => {
     );
 
     if (!cartItem) {
-      return res.status(404).json({
+      return res.status(statusCode.NOT_FOUND).json({
         success: false,
         message: "Item not found in cart",
       });
@@ -295,7 +295,7 @@ const updateProductQuantity = async (req, res) => {
 
     const product = await Product.findById(productId);
     if (!product) {
-      return res.status(404).json({
+      return res.status(statusCode.NOT_FOUND).json({
         success: false,
         message: "Product not found",
       });
@@ -303,7 +303,7 @@ const updateProductQuantity = async (req, res) => {
 
     const sizeIndex = product.sizes.findIndex((s) => s.size === size);
     if (sizeIndex === -1) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: `Size ${size} not available for this product`,
       });
@@ -364,7 +364,7 @@ const deleteProductCart = async (req, res) => {
 
   try {
     if (!userId || !productId) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: "User ID or Product ID is missing.",
       });
@@ -372,7 +372,7 @@ const deleteProductCart = async (req, res) => {
 
     const cart = await Cart.findOne({ userId });
     if (!cart) {
-      return res.status(404).json({
+      return res.status(statusCode.NOT_FOUND).json({
         success: false,
         message: "Cart not found.",
       });
@@ -383,7 +383,7 @@ const deleteProductCart = async (req, res) => {
     );
 
     if (!itemToRemove) {
-      return res.status(404).json({
+      return res.status(statusCode.NOT_FOUND).json({
         success: false,
         message: "Product not found in cart.",
       });
@@ -403,7 +403,7 @@ const deleteProductCart = async (req, res) => {
       await updatedCart.save();
     }
 
-    return res.status(200).json({
+    return res.status(statusCode.OK).json({
       success: true,
       message: "Product removed from cart successfully.",
       cart: updatedCart,

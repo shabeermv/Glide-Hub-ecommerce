@@ -1,4 +1,5 @@
 const User = require("../../models/userSchema");
+const statusCode = require("../../utils/statusCodes")
 
 const userInfo = async (req, res) => {
   try {
@@ -61,7 +62,7 @@ const toggleBlockStatus = async (req, res) => {
     await user.save();
 
     res
-      .status(200)
+      .status(statusCode.OK)
       .json({
         success: true,
         message: `User ${isBlocked ? "blocked" : "unblocked"} successfully.`,

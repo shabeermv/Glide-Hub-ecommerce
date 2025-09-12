@@ -17,27 +17,29 @@
                         <div class="wrap-slick3-arrows flex-sb-m flex-w"></div>
             
                         <div class="slick3 gallery-lb">
-                            <% if (product.image && product.image.length > 0) { %>
-                                <% product.image.forEach((imagePath, index) => { %>
-                                    <div class="item-slick3" data-thumb="<%= imagePath %>">
-                                        <div class="wrap-pic-w pos-relative">
-                                            <!-- Add the zoom effect here -->
-                                            <img id="zoom_01" src="<%= imagePath %>" alt="Product Image <%= index + 1 %>" class="img-fluid" data-zoom-image="<%= imagePath %>">
-                                            <a class="btn-view-image" href="<%= imagePath %>">
-                                                View Image
-                                            </a>
-                                            <i class="fa fa-expand"></i>
-                                        </div>
-                                    </div>
-                                <% }); %>
-                            <% } else { %>
-                                <div class="item-slick3">
-                                    <div class="wrap-pic-w pos-relative">
-                                        <img src="/images/placeholder.jpg" alt="No Image Available" class="img-fluid">
-                                    </div>
-                                </div>
-                            <% } %>
-                        </div>
+    <% if (product.image && product.image.length > 0) { %>
+        <% product.image.forEach((imagePath, index) => { %>
+            <div class="item-slick3" data-thumb="<%= imagePath %>">
+                <div class="wrap-pic-w pos-relative">
+                    <img src="<%= imagePath %>" 
+                         alt="Product Image <%= index + 1 %>" 
+                         class="img-fluid zoom-img" 
+                         data-zoom-image="<%= imagePath %>">
+
+                    <a class="btn-view-image" href="<%= imagePath %>">View Image</a>
+                    <i class="fa fa-expand"></i>
+                </div>
+            </div>
+        <% }); %>
+    <% } else { %>
+        <div class="item-slick3">
+            <div class="wrap-pic-w pos-relative">
+                <img src="/images/placeholder.jpg" alt="No Image Available" class="img-fluid">
+            </div>
+        </div>
+    <% } %>
+</div>
+
                     </div>
                 </div>
             </div>
@@ -357,20 +359,27 @@
 }
 
 </style>
+
+<!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-
+<!-- ElevateZoom -->
 <script src="https://cdn.rawgit.com/elevateweb/elevatezoom/master/jquery.elevateZoom.min.js"></script>
 
 <script>
-    $(document).ready(function() {
-        $('#zoom_01').elevateZoom({
-            zoomType: "inner", 
-            cursor: "crosshair", 
-            scrollZoom: true 
-        });
-    });
-</script> 
+  $(document).ready(function() {
+      // Apply zoom effect to every product image
+      $('.zoom-img').each(function() {
+          $(this).elevateZoom({
+              zoomType: "inner",      // zoom inside image
+              cursor: "crosshair",    // cursor style
+              scrollZoom: true        // zoom with scroll
+          });
+      });
+  });
+</script>
+
+
 
 
 <script>

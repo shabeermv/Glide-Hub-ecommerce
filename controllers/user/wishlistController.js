@@ -1,6 +1,7 @@
 const User = require("../../models/userSchema");
 const Product = require("../../models/productSchema");
 const Wishlist = require("../../models/wishlistSchema");
+const statusCode = require("../../utils/statusCodes")
 
 const wishlistPageInfo = async (req, res) => {
   try {
@@ -53,8 +54,8 @@ const wishlistPageInfo = async (req, res) => {
     console.error("Error in wishlistPageInfo:", error);
 
     return res
-      .status(500)
-      .render("user/error", { message: "Internal server error" });
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .render("error", { message: "Internal server error" });
   }
 };
 
@@ -65,7 +66,7 @@ const addProductWishlist = async (req, res) => {
   try {
     if (!userId || !productId) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "userId or productId is missing" });
     }
 
@@ -81,7 +82,7 @@ const addProductWishlist = async (req, res) => {
 
     if (productExists) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "Product already in wishlist" });
     }
 
@@ -90,7 +91,7 @@ const addProductWishlist = async (req, res) => {
     await wishlist.save();
 
     res
-      .status(200)
+      .status(statusCode.OK)
       .json({ success: true, message: "Product added to wishlist" });
   } catch (error) {
     console.error(error);
@@ -107,7 +108,7 @@ const removeWishlistItem = async (req, res) => {
     // console.log('User ID:', userId);
 
     if (!userId || !productId) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: "User ID or Product ID is missing.",
       });
@@ -120,13 +121,13 @@ const removeWishlistItem = async (req, res) => {
     );
 
     if (!updatedWishList) {
-      return res.status(404).json({
+      return res.status(statusCode.NOT_FOUND).json({
         success: false,
         message: "Wishlist not found.",
       });
     }
 
-    return res.status(200).json({
+    return res.status(statusCode.OK).json({
       success: true,
       message: "Product deleted from wishlist successfully.",
     });

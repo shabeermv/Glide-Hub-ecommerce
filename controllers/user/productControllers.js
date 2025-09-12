@@ -3,6 +3,7 @@ const Category = require("../../models/categorySchema");
 const CategoryOffer = require("../../models/categoryOffer");
 const ProductOffer = require("../../models/productOffer");
 const User = require("../../models/userSchema");
+const statusCode = require("../../utils/statusCodes")
 
 const shopInfo = async (req, res) => {
   try {
@@ -190,7 +191,7 @@ const shopInfo = async (req, res) => {
     });
   } catch (error) {
     console.error("shopInfo error:", error);
-    res.status(500).json({ message: "internal server error" });
+    res.status(statusCode).json({ message: "internal server error" });
   }
 };
 const getFilteredProducts = async (req, res) => {
@@ -349,7 +350,7 @@ const getFilteredProducts = async (req, res) => {
       };
     });
 
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
       products: updatedProducts,
       currentPage: page,
@@ -358,7 +359,7 @@ const getFilteredProducts = async (req, res) => {
     });
   } catch (error) {
     console.error("API Error:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -372,7 +373,7 @@ const getDetailInfo = async (req, res) => {
     const product = await Product.findById(productId).populate("category");
 
     if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+      return res.status(statusCode.NOT_FOUND).json({ message: "Product not found" });
     }
 
     const availableSizes = product.sizes.filter((size) => size.stock > 0);

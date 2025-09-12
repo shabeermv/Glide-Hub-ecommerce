@@ -5,6 +5,7 @@ const Category=require('../../models/categorySchema');
 const bcrypt = require('bcrypt');
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
+const statusCode = require("../../utils/statusCodes")
 
 const adminLogin = async (req, res) => {
     try {
@@ -68,7 +69,7 @@ const getHome = async (req, res) => {
         res.render('adminLogin');
     } catch (error) {
         console.error("Error in getHome:", error.message);
-        res.status(500).render('error', {
+        res.status(statusCode.INTERNAL_SERVER_ERROR).render('error', {
             message: 'Server error while loading dashboard',
             error
         });
@@ -84,7 +85,7 @@ const getSalesData = async (req, res) => {
         const { startDate, endDate } = req.query;
         
         if (!startDate || !endDate) {
-            return res.status(400).json({ error: "Start date and end date are required" });
+            return res.status(statusCode.BAD_REQUEST).json({ error: "Start date and end date are required" });
         }
         
         const start = new Date(startDate);
@@ -115,7 +116,7 @@ const getSalesData = async (req, res) => {
         res.json(salesData);
     } catch (error) {
         console.error("Error fetching sales data:", error);
-        res.status(500).json({ error: "Failed to fetch sales data" });
+        res.status(statusCode.INTERNAL_SERVER_ERROR).json({ error: "Failed to fetch sales data" });
     }
 };
 
@@ -194,9 +195,9 @@ const filterCategoryList = async (req, res) => {
     } catch (error) {
         console.error("Error filtering orders by category:", error);
         if (req.xhr || req.headers.accept.indexOf("json") > -1) {
-            return res.status(500).json({ error: "Server error while filtering orders" });
+            return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ error: "Server error while filtering orders" });
         }
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: "Internal server error" });
     }
 };
 
@@ -234,13 +235,13 @@ const getFilterByDate = async (req, res) => {
                 break;
             case "custom":
                 if (!startDate || !endDate) {
-                    return res.status(400).json({ success: false, message: "Start and end date required" });
+                    return res.status(statusCode.BAD_REQUEST).json({ success: false, message: "Start and end date required" });
                 }
                 start = new Date(`${startDate}T00:00:00.000`);
                 end = new Date(`${endDate}T23:59:59.999`);
                 break;
             default:
-                return res.status(400).json({ success: false, message: "Invalid filter type" });
+                return res.status(statusCode.BAD_REQUEST).json({ success: false, message: "Invalid filter type" });
         }
 
 
@@ -270,7 +271,7 @@ const getFilterByDate = async (req, res) => {
 
     } catch (error) {
         console.error("Error fetching orders by date:", error);
-        return res.status(500).json({
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
             success: false,
             message: "Internal server error",
             error: error.message
@@ -292,7 +293,7 @@ const postAdmin = async (req, res) => {
         // console.log(adminUser,'l00000000000000000000000000');
         
         if (!adminUser) {
-            return res.status(404).json({ success: false, message: "Admin not found or unauthorized" });
+            return res.status(statusCode.NOT_FOUND).json({ success: false, message: "Admin not found or unauthorized" });
         }
 
         const isPasswordValid = await bcrypt.compare(password, adminUser.password);
@@ -300,18 +301,18 @@ const postAdmin = async (req, res) => {
 
         if (!isPasswordValid) {
             console.log('password mathch alla');
-            return res.status(401).json({ success: false, message: "Invalid email or password" });
+            return res.status(statusCode.UNAUTHORIZED).json({ success: false, message: "Invalid email or password" });
             
             
         }
 
         req.session.admin = adminUser._id;
 
-        return res.status(200).json({ success: true, message: "Login successful" });
+        return res.status(statusCode.OK).json({ success: true, message: "Login successful" });
 
     } catch (error) {
         console.error(error.message);
-        return res.status(500).json({message:'internal server error'})
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({message:'internal server error'})
     }
 };
 
@@ -323,7 +324,7 @@ const logoutAdmin = (req, res) => {
   
     req.session.destroy((err) => {
       if (err) {
-        return res.status(500).json({ success: false, message: "Could not log out" });
+        return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Could not log out" });
       }
       res.clearCookie("connect.sid"); 
       res.render("adminLogin"); 
@@ -397,7 +398,7 @@ const downloadOrdersPDF = async (req, res) => {
     } catch (error) {
         console.error('Error generating PDF:', error);
         if (!res.headersSent) {
-            res.status(500).send('Error generating PDF');
+            res.status(statusCode.INTERNAL_SERVER_ERROR).send('Error generating PDF');
         }
     }
 };
@@ -445,7 +446,7 @@ const downloadOrdersExcel = async (req, res) => {
     } catch (error) {
         console.error('Error generating Excel:', error);
         if (!res.headersSent) {
-            res.status(500).send('Error generating Excel report');
+            res.status(statusCode.INTERNAL_SERVER_ERROR).send('Error generating Excel report');
         }
     }
 };

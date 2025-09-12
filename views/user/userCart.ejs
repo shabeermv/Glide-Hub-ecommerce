@@ -68,7 +68,11 @@
                                                         <i class="icon-minus"></i>
                                                     </button>
                                                 </div>
-                                                <input type="number" class="form-control num-product" value="<%= item.quantity %>" readonly>
+<input type="number" 
+       class="form-control num-product" 
+       value="<%= item.quantity %>" 
+       readonly
+       style="width:70px; text-align:center; font: size 12px; font-weight:700; color:#000; background-color:#fff; border:1px solid #ddd;">
                                                 <div class="input-group-append">
                                                     <button class="btn-num-product-up" 
                                                             data-id="<%= item.productId._id %>" 
@@ -154,7 +158,6 @@
 </main>
 
 <script>
-  // Quantity update functionality
   document
     .querySelectorAll(".btn-num-product-up, .btn-num-product-down")
     .forEach((button) => {

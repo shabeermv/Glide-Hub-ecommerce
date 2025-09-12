@@ -1,4 +1,5 @@
 const Coupon = require("../../models/couponSchema");
+const statusCode = require("../../utils/statusCodes")
 
 const couponPageInfo = async (req, res) => {
   try {
@@ -23,7 +24,7 @@ const addCoupon = async (req, res) => {
       !expireDate ||
       !minPurchase
     ) {
-      return res.status(400).json({ message: "All fields are required!" });
+      return res.status(statusCode.BAD_REQUEST).json({ message: "All fields are required!" });
     }
 
     const parsedDiscountValue = parseFloat(discountValue);
@@ -31,7 +32,7 @@ const addCoupon = async (req, res) => {
 
     if (isNaN(parsedDiscountValue) || isNaN(parsedMinPurchase)) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ message: "Invalid discount or minPurchase value!" });
     }
 
@@ -40,13 +41,13 @@ const addCoupon = async (req, res) => {
       (parsedDiscountValue < 0 || parsedDiscountValue > 100)
     ) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ message: "Percentage discount must be between 0 and 100!" });
     }
 
     if (discount === "fixed" && parsedDiscountValue < 0) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ message: "Fixed discount cannot be negative!" });
     }
 
@@ -64,7 +65,7 @@ const addCoupon = async (req, res) => {
     console.log("Received Coupon Data:", couponData);
 
     res
-      .status(201)
+      .status(statusCode.CREATED)
       .json({ message: "Coupon added successfully!", data: couponData });
   } catch (error) {
     console.error("Error adding coupon:", error);
@@ -82,12 +83,12 @@ const deleteCoupon = async (req, res) => {
 
     if (!coupon) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Coupon not found" });
     }
 
     res
-      .status(200)
+      .status(statusCode.OK)
       .json({ success: true, message: "Coupon successfully deleted." });
   } catch (error) {
     console.error("Error deleting coupon:", error);
@@ -100,7 +101,7 @@ const editCouponDetails = async (req, res) => {
   try {
     const coupon = await Coupon.findById(couponId);
     if (!coupon) {
-      res.status(404);
+      res.status(statusCode.NOT_FOUND);
       return next(new Error("Coupon not found"));
     }
     res.render("editCoupon", { coupon });
@@ -130,12 +131,12 @@ const editCoupon = async (req, res) => {
       !expireDate ||
       !minPurchase
     ) {
-      return res.status(400).json({ message: "All fields are required!" });
+      return res.status(statusCode.BAD_REQUEST).json({ message: "All fields are required!" });
     }
 
     if (isNaN(parsedDiscountValue) || isNaN(parsedMinPurchase)) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ message: "Invalid discount or minPurchase value!" });
     }
 
@@ -144,13 +145,13 @@ const editCoupon = async (req, res) => {
       (parsedDiscountValue < 0 || parsedDiscountValue > 100)
     ) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ message: "Percentage discount must be between 0 and 100!" });
     }
 
     if (discount === "fixed" && parsedDiscountValue < 0) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ message: "Fixed discount cannot be negative!" });
     }
 
@@ -168,13 +169,13 @@ const editCoupon = async (req, res) => {
     );
 
     if (!updatedCoupon) {
-      return res.status(404).json({ message: "Coupon not found!" });
+      return res.status(statusCode.NOT_FOUND).json({ message: "Coupon not found!" });
     }
 
     console.log("Updated Coupon Data:", updatedCoupon);
 
     res
-      .status(200)
+      .status(statusCode.OK)
       .json({ message: "Coupon updated successfully!", updatedCoupon });
   } catch (error) {
     console.error("Error updating coupon:", error);
@@ -189,7 +190,7 @@ const getEligibleCoupons = async (req, res) => {
 
     if (isNaN(total)) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "Invalid cart total" });
     }
 
@@ -198,7 +199,7 @@ const getEligibleCoupons = async (req, res) => {
       expireDate: { $gt: new Date() },
     });
 
-    res.status(200).json({ success: true, coupons: eligibleCoupons });
+    res.status(statusCode.OK).json({ success: true, coupons: eligibleCoupons });
   } catch (error) {
     console.error("Error fetching eligible coupons:", error);
     next(error);
@@ -217,14 +218,14 @@ const applyCoupon = async (req, res) => {
     });
 
     if (!coupon) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: "Invalid coupon code or minimum purchase not met",
       });
     }
 
     if (coupon.usedBy && coupon.usedBy.includes(userId)) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: "You have already used this coupon",
       });
@@ -265,7 +266,7 @@ const applyCoupon = async (req, res) => {
     });
   } catch (error) {
     console.error("Error applying coupon:", error);
-    return res.status(500).json({
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Internal server error",
     });

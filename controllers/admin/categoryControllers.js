@@ -1,6 +1,7 @@
 const Category = require("../../models/categorySchema");
 const categoryOffer = require("../../models/categoryOffer");
 const Product = require("../../models/productSchema");
+const statusCode = require("../../utils/statusCodes")
 
 const getCategory = async (req, res) => {
   try {
@@ -40,7 +41,7 @@ const addCategory = async (req, res) => {
     if (existCategory) {
       console.log("Category already exists:", existCategory);
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "Category already exists" });
     }
 
@@ -64,12 +65,12 @@ const renderEditCategory = async (req, res) => {
     const categoryId = req.params.id;
     // console.log('category id:',categoryId);
     if (!categoryId) {
-      return res.status(404).json({ message: "category id found" });
+      return res.status(statusCode.NOT_FOUND).json({ message: "category id found" });
     }
     const category = await Category.findById(categoryId);
 
     if (!category) {
-      return res.status(404).send("Category not found");
+      return res.status(statusCode.NOT_FOUND).send("Category not found");
     }
 
     res.render("editCategory", { category });
@@ -94,12 +95,12 @@ const updateCategory = async (req, res) => {
 
     if (!updatedCategory) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Category not found" });
     }
 
     res
-      .status(200)
+      .status(statusCode.OK)
       .json({
         success: true,
         message: "Category updated successfully",
@@ -123,12 +124,12 @@ const deleteCategory = async (req, res) => {
 
     if (!updatedCategory) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Category not found" });
     }
 
     res
-      .status(200)
+      .status(statusCode.OK)
       .json({ success: true, message: "Category soft deleted successfully" });
   } catch (error) {
     console.error("Error soft deleting category:", error);
@@ -148,11 +149,11 @@ const toggleCategoryStatus = async (req, res) => {
 
     if (!updatedCategory) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Category not found" });
     }
 
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
       message: `Category successfully ${isDeleted ? "blocked" : "unblocked"}`,
     });
@@ -169,7 +170,7 @@ const viewCategoryOfferInfo = async (req, res, next) => {
 
     if (!categories) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Categories not found" });
     }
 
@@ -203,13 +204,13 @@ const addCategoryOffer = async (req, res, next) => {
       !endDate
     ) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "All fields are required" });
     }
 
     if (!["percentage", "fixed"].includes(discountType)) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "Invalid discount type" });
     }
 
@@ -218,7 +219,7 @@ const addCategoryOffer = async (req, res, next) => {
     });
     if (existingOffer) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({
           success: false,
           message: "An offer already exists for this category",
@@ -254,7 +255,7 @@ const addCategoryOffer = async (req, res, next) => {
     }
 
     return res
-      .status(200)
+      .status(statusCode.OK)
       .json({ success: true, message: "Saved successfully." });
   } catch (error) {
     console.error("Error in addCategoryOffer:", error);
@@ -268,7 +269,7 @@ const deleteCategoryOffer = async (req, res, next) => {
     const categoryOfferToDelete = await categoryOffer.findById(id);
     if (!categoryOfferToDelete) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Category offer not found" });
     }
 
@@ -284,7 +285,7 @@ const deleteCategoryOffer = async (req, res, next) => {
     }
 
     return res
-      .status(200)
+      .status(statusCode.OK)
       .json({ success: true, message: "Category offer deleted" });
   } catch (error) {
     console.log(error.message, "this is the error message");
@@ -308,14 +309,14 @@ const updateCategoryOffer = async (req, res, next) => {
       discountType === "percentage" &&
       (discountValue <= 0 || discountValue > 100)
     ) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: "Percentage discount must be between 1 and 100",
       });
     }
 
     if (discountType === "fixed" && discountValue <= 0) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: "Fixed discount must be greater than 0",
       });
@@ -325,7 +326,7 @@ const updateCategoryOffer = async (req, res, next) => {
     const end = new Date(endDate);
 
     if (end <= start) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: "End date must be after start date",
       });
@@ -342,7 +343,7 @@ const updateCategoryOffer = async (req, res, next) => {
     });
 
     if (existingOffer) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message:
           "Another offer already exists for this category during the specified date range",
@@ -364,7 +365,7 @@ const updateCategoryOffer = async (req, res, next) => {
 
     if (!updatedOffer) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Category offer not found" });
     }
 
@@ -385,7 +386,7 @@ const updateCategoryOffer = async (req, res, next) => {
       await product.save();
     }
 
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
       message: "Category offer updated successfully",
       offer: updatedOffer,

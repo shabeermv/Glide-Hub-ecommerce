@@ -2,6 +2,7 @@ const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const User = require("../../models/userSchema");
 const Order = require("../../models/orderSchema");
+const statusCode = require("../../utils/statusCodes")
 
 const userOrdersInfo = async (req, res) => {
   try {
@@ -73,14 +74,14 @@ const changeOrderStatus = async (req, res, next) => {
 
     if (!order) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Order not found" });
     }
 
     const validStatuses = ["Pending", "Shipped", "Delivered", "Cancelled"];
     if (!validStatuses.includes(status)) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "Invalid status provided" });
     }
 
@@ -102,7 +103,7 @@ const changeOrderStatus = async (req, res, next) => {
 
     await order.save();
 
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
       message: "Order status and product statuses updated successfully",
       order,
@@ -131,7 +132,7 @@ const viewOrderDetails = async (req, res) => {
     if (!order) {
       console.log("Order not found");
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .render("admin/error", { message: "Order not found" });
     }
 
@@ -160,7 +161,7 @@ const getInvoice = async (req, res) => {
 
     if (!order) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .render("admin/error", { message: "Order not found" });
     }
 
@@ -217,7 +218,7 @@ const returnRequests = async (req, res) => {
     res.render("ReturnRequest", { returnOrders });
   } catch (error) {
     console.error("Error fetching return requests:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -274,7 +275,7 @@ const getCancelRequests = async (req, res) => {
     res.render("cancelRequests", { cancelRequests });
   } catch (error) {
     console.error("Error fetching cancel requests:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -290,13 +291,13 @@ const setUpReturnRequest = async (req, res) => {
 
     if (!order) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Order not found" });
     }
 
     if (order.paymentStatus !== "completed") {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({
           success: false,
           message: "Refund cannot be processed. Payment is not completed.",
@@ -306,7 +307,7 @@ const setUpReturnRequest = async (req, res) => {
     const user = order.userId;
     if (!user) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "User not found" });
     }
 
@@ -316,13 +317,13 @@ const setUpReturnRequest = async (req, res) => {
 
     if (!productToReturn) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: `Product not found in order` });
     }
 
     if (productToReturn.status === "Returned") {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: `Product has already been returned` });
     }
 
@@ -362,7 +363,7 @@ const setUpReturnRequest = async (req, res) => {
 
     await order.save();
 
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
       message:
         action === "approved"
@@ -372,7 +373,7 @@ const setUpReturnRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("Error processing return request:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -386,13 +387,13 @@ const setCancelAction = async (req, res) => {
 
     if (!order) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Order not found" });
     }
 
     if (order.paymentStatus !== "completed") {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({
           success: false,
           message: "Refund cannot be processed. Payment is not completed.",
@@ -402,7 +403,7 @@ const setCancelAction = async (req, res) => {
     const user = order.userId;
     if (!user) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "User not found" });
     }
 
@@ -444,7 +445,7 @@ const setCancelAction = async (req, res) => {
 
       if (productIndex === -1) {
         return res
-          .status(404)
+          .status(statusCode.NOT_FOUND)
           .json({ success: false, message: "Product not found in order" });
       }
 
@@ -498,7 +499,7 @@ const setCancelAction = async (req, res) => {
     res.json({ success: true, refundAmount });
   } catch (error) {
     console.error("Error handling cancel action:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal Server Error" });
   }
 };
 

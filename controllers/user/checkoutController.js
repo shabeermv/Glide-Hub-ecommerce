@@ -7,6 +7,7 @@ const ProductOffer = require("../../models/productOffer");
 const Coupon = require("../../models/couponSchema");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const statusCode = require("../../utils/statusCodes")
 
 const checkoutPageInfo = async (req, res) => {
   const userId = req.session.userId;
@@ -21,7 +22,7 @@ const checkoutPageInfo = async (req, res) => {
     if (productId) {
       const product = await Product.findById(productId).populate("category");
       if (!product) {
-        return res.status(404).render("checkout", {
+        return res.status(statusCode.NOT_FOUND).render("checkout", {
           error: "Product not found",
           products: [],
           user: {
@@ -87,7 +88,7 @@ const checkoutPageInfo = async (req, res) => {
       );
 
       if (!cart || !cart.product || cart.product.length === 0) {
-        return res.status(400).render("checkout", {
+        return res.status(statusCode.BAD_REQUEST).render("checkout", {
           error: "Your cart is empty",
           products: [],
           user: {
@@ -177,7 +178,7 @@ const checkoutPageInfo = async (req, res) => {
   } catch (error) {
     console.error("Error fetching checkout data:", error);
     return res
-      .status(500)
+      .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "internal server error" });
   }
 };
@@ -206,7 +207,7 @@ const cartCheckoutPage = async (req, res, next) => {
     });
 
     if (!cart || !cart.product || cart.product.length === 0) {
-      return res.status(400).render("checkout", {
+      return res.status(statusCode.BAD_REQUEST).render("checkout", {
         error: "Your cart is empty",
         products: [],
         totalPrice: 0,
@@ -296,7 +297,7 @@ const cartCheckoutPage = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error fetching cart checkout data:", error);
-    res.status(500).render("user/error", {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).render("user/error", {
       error: err.message,
       user: req.session.userId ? { username: "User" } : null,
     });
@@ -307,7 +308,7 @@ const applyCoupon = async (req, res) => {
     const { couponCode, subtotal } = req.body;
 
     if (!couponCode || !subtotal) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: "Coupon code and subtotal are required",
       });
@@ -319,21 +320,21 @@ const applyCoupon = async (req, res) => {
     });
 
     if (!coupon) {
-      return res.status(404).json({
+      return res.status(statusCode.NOT_FOUND).json({
         success: false,
         message: "Invalid or expired coupon code",
       });
     }
 
     if (coupon.minPurchase && subtotal < coupon.minPurchase) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: `Minimum purchase of ₹${coupon.minPurchase} required to use this coupon`,
       });
     }
 
     if (coupon.count !== undefined && coupon.count <= 0) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: "This coupon has reached its usage limit",
       });
@@ -351,7 +352,7 @@ const applyCoupon = async (req, res) => {
     let discountedTotal = Math.max(0, subtotal - discount);
     discountedTotal = parseFloat(discountedTotal.toFixed(2)); // Round discounted total
 
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
       discount: discount,
       discountedTotal: discountedTotal,
@@ -360,7 +361,7 @@ const applyCoupon = async (req, res) => {
     });
   } catch (error) {
     console.error("Error applying coupon:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -384,7 +385,7 @@ const buyNow = async (req, res) => {
 
     if (!cart || !cart.product || cart.product.length === 0) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "No items in cart" });
     }
 
@@ -461,7 +462,7 @@ const buyNow = async (req, res) => {
       { $set: { product: [], totalPrice: 0 } }
     );
 
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
       message: "Order placed successfully",
       orderId: newOrder.orderId,
@@ -470,7 +471,7 @@ const buyNow = async (req, res) => {
   } catch (error) {
     console.error("Error in buyNow controller:", error);
     return res
-      .status(500)
+      .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "Internal server error" });
   }
 };
@@ -484,7 +485,7 @@ const cancelOrder = async (req, res) => {
     const order = await Order.findById(orderId);
 
     if (!order) {
-      return res.status(404).json({
+      return res.status(statusCode.NOT_FOUND).json({
         success: false,
         message: "Order not found",
       });
@@ -519,7 +520,7 @@ const cancelOrder = async (req, res) => {
     }
 
     order.products.forEach((product) => {
-      product.status = "Cancel Requested";
+      product.status = "Cancelled";
     });
 
     order.cancellationReason = reason;
@@ -528,11 +529,11 @@ const cancelOrder = async (req, res) => {
     }
 
     order.markModified("products");
-    order.orderStatus = "Cancel Requested";
+    order.orderStatus = "Cancelled";
 
     await order.save();
 
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
       message: "Order cancelled successfully",
       refunded: order.paymentStatus === "completed" ? order.totalAmount : 0,
@@ -540,7 +541,7 @@ const cancelOrder = async (req, res) => {
   } catch (error) {
     console.error("Error in cancelOrder:", error);
     return res
-      .status(500)
+      .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "Internal server error" });
   }
 };
@@ -558,13 +559,13 @@ const viewPurchaseDetails = async (req, res) => {
       .populate("userId", "username email contact");
 
     if (!order) {
-      return res.status(404).render("error", {
+      return res.status(statusCode.NOT_FOUND).render("error", {
         message: "Order not found",
       });
     }
 
     if (order.userId._id.toString() !== userId) {
-      return res.status(403).render("error", {
+      return res.status(statusCode.FORBIDDEN).render("error", {
         message: "Unauthorized access to order",
       });
     }
@@ -576,7 +577,7 @@ const viewPurchaseDetails = async (req, res) => {
   } catch (error) {
     console.error("Error fetching order details:", error);
     return res
-      .status(500)
+      .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "Internal server error" });
   }
 };
@@ -593,20 +594,20 @@ const cancelPartialProduct = async (req, res) => {
 
     if (!orderId || !productId) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "Missing required fields." });
     }
 
     const order = await Order.findById(orderId);
     if (!order) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Order not found." });
     }
 
     if (!Array.isArray(order.products) || order.products.length === 0) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "No products found in order." });
     }
 
@@ -616,7 +617,7 @@ const cancelPartialProduct = async (req, res) => {
 
     if (!product) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Product not found in order." });
     }
 
@@ -624,12 +625,12 @@ const cancelPartialProduct = async (req, res) => {
 
     if (["Cancel Requested", "Cancelled"].includes(product.status)) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "Product already cancelled." });
     }
 
     if (quantity > product.quantity) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: `Invalid quantity. You can't cancel more than the ordered quantity (${product.quantity}).`,
       });
@@ -691,7 +692,7 @@ const cancelPartialProduct = async (req, res) => {
 
     await order.save();
 
-    return res.status(200).json({
+    return res.status(statusCode.OK).json({
       success: true,
       message:
         quantity < product.quantity
@@ -701,7 +702,7 @@ const cancelPartialProduct = async (req, res) => {
   } catch (error) {
     console.error("Error in cancelPartialProduct:", error);
     return res
-      .status(500)
+      .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "Internal server error." });
   }
 };
@@ -716,7 +717,7 @@ const orderCancel = async (req, res) => {
     const order = await Order.findById(orderId);
     if (!order) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Order not found" });
     }
 
@@ -771,14 +772,14 @@ const orderCancel = async (req, res) => {
       await order.save();
 
       return res
-        .status(200)
+        .status(statusCode.OK)
         .json({
           success: true,
           message: "Order cancellation request submitted successfully",
         });
     } else {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({
           success: false,
           message:
@@ -788,7 +789,7 @@ const orderCancel = async (req, res) => {
   } catch (error) {
     console.error("Error in orderCancel:", error);
     return res
-      .status(500)
+      .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "Internal server error" });
   }
 };
@@ -806,7 +807,7 @@ const razorpayCreation = async (req, res) => {
       order = await Order.findById(orderId);
       if (!order) {
         return res
-          .status(404)
+          .status(statusCode.NOT_FOUND)
           .json({ success: false, message: "Order not found" });
       }
     } else {
@@ -829,7 +830,7 @@ const razorpayCreation = async (req, res) => {
       }
 
       if (!subtotal) {
-        return res.status(400).json({
+        return res.status(statusCode.BAD_REQUEST).json({
           success: false,
           message: "Unable to determine order amount. Please try again.",
         });
@@ -903,7 +904,7 @@ const razorpayCreation = async (req, res) => {
   } catch (error) {
     console.error("Error creating Razorpay order:", error);
     return res
-      .status(500)
+      .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "Internal server error" });
   }
 };
@@ -936,7 +937,7 @@ const verifyRazorPay = async (req, res) => {
         orderStatus: "Cancelled",
       });
 
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message:
           "Payment verification failed. Please try again or contact support.",
@@ -945,7 +946,7 @@ const verifyRazorPay = async (req, res) => {
 
     const order = await Order.findById(order_id);
     if (!order) {
-      return res.status(404).json({
+      return res.status(statusCode.NOT_FOUND).json({
         success: false,
         message: "Order not found. Please contact support.",
       });
@@ -1012,7 +1013,7 @@ const verifyRazorPay = async (req, res) => {
   } catch (error) {
     console.error("Error verifying payment:", error);
     return res
-      .status(500)
+      .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "Internal server error" });
   }
 };
@@ -1023,7 +1024,7 @@ const handleFailedPayments = async (req, res) => {
 
     if (!orderId) {
       console.log("Failed payment request missing orderId");
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: "Order ID is required",
       });
@@ -1031,13 +1032,12 @@ const handleFailedPayments = async (req, res) => {
 
     console.log(`Processing failed payment for order: ${orderId}`);
 
-    // Find and update the order
     const order = await Order.findByIdAndUpdate(
       orderId,
       {
         paymentStatus: "Failed",
         orderStatus: "Order Pending",
-        isTemporary: false, // Mark as not temporary so it doesn't get cleaned up
+        isTemporary: false,
         updatedAt: new Date(),
       },
       { new: true }
@@ -1045,13 +1045,12 @@ const handleFailedPayments = async (req, res) => {
 
     if (!order) {
       console.log(`Order not found for failed payment: ${orderId}`);
-      return res.status(404).json({
+      return res.status(statusCode.NOT_FOUND).json({
         success: false,
         message: "Order not found",
       });
     }
 
-    // Log the order status update
     console.log(
       ` Order ${orderId} marked as Failed/Cancelled due to payment failure`
     );
@@ -1108,7 +1107,7 @@ const handleFailedPayments = async (req, res) => {
       errorMessage = "Duplicate key error";
     }
 
-    return res.status(500).json({
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: errorMessage,
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
@@ -1124,14 +1123,14 @@ const returnOrder = async (req, res) => {
 
     if (!orderId) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "Order ID is required" });
     }
 
     let order = await Order.findById(orderId);
     if (!order) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Order not found" });
     }
 
@@ -1151,7 +1150,7 @@ const returnOrder = async (req, res) => {
 
     if (!hasUpdatedProduct) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({
           success: false,
           message: "All products are already return requested",
@@ -1163,14 +1162,14 @@ const returnOrder = async (req, res) => {
 
     await order.save();
 
-    return res.status(200).json({
+    return res.status(statusCode.OK).json({
       success: true,
       message: "Return request for entire order submitted successfully",
     });
   } catch (error) {
     console.error("Error processing full order return request:", error);
     return res
-      .status(500)
+      .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "Internal server error" });
   }
 };
@@ -1186,7 +1185,7 @@ const returnRequest = async (req, res) => {
     const order = await Order.findById(Id);
     if (!order) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Order not found" });
     }
 
@@ -1206,7 +1205,7 @@ const returnRequest = async (req, res) => {
 
     if (!hasUpdatedProduct) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({
           success: false,
           message: "All products are already return requested",
@@ -1219,7 +1218,7 @@ const returnRequest = async (req, res) => {
     await order.save();
 
     return res
-      .status(200)
+      .status(statusCode.OK)
       .json({
         success: true,
         message: "Product return requested successfully",
@@ -1227,7 +1226,7 @@ const returnRequest = async (req, res) => {
   } catch (error) {
     console.error("Error in returnRequest:", error);
     return res
-      .status(500)
+      .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "Internal server error" });
   }
 };
@@ -1244,26 +1243,26 @@ const returnPartialRequest = async (req, res) => {
     const order = await Order.findById(orderId);
     if (!order) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Order not found" });
     }
 
     if (!order.products || order.products.length === 0) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "No products found in order" });
     }
 
     const product = order.products.id(productOrderId);
     if (!product) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Product not found in order" });
     }
 
     if (product.status === "Returned") {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "Product already returned" });
     }
 
@@ -1274,7 +1273,7 @@ const returnPartialRequest = async (req, res) => {
     await order.save();
 
     return res
-      .status(200)
+      .status(statusCode.OK)
       .json({
         success: true,
         message: "Return request submitted successfully",
@@ -1282,7 +1281,7 @@ const returnPartialRequest = async (req, res) => {
   } catch (error) {
     console.error("Error processing return request:", error);
     return res
-      .status(500)
+      .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "Server error, please try again." });
   }
 };
@@ -1293,7 +1292,7 @@ const getWalletBalance = async (req, res) => {
 
     if (!userId) {
       return res
-        .status(401)
+        .status(statusCode.UNAUTHORIZED)
         .json({ success: false, message: "User not authenticated" });
     }
 
@@ -1301,17 +1300,17 @@ const getWalletBalance = async (req, res) => {
 
     if (!user) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "User not found" });
     }
 
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
       balance: user.wallet || 0,
     });
   } catch (error) {
     console.error("Error fetching wallet balance:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal server error" });
   }
 };
 const payWithWallet = async (req, res) => {
@@ -1321,7 +1320,7 @@ const payWithWallet = async (req, res) => {
 
     if (!userId) {
       return res
-        .status(401)
+        .status(statusCode.UNAUTHORIZED)
         .json({ success: false, message: "User not authenticated" });
     }
 
@@ -1333,12 +1332,12 @@ const payWithWallet = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "User not found" });
     }
 
     if (user.wallet < finalAmount) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         insufficientBalance: true,
         message: "Insufficient wallet balance",
@@ -1349,7 +1348,7 @@ const payWithWallet = async (req, res) => {
     const cart = await Cart.findOne({ userId }).populate("product.productId");
     if (!cart || !cart.product || cart.product.length === 0) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "No items in cart" });
     }
 
@@ -1401,7 +1400,7 @@ const payWithWallet = async (req, res) => {
       { $set: { product: [], totalPrice: 0 } }
     );
 
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
       message: "Order placed successfully using wallet",
       orderId: newOrder.orderId,
@@ -1409,7 +1408,7 @@ const payWithWallet = async (req, res) => {
     });
   } catch (error) {
     console.error("Error processing wallet payment:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal server error" });
   }
 };
 

@@ -11,6 +11,7 @@ const CategoryOffer = require("../../models/categoryOffer");
 const Product = require("../../models/productSchema");
 const Order = require("../../models/orderSchema");
 const Coupon = require("../../models/couponSchema");
+const statusCode = require("../../utils/statusCodes");
 
 const loadHome = async (req, res) => {
   try {
@@ -495,7 +496,7 @@ const logout = (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       return res
-        .status(500)
+        .status(statusCode.INTERNAL_SERVER_ERROR)
         .json({ success: false, message: "Could not log out" });
     }
     res.clearCookie("connect.sid");
@@ -507,7 +508,7 @@ const resendOtp = async (req, res) => {
   try {
     if (!req.session.user || !req.session.user.email) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "Session has expired" });
     }
     const email = req.session.user.email;
@@ -516,7 +517,7 @@ const resendOtp = async (req, res) => {
     const emailSent = await sendVerificationEmail(email, otp);
     if (!emailSent) {
       return res
-        .status(500)
+        .status(statusCode.INTERNAL_SERVER_ERROR)
         .json({ success: false, message: "Error in sending OTP" });
     }
 
@@ -545,7 +546,7 @@ const postForgetEmail = async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Email not found" });
     }
     req.session.userEmail = email;
@@ -557,13 +558,13 @@ const postForgetEmail = async (req, res) => {
     const emailSent = await sendVerificationEmail(email);
     if (!emailSent) {
       return res
-        .status(500)
+        .status(statusCode.INTERNAL_SERVER_ERROR)
         .json({ success: false, message: "Error in sending OTP" });
     }
 
     req.session.userEmail = email.toLowerCase();
 
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
       message: "OTP sent to your email",
       showOtpModal: true,
@@ -582,17 +583,17 @@ const postOtpForPasswordReset = async (req, res) => {
     console.log("Stored OTP in session:", req.session.userOtp);
 
     if (String(otp) !== String(req.session.userOtp)) {
-      return res.status(404).json({ success: false, message: "Invalid OTP" });
+      return res.status(statusCode.BAD_REQUEST).json({ success: false, message: "Invalid OTP" });
     }
 
     const user = await User.findOne({ email: req.session.userEmail });
     if (!user) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "User not found" });
     }
 
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
       message: "OTP verified successfully, now you can reset your password",
     });
@@ -618,7 +619,7 @@ const postResetPasswordByOtp = async (req, res) => {
 
   if (!newPassword) {
     return res
-      .status(400)
+      .status(statusCode.BAD_REQUEST)
       .json({ success: false, message: "Password is required" });
   }
 
@@ -626,7 +627,7 @@ const postResetPasswordByOtp = async (req, res) => {
     const user = await User.findOne({ email: email });
     if (!user) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "User not found" });
     }
 
@@ -639,7 +640,7 @@ const postResetPasswordByOtp = async (req, res) => {
     delete req.session.userEmail;
 
     res
-      .status(200)
+      .status(statusCode.OK)
       .json({ success: true, message: "Password reset successful" });
   } catch (error) {
     console.error("Error resetting password:", error);
@@ -694,7 +695,7 @@ const updateUserDetails = async (req, res) => {
     const userId = req.session.userId;
 
     if (!userId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      return res.status(statusCode.UNAUTHORIZED).json({ success: false, message: "Unauthorized" });
     }
 
     const { fullName, mobileNumber } = req.body;
@@ -707,7 +708,7 @@ const updateUserDetails = async (req, res) => {
 
     if (!updatedUser) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "User not found" });
     }
 
@@ -721,7 +722,7 @@ const updateUserDetails = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating user details:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -735,7 +736,7 @@ const addAccountDetails = async (req, res, next) => {
     if (!fullName || !address || !city || !state || !postCode || !country) {
       console.warn("⚠️ Missing Fields:", req.body);
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "All fields are required." });
     }
 
@@ -743,7 +744,7 @@ const addAccountDetails = async (req, res, next) => {
     if (!user) {
       console.warn("⚠️ User Not Found:", req.session.userId);
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "User not found." });
     }
 
@@ -780,7 +781,7 @@ const editProfile = async (req, res) => {
 
   if (!userId) {
     return res
-      .status(401)
+      .status(statusCode.UNAUTHORIZED)
       .json({ success: false, message: "User not authenticated" });
   }
 
@@ -788,7 +789,7 @@ const editProfile = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "User not found" });
     }
 
@@ -806,7 +807,7 @@ const editProfile = async (req, res) => {
     await user.save();
 
     return res
-      .status(200)
+      .status(statusCode.OK)
       .json({ success: true, message: "User details updated successfully" });
   } catch (error) {
     console.error("Error updating user:", error);
@@ -822,14 +823,14 @@ const deleteAddress = async (req, res) => {
   try {
     if (!userId) {
       return res
-        .status(401)
+        .status(statusCode.UNAUTHORIZED)
         .json({ success: false, message: "User not authenticated" });
     }
 
     const user = await User.findById(userId);
     if (!user) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "User not found" });
     }
 
@@ -843,7 +844,7 @@ const deleteAddress = async (req, res) => {
   } catch (error) {
     console.error("Error deleting address:", error);
     return res
-      .status(500)
+      .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "internal server error" });
   }
 };
@@ -866,14 +867,14 @@ const postResetPassword = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "user not found" });
     }
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) {
       console.log("Old password does not match stored password");
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "Invalid old password" });
     }
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
@@ -883,7 +884,7 @@ const postResetPassword = async (req, res) => {
     console.log("password changeddddd");
 
     return res
-      .status(200)
+      .status(statusCode.OK)
       .json({ success: true, message: "password changed successfully.." });
   } catch (error) {
     console.log("internal server error....", error);
@@ -908,7 +909,7 @@ const sendMessage = async (req, res) => {
   const { email, message } = req.body;
 
   if (!email || !message) {
-    return res.status(400).json({ message: "All fields are required" });
+    return res.status(statusCode.BAD_REQUEST).json({ message: "All fields are required" });
   }
 
   try {

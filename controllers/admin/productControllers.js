@@ -4,6 +4,7 @@ const categoryOffer = require("../../models/categoryOffer");
 const ProductOffer = require("../../models/productOffer");
 const fs = require("fs");
 const path = require("path");
+const statusCode = require("../../utils/statusCodes")
 
 const { nextTick } = require("process");
 const sharp = require("sharp");
@@ -62,14 +63,14 @@ const productAdd = async (req, res) => {
     const categoryDetails = await Category.findById(category);
     if (!categoryDetails) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "Invalid category." });
     }
     const categoryName = categoryDetails.name;
 
     if (!Array.isArray(sizesWithStock) || sizesWithStock.length === 0) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({
           success: false,
           message: "Sizes with stock must be an array of size-stock pairs.",
@@ -83,7 +84,7 @@ const productAdd = async (req, res) => {
         !size.stock ||
         typeof size.stock !== "number"
       ) {
-        return res.status(400).json({
+        return res.status(statusCode.BAD_REQUEST).json({
           success: false,
           message:
             'Each size-stock pair must have a "size" (string) and "stock" (number).',
@@ -97,7 +98,7 @@ const productAdd = async (req, res) => {
     );
 
     if (!req.files || req.files.length === 0) {
-      return res.status(400).send("Please upload at least one image.");
+      return res.status(statusCode.BAD_REQUEST).send("Please upload at least one image.");
     }
     console.log(req.files, "req.files.........");
 
@@ -139,7 +140,7 @@ const productAdd = async (req, res) => {
     await newProduct.save();
     console.log("new product", newProduct);
     res
-      .status(200)
+      .status(statusCode.OK)
       .json({ success: true, message: "Product saved successfully." });
   } catch (error) {
     console.error("Error adding product:", error);
@@ -156,7 +157,7 @@ const getProductDeatilsInfo = async (req, res) => {
 
     if (!product) {
       const error = new Error("product Not Found");
-      error.status = 404;
+      error.status = statusCode.NOT_FOUND;
       throw error;
     }
     res.render("productDetailsInfo", { product });
@@ -171,7 +172,7 @@ const renderEditProduct = async (req, res) => {
 
     const product = await Product.findById(productId).populate("category");
     if (!product) {
-      return res.status(404).send("Product not found");
+      return res.status(statusCode.NOT_FOUND).send("Product not found");
     }
 
     const categories = await Category.find({});
@@ -207,7 +208,7 @@ const updateProduct = async (req, res) => {
     const product = await Product.findById(productId);
     if (!product) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Product not found" });
     }
 
@@ -222,7 +223,7 @@ const updateProduct = async (req, res) => {
         : removedImages || [];
 
     if (!title || !description || !price || !brandName || !color || !category) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: "All required fields must be provided",
       });
@@ -232,7 +233,7 @@ const updateProduct = async (req, res) => {
       !Array.isArray(parsedSizesWithStock) ||
       parsedSizesWithStock.length === 0
     ) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: "At least one size with stock must be provided",
       });
@@ -244,7 +245,7 @@ const updateProduct = async (req, res) => {
         typeof sizeObj.stock !== "number" ||
         sizeObj.stock < 0
       ) {
-        return res.status(400).json({
+        return res.status(statusCode.BAD_REQUEST).json({
           success: false,
           message: "Invalid size or stock value provided",
         });
@@ -291,7 +292,7 @@ const updateProduct = async (req, res) => {
 
     const categoryExists = await Category.findById(category);
     if (!categoryExists) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: "Invalid category provided",
       });
@@ -314,13 +315,13 @@ const updateProduct = async (req, res) => {
     );
 
     if (!updatedProduct) {
-      return res.status(500).json({
+      return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: "Error updating product",
       });
     }
 
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
       message: "Product updated successfully",
       product: updatedProduct,
@@ -350,7 +351,7 @@ const softDeleteProduct = async (req, res) => {
 
     if (!product) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Product not found" });
     }
 
@@ -373,7 +374,7 @@ const recoverProduct = async (req, res) => {
 
     if (!product) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Product not found" });
     }
 
@@ -424,20 +425,20 @@ const addProductOffer = async (req, res, next) => {
       !endDate
     ) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "All fields are required" });
     }
 
     if (!["percentage", "fixed"].includes(discountType)) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "Invalid discount type" });
     }
 
     const product = await Product.findById(selectedProduct);
     if (!product) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Product not found" });
     }
 
@@ -446,7 +447,7 @@ const addProductOffer = async (req, res, next) => {
     });
     if (existingOffer) {
       return res
-        .status(400)
+        .status(statusCode.BAD_REQUEST)
         .json({
           success: false,
           message: "An offer already exists for this product",
@@ -479,7 +480,7 @@ const addProductOffer = async (req, res, next) => {
     product.discountedPrice = discountedPrice;
     await product.save();
 
-    return res.status(200).json({
+    return res.status(statusCode.OK).json({
       success: true,
       message: "Product offer saved successfully.",
       discountedPrice,
@@ -497,7 +498,7 @@ const deleteProductOffer = async (req, res, next) => {
 
     if (!deletedOffer) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Offer not found." });
     }
 
@@ -529,7 +530,7 @@ const editProductOffer = async (req, res, next) => {
 
     if (!updatedOffer) {
       return res
-        .status(404)
+        .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "Offer not found." });
     }
 
