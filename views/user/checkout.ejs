@@ -314,7 +314,6 @@
                                             </div><!-- End .card-header -->
                                             <div id="collapse-3" class="collapse" aria-labelledby="heading-3" data-parent="#accordion-payment">
                                                 <div class="card-body">
-                                                    Quisque volutpat mattis eros. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec odio. Quisque volutpat mattis eros. 
                                                 </div><!-- End .card-body -->
                                             </div><!-- End .collapse -->
                                         </div><!-- End .card -->
@@ -336,47 +335,45 @@
 
 <!-- Order Confirmation Modal -->
 <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body text-center">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-12 text-center mb-4">
-                            <div class="success-animation">
-                                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                                    <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
-                                    <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <h4 class="text-success mb-4">Order Placed Successfully!</h4>
-                            <div class="order-details mb-4">
-                                <p class="mb-2">Order ID: <strong><span id="modalOrderId"></span></strong></p>
-                                <p class="mb-2">Total Amount: <strong><span id="modalOrderTotal"></span></strong></p>
-                                <p class="mb-4">A confirmation email has been sent to your registered email address.</p>
-                            </div>
-                            <div class="next-steps">
-                                <p class="text-muted mb-4">You will be redirected to the order details page shortly...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer border-0 justify-content-center">
-                <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Close</button>
-                <a href="/orders" class="btn btn-primary">View Orders</a>
-            </div>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content text-center p-3">
+      
+      <!-- Success Icon -->
+      <div class="mt-4 mb-3">
+        <div class="success-animation d-inline-block">
+          <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+            <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+            <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+          </svg>
         </div>
+      </div>
+
+      <!-- Success Message -->
+      <h4 class="text-success mb-3">Order Placed Successfully!</h4>
+
+      <!-- Order Details -->
+      <div class="order-details mb-3">
+        <p class="mb-1">Order ID: <strong><span id="modalOrderId"></span></strong></p>
+        <p class="mb-1">Total Amount: <strong><span id="modalOrderTotal"></span></strong></p>
+        <p class="mb-0 text-muted small">
+          A confirmation email has been sent to your registered email address.
+        </p>
+      </div>
+
+      <!-- Redirect Info -->
+      <div class="next-steps mb-3">
+        <p class="text-muted small">You will be redirected to the order details page shortly...</p>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="modal-footer border-0 justify-content-center">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+        <a href="/orders" class="btn btn-primary ml-2">View Orders</a>
+      </div>
     </div>
+  </div>
 </div>
+
 <div id="paymentErrorModal" class="modaal fade" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- Centered & Larger Size -->
         <div class="modal-content">
@@ -999,7 +996,6 @@ function submitOrderThroughRegularCheckout(formData) {
 document.addEventListener('DOMContentLoaded', function() {
   fetchWalletBalance();
   
-  // SINGLE EVENT LISTENER FOR PLACE ORDER BUTTON
   document.getElementById('btn-place-order').addEventListener('click', function(e) {
     e.preventDefault();
 

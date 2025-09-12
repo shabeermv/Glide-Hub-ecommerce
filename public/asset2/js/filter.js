@@ -242,13 +242,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Status filter
     const statusSelect = document.querySelector('.custom_select:nth-child(3) select');
     if (statusSelect) {
         statusSelect.addEventListener('change', applyFilters);
     }
     
-    // Date range inputs (for custom date filter)
     const startDateInput = document.getElementById('startDate');
     if (startDateInput) {
         startDateInput.addEventListener('change', function() {
@@ -267,7 +265,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Set default values based on URL params
     const urlParams = new URLSearchParams(window.location.search);
     
     if (categorySelect && urlParams.has('category')) {
