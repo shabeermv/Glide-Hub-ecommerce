@@ -43,14 +43,14 @@ const downloadInvoice = async (req, res) => {
     doc.moveDown();
 
     // ================= CUSTOMER INFO =================
-    doc.fontSize(12).text("Customer Details", { underline: true });
+    doc.fontSize(12).text("Customer Details \n", { underline: true }).moveDown(1.5);
     doc.text(`Name: ${order.userId.username}`);
     doc.text(`Email: ${order.userId.email}`);
     doc.moveDown();
 
     // ================= SHIPPING INFO =================
     const shipping = order.shippingAddress;
-    doc.fontSize(12).text("Shipping Address", { underline: true });
+    doc.fontSize(12).text("Shipping Address ", { underline: true }).moveDown(1.5);
     doc.text(`${shipping.fullName}`);
     doc.text(`${shipping.address}`);
     doc.text(`${shipping.city}, ${shipping.state}, ${shipping.postalCode}`);
@@ -59,7 +59,7 @@ const downloadInvoice = async (req, res) => {
     doc.moveDown();
 
     // ================= PRODUCTS TABLE =================
-    doc.fontSize(12).text("Products Ordered", { underline: true }).moveDown(0.5);
+    doc.fontSize(12).text("Products Ordered ", { underline: true }).moveDown(1.5);
 
     // Column positions (absolute X coords)
     const startX = 50;
