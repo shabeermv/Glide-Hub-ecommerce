@@ -148,7 +148,6 @@ const loadHome = async (req, res) => {
 const loadLogin = async (req, res) => {
   try {
     if (req.session.userId) {
-      // 🔹 same as loadHome
       const userId = req.session.userId;
       const products = await Product.find();
       const category = await Category.find();
@@ -267,7 +266,6 @@ const loadLogin = async (req, res) => {
         };
       });
 
-      // 🔹 now render home with same data
       res.render("home", {
         category,
         updatedProducts: updatedProducts.slice(0, 4),
@@ -666,14 +664,7 @@ const userProfileInfo = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    orders.forEach((order) => {
-      const confirmedProducts = order.products.filter(
-        (product) => product.status !== "Cancelled"
-      );
-      order.totalAmount = confirmedProducts.reduce((sum, product) => {
-        return sum + product.productId.price * product.quantity;
-      }, 0);
-    });
+   
 
     const coupons = await Coupon.find({
       expireDate: { $gte: new Date() },
@@ -728,13 +719,13 @@ const updateUserDetails = async (req, res) => {
 
 const addAccountDetails = async (req, res, next) => {
   try {
-    console.log("📥 Received Request to Add Address");
-    console.log("📝 Request Body:", req.body);
+    console.log("Received Request to Add Address");
+    console.log("Request Body:", req.body);
 
     const { fullName, address, city, state, postCode, country } = req.body;
 
     if (!fullName || !address || !city || !state || !postCode || !country) {
-      console.warn("⚠️ Missing Fields:", req.body);
+      console.warn("Missing Fields:", req.body);
       return res
         .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "All fields are required." });
@@ -742,7 +733,7 @@ const addAccountDetails = async (req, res, next) => {
 
     const user = await User.findById(req.session.userId);
     if (!user) {
-      console.warn("⚠️ User Not Found:", req.session.userId);
+      console.warn("User Not Found:", req.session.userId);
       return res
         .status(statusCode.NOT_FOUND)
         .json({ success: false, message: "User not found." });

@@ -30,6 +30,8 @@ passport.use(
                 : null,
             googleId: profile.id,
           });
+
+          console.log('this is the email from google auth',email);
           await user.save();
           return done(null, user);
         }

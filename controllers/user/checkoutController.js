@@ -1055,7 +1055,6 @@ const handleFailedPayments = async (req, res) => {
       ` Order ${orderId} marked as Failed/Cancelled due to payment failure`
     );
 
-    // For guest checkout, no need to modify cart
     if (!order.userId) {
       console.log(`Guest checkout - no cart to preserve`);
       return res.json({
@@ -1065,8 +1064,7 @@ const handleFailedPayments = async (req, res) => {
       });
     }
 
-    // For logged-in users, we ensure their cart is still active
-    // We don't need to do anything with the cart since we want to keep it as is
+ 
     const cart = await Cart.findOne({ userId: order.userId });
 
     if (!cart || cart.product.length === 0) {
@@ -1079,14 +1077,12 @@ const handleFailedPayments = async (req, res) => {
       );
     }
 
-    // If there was a coupon applied, we don't increment its usage count
     if (order.couponCode) {
       console.log(
         `Coupon ${order.couponCode} was not counted as used due to payment failure`
       );
     }
 
-    // Return success response
     return res.json({
       success: true,
       orderId: order._id,
@@ -1096,7 +1092,6 @@ const handleFailedPayments = async (req, res) => {
   } catch (error) {
     console.error("Error handling failed payment:", error);
 
-    // Provide appropriate error details based on the error type
     let errorMessage = "Internal server error";
 
     if (error.name === "CastError") {
