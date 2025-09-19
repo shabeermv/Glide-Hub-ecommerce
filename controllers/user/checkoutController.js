@@ -347,10 +347,10 @@ const applyCoupon = async (req, res) => {
       discount = coupon.discountValue;
     }
 
-    discount = parseFloat(discount.toFixed(2)); // Round discount to 2 decimal places
+    discount = parseFloat(discount.toFixed(2)); 
 
     let discountedTotal = Math.max(0, subtotal - discount);
-    discountedTotal = parseFloat(discountedTotal.toFixed(2)); // Round discounted total
+    discountedTotal = parseFloat(discountedTotal.toFixed(2)); 
 
     res.status(statusCode.OK).json({
       success: true,
@@ -389,6 +389,7 @@ const buyNow = async (req, res) => {
         .json({ success: false, message: "No items in cart" });
     }
 
+    // Subtotal
     const subtotal = cart.product.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
@@ -396,6 +397,7 @@ const buyNow = async (req, res) => {
 
     const finalAmount = Math.max(0, subtotal - couponDiscount);
 
+    // Shipping address
     const shippingAddress = {
       fullName: `${formData.firstName} ${formData.lastName}`,
       address:
@@ -408,6 +410,7 @@ const buyNow = async (req, res) => {
       phone: formData.phone,
     };
 
+    // Order products array
     const orderProducts = cart.product.map((item) => ({
       productId: item.productId._id,
       size: item.size,
@@ -415,8 +418,8 @@ const buyNow = async (req, res) => {
       price: item.price,
     }));
 
+    // Payment method normalization
     let paymentMethod = formData.paymentMethod;
-
     if (typeof paymentMethod === "string") {
       if (paymentMethod.toLowerCase().includes("wallet")) {
         paymentMethod = "wallet";
@@ -430,6 +433,7 @@ const buyNow = async (req, res) => {
       }
     }
 
+    // Create new order
     const newOrder = new Order({
       orderId: generateOrderId(),
       userId: userId,
@@ -445,6 +449,7 @@ const buyNow = async (req, res) => {
 
     await newOrder.save();
 
+    // Wallet deduction if used
     if (paymentMethod === "wallet") {
       const user = await User.findById(userId);
       if (user) {
@@ -456,6 +461,19 @@ const buyNow = async (req, res) => {
         await user.save();
       }
     }
+
+    for (const item of cart.product) {
+      await Product.updateOne(
+        { _id: item.productId._id, "sizes.size": item.size },
+        {
+          $inc: {
+            "sizes.$.stock": -item.quantity, 
+            totalStock: -item.quantity, 
+          },
+        }
+      );
+    }
+
 
     await Cart.findOneAndUpdate(
       { userId: userId },
@@ -651,7 +669,7 @@ const cancelPartialProduct = async (req, res) => {
           sizeObj.stock += quantity;
         } else {
           console.warn(
-            `⚠️ Size ${product.size} not found for Product ${productData._id}`
+            `Size ${product.size} not found for Product ${productData._id}`
           );
         }
         await productData.save();
@@ -670,7 +688,7 @@ const cancelPartialProduct = async (req, res) => {
           sizeObj.stock += product.quantity;
         } else {
           console.warn(
-            `⚠️ Size ${product.size} not found for Product ${productData._id}`
+            `Size ${product.size} not found for Product ${productData._id}`
           );
         }
         await productData.save();

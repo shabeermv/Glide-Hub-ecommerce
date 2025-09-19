@@ -199,7 +199,7 @@ const addProductCart = async (req, res) => {
 };
 
 const addProductToCartFromWishlist = async (req, res) => {
-  const { productId, size = "S", quantity = 1 } = req.query;
+  const { productId, size , quantity = 1 } = req.query;
   const userId = req.session.userId;
 
   if (!userId) {
