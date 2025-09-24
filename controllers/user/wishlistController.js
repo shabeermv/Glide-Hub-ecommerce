@@ -1,7 +1,8 @@
 const User = require("../../models/userSchema");
 const Product = require("../../models/productSchema");
 const Wishlist = require("../../models/wishlistSchema");
-const statusCode = require("../../utils/statusCodes")
+const Cart = require("../../models/cartSchema"); // Add this import
+const statusCode = require("../../utils/statusCodes");
 
 const wishlistPageInfo = async (req, res) => {
   try {
@@ -104,9 +105,6 @@ const removeWishlistItem = async (req, res) => {
   const userId = req.session.userId;
 
   try {
-    // console.log('Product ID:', productId);
-    // console.log('User ID:', userId);
-
     if (!userId || !productId) {
       return res.status(statusCode.BAD_REQUEST).json({
         success: false,
@@ -137,8 +135,11 @@ const removeWishlistItem = async (req, res) => {
   }
 };
 
+
+
 module.exports = {
   wishlistPageInfo,
   addProductWishlist,
   removeWishlistItem,
+ 
 };

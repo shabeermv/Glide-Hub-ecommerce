@@ -389,7 +389,26 @@ const buyNow = async (req, res) => {
         .json({ success: false, message: "No items in cart" });
     }
 
-    // Subtotal
+    // Check stock availability before processing order
+    for (const item of cart.product) {
+      const product = await Product.findById(item.productId._id);
+      if (!product) {
+        return res
+          .status(statusCode.BAD_REQUEST)
+          .json({ success: false, message: `Product not found` });
+      }
+
+      const sizeInfo = product.sizes.find(s => s.size === item.size);
+      if (!sizeInfo || sizeInfo.stock < item.quantity) {
+        return res
+          .status(statusCode.BAD_REQUEST)
+          .json({ 
+            success: false, 
+            message: `Insufficient stock for ${product.title} in size ${item.size}. Available: ${sizeInfo ? sizeInfo.stock : 0}, Requested: ${item.quantity}` 
+          });
+      }
+    }
+
     const subtotal = cart.product.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
@@ -397,7 +416,16 @@ const buyNow = async (req, res) => {
 
     const finalAmount = Math.max(0, subtotal - couponDiscount);
 
-    // Shipping address
+    // Wallet balance check for wallet payments
+    if (formData.paymentMethod && formData.paymentMethod.toLowerCase().includes("wallet")) {
+      const user = await User.findById(userId);
+      if (!user || user.wallet < finalAmount) {
+        return res
+          .status(statusCode.BAD_REQUEST)
+          .json({ success: false, message: "Insufficient wallet balance" });
+      }
+    }
+
     const shippingAddress = {
       fullName: `${formData.firstName} ${formData.lastName}`,
       address:
@@ -410,7 +438,6 @@ const buyNow = async (req, res) => {
       phone: formData.phone,
     };
 
-    // Order products array
     const orderProducts = cart.product.map((item) => ({
       productId: item.productId._id,
       size: item.size,
@@ -418,7 +445,6 @@ const buyNow = async (req, res) => {
       price: item.price,
     }));
 
-    // Payment method normalization
     let paymentMethod = formData.paymentMethod;
     if (typeof paymentMethod === "string") {
       if (paymentMethod.toLowerCase().includes("wallet")) {
@@ -433,7 +459,6 @@ const buyNow = async (req, res) => {
       }
     }
 
-    // Create new order
     const newOrder = new Order({
       orderId: generateOrderId(),
       userId: userId,
@@ -449,7 +474,7 @@ const buyNow = async (req, res) => {
 
     await newOrder.save();
 
-    // Wallet deduction if used
+    // Handle wallet payment
     if (paymentMethod === "wallet") {
       const user = await User.findById(userId);
       if (user) {
@@ -457,24 +482,38 @@ const buyNow = async (req, res) => {
         user.walletHistory.push({
           date: new Date(),
           amount: -finalAmount,
+          description: `Order payment - ${newOrder.orderId}`,
+          type: 'debit'
         });
         await user.save();
       }
     }
 
+    // Update stock for each product with better error handling
     for (const item of cart.product) {
-      await Product.updateOne(
-        { _id: item.productId._id, "sizes.size": item.size },
+      const updateResult = await Product.updateOne(
+        { 
+          _id: item.productId._id,
+          "sizes.size": item.size,
+          "sizes.stock": { $gte: item.quantity } // Ensure sufficient stock
+        },
         {
           $inc: {
-            "sizes.$.stock": -item.quantity, 
-            totalStock: -item.quantity, 
-          },
+            "sizes.$.stock": -item.quantity,
+            totalStock: -item.quantity,
+            saleCount: item.quantity
+          }
         }
       );
+
+      // Check if the update was successful
+      if (updateResult.modifiedCount === 0) {
+        console.error(`Failed to update stock for product ${item.productId._id}, size ${item.size}`);
+        // You might want to implement rollback logic here
+      }
     }
 
-
+    // Clear the cart
     await Cart.findOneAndUpdate(
       { userId: userId },
       { $set: { product: [], totalPrice: 0 } }
@@ -656,7 +695,7 @@ const cancelPartialProduct = async (req, res) => {
 
     if (quantity < product.quantity) {
       product.cancelledQuantity = quantity;
-      product.status = "Cancel Requested";
+      product.status = "Cancelled";
       product.cancelReason = reason || "Not specified";
       product.cancelDetails = customReason || "";
       product.cancelRequestDate = new Date();
@@ -675,7 +714,7 @@ const cancelPartialProduct = async (req, res) => {
         await productData.save();
       }
     } else {
-      product.status = "Cancel Requested";
+      product.status = "Cancelled";
       product.cancelReason = reason || "Not specified";
       product.cancelDetails = customReason || "";
       product.cancelRequestDate = new Date();
@@ -702,7 +741,7 @@ const cancelPartialProduct = async (req, res) => {
     );
 
     if (allCancelled) {
-      order.orderStatus = "Cancel Requested";
+      order.orderStatus = "Cancelled";
       order.cancelReason = reason || "All products cancelled";
       order.cancelDetails = customReason || "";
       order.cancelRequestDate = new Date();
@@ -752,7 +791,7 @@ const orderCancel = async (req, res) => {
         continue;
       }
 
-      product.status = "Cancel Requested";
+      product.status = "Cancelled";
       product.cancelReason = reason || "Order cancelled";
       product.cancelDetails = additionalDetails || "";
       product.cancelRequestDate = new Date();
@@ -781,7 +820,7 @@ const orderCancel = async (req, res) => {
     }
 
     if (hasUpdatedProduct) {
-      order.orderStatus = "Cancel Requested";
+      order.orderStatus = "Cancelled";
       order.cancelReason = reason || "Not specified";
       order.cancelDetails = additionalDetails || "";
       order.cancelRequestDate = new Date();
@@ -980,7 +1019,7 @@ const verifyRazorPay = async (req, res) => {
       try {
         const product = await Product.findById(item.productId);
         if (!product) {
-          console.warn("⚠️ Product not found:", item.productId);
+          console.warn("Product not found:", item.productId);
           continue;
         }
 
@@ -1189,10 +1228,11 @@ const returnOrder = async (req, res) => {
 
 const returnRequest = async (req, res) => {
   const Id = req.params.id;
-  const { customReason } = req.body;
+  const { customReason, reason } = req.body; // Added reason to destructuring
 
   console.log("Order ID:", Id);
-  console.log("Return Reason:", customReason);
+  console.log("Return Reason:", reason);
+  console.log("Custom Reason:", customReason);
 
   try {
     const order = await Order.findById(Id);
@@ -1203,30 +1243,67 @@ const returnRequest = async (req, res) => {
     }
 
     let hasUpdatedProduct = false;
+    let skippedProducts = [];
+    let updatedProducts = [];
 
     order.products.forEach((product) => {
       if (product.status === "Return Requested") {
         console.log(
           `Skipping product ${product.productId}, already return requested.`
         );
+        skippedProducts.push(`Product already return requested`);
+        return;
+      }
+      
+      if (product.status === "Cancelled" || product.status === "Cancel Requested") {
+        console.log(
+          `Skipping product ${product.productId}, already cancelled.`
+        );
+        skippedProducts.push(`Product already cancelled`);
         return;
       }
 
-      product.status = "Return Requested";
-      hasUpdatedProduct = true;
+      if (product.status === "Returned") {
+        console.log(
+          `Skipping product ${product.productId}, already returned.`
+        );
+        skippedProducts.push(`Product already returned`);
+        return;
+      }
+
+      if (["Delivered", "Shipped", "Confirmed", "Pending"].includes(product.status)) {
+        product.status = "Return Requested";
+        hasUpdatedProduct = true;
+        updatedProducts.push(product.productId);
+        console.log(`Updated product ${product.productId} to Return Requested`);
+      } else {
+        skippedProducts.push(`Product in ${product.status} state cannot be returned`);
+      }
     });
 
     if (!hasUpdatedProduct) {
+      const allProductsStatus = order.products.map(p => p.status);
       return res
         .status(statusCode.BAD_REQUEST)
         .json({
           success: false,
-          message: "All products are already return requested",
+          message: "No products are eligible for return. All products are either already returned, cancelled, or in non-returnable states.",
+          productStatuses: allProductsStatus,
+          skippedReasons: skippedProducts
         });
     }
 
-    order.orderStatus = "Return Requested";
-    order.returnReason = customReason;
+    const allProductsInFinalState = order.products.every(product => 
+      ["Return Requested", "Returned", "Cancelled", "Cancel Requested"].includes(product.status)
+    );
+
+    if (allProductsInFinalState) {
+      order.orderStatus = "Return Requested";
+    } else {
+      order.orderStatus = "Partial Return Requested"; 
+    }
+
+    order.returnReason = reason || customReason;
 
     await order.save();
 
@@ -1234,8 +1311,15 @@ const returnRequest = async (req, res) => {
       .status(statusCode.OK)
       .json({
         success: true,
-        message: "Product return requested successfully",
+        message: `Return request submitted successfully for ${updatedProducts.length} product(s)`,
+        updatedProducts: updatedProducts.length,
+        skippedProducts: skippedProducts.length,
+        details: {
+          updated: updatedProducts,
+          skipped: skippedProducts
+        }
       });
+      
   } catch (error) {
     console.error("Error in returnRequest:", error);
     return res

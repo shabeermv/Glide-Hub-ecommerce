@@ -156,6 +156,27 @@
         </div>
     </div>
 </main>
+<!-- Remove Confirmation Modal -->
+<div class="modal fade" id="removeConfirmModal" tabindex="-1" role="dialog" aria-labelledby="removeConfirmLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="removeConfirmLabel">Remove Item</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to remove this product from your cart?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmRemoveBtn">Remove</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <script>
   document
@@ -190,16 +211,16 @@
               );
 
               if (cartItem) {
-                // Update the quantity input
+                
                 quantityInput.value = cartItem.quantity;
 
-                // Update the total price cell
+                
                 const totalCell = row.querySelector(".total-col");
                 totalCell.innerHTML = cartItem.hasDiscount ? 
                   `<span class="discount-price">₹${cartItem.totalPrice.toFixed(2)}</span>` : 
                   `₹${cartItem.totalPrice.toFixed(2)}`;
 
-                // Update cart totals
+                
                 const cartSubtotalElement = document.querySelector(".summary-subtotal td:last-child");
                 const cartTotalElement = document.querySelector(".summary-total td:last-child");
                 
@@ -275,41 +296,54 @@
     });
   }
 
-  // Remove item functionality
+    let removeProductId = null;
+  let removeSize = null;
+  let removeButton = null;
+
   document.querySelectorAll(".btn-remove").forEach((button) => {
     button.addEventListener("click", function (e) {
       e.preventDefault();
 
-      const productId = this.getAttribute("data-id");
-      const size = this.getAttribute("data-size");
+      removeProductId = this.getAttribute("data-id");
+      removeSize = this.getAttribute("data-size");
+      removeButton = this;
 
-      if (confirm("Are you sure you want to remove this item?")) {
-        fetch(`/deleteCartItem/${productId}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ size }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.success) {
-              this.closest("tr").remove();
-              updateCartTotals(data.cart);
-              if (document.querySelectorAll(".table_row").length === 0) {
-                location.reload();
-              }
-            } else {
-              alert("Error: " + data.message);
-            }
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            alert("An error occurred while removing the item");
-          });
-      }
+      // Show modal instead of confirm
+      $("#removeConfirmModal").modal("show");
     });
   });
+
+  document.getElementById("confirmRemoveBtn").addEventListener("click", function () {
+    if (removeProductId && removeSize) {
+      fetch(`/deleteCartItem/${removeProductId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ size: removeSize }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            removeButton.closest("tr").remove();
+            updateCartTotals(data.cart);
+            if (document.querySelectorAll(".table_row").length === 0) {
+              location.reload();
+            }
+          } else {
+            alert("Error: " + data.message);
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("An error occurred while removing the item");
+        })
+        .finally(() => {
+          $("#removeConfirmModal").modal("hide"); 
+        });
+    }
+  });
+
 
   function updateCartTotals(cart) {
     const cartSubtotalElement = document.querySelector(".summary-subtotal td:last-child");

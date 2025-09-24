@@ -55,7 +55,7 @@ userRouter.get('/cart',authMiddleware.authMiddleware,cartController.cartPageInfo
 userRouter.post('/cart/add',authMiddleware.authMiddleware,cartController.addProductCart);
 userRouter.delete('/deleteCartItem/:id',authMiddleware.authMiddleware,cartController.deleteProductCart);
 userRouter.patch('/updateQuantity/:id',authMiddleware.authMiddleware,cartController.updateProductQuantity);
-userRouter.get('/cart/add-from-wishlist', authMiddleware.authMiddleware, cartController.addProductToCartFromWishlist);
+userRouter.post('/cart/add-from-wishlist', authMiddleware.authMiddleware, cartController.addToCartFromWishlist);
 
 userRouter.get('/wishlist',authMiddleware.authMiddleware,wishlistController.wishlistPageInfo);
 

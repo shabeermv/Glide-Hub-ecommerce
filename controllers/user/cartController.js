@@ -198,72 +198,85 @@ const addProductCart = async (req, res) => {
   }
 };
 
-const addProductToCartFromWishlist = async (req, res) => {
-  const { productId, size , quantity = 1 } = req.query;
-  const userId = req.session.userId;
-
-  if (!userId) {
-    return res
-      .status(statusCode.UNAUTHORIZED)
-      .json({ success: false, message: "User not logged in" });
-  }
-
+const addToCartFromWishlist = async (req, res) => {
   try {
+    const userId = req.session.userId;
+    const { productId, size, quantity = 1 } = req.body;
+
+    if (!userId) {
+      return res.status(statusCode.UNAUTHORIZED).json({
+        success: false,
+        message: "Please login to add items to cart"
+      });
+    }
+
+    if (!productId || !size) {
+      return res.status(statusCode.BAD_REQUEST).json({
+        success: false,
+        message: "Product ID and size are required"
+      });
+    }
+
     const product = await Product.findById(productId);
     if (!product) {
-      return res
-        .status(statusCode.NOT_FOUND)
-        .json({ success: false, message: "Product not found" });
+      return res.status(statusCode.NOT_FOUND).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    const sizeObj = product.sizes.find(s => s.size === size);
+    if (!sizeObj) {
+      return res.status(statusCode.BAD_REQUEST).json({
+        success: false,
+        message: "Selected size is not available"
+      });
     }
 
     let cart = await Cart.findOne({ userId });
-
     if (!cart) {
-      cart = new Cart({
-        userId,
-        product: [
-          {
-            productId,
-            size,
-            quantity,
-            price: product.price,
-            totalPrice: product.price * quantity,
-          },
-        ],
-      });
-    } else {
-      const existingProduct = cart.product.find(
-        (p) => p.productId.toString() === productId && p.size === size
-      );
+      cart = new Cart({ userId, product: [] });
+    }
 
-      if (!existingProduct) {
-        cart.product.push({
-          productId,
-          size,
-          quantity,
-          price: product.price,
-          totalPrice: product.price * quantity,
+    const existingCartItem = cart.product.find(
+      item => item.productId.toString() === productId && item.size === size
+    );
+
+    if (existingCartItem) {
+      const newQuantity = existingCartItem.quantity + parseInt(quantity);
+
+      if (newQuantity > sizeObj.stock) {
+        return res.status(statusCode.BAD_REQUEST).json({
+          success: false,
+          message: `Cannot add more items. Only ${sizeObj.stock} available for size ${size}, you already have ${existingCartItem.quantity} in cart`
         });
-      } else {
-        existingProduct.quantity += quantity;
-        existingProduct.totalPrice =
-          existingProduct.price * existingProduct.quantity;
       }
 
-      cart.totalPrice = cart.product.reduce(
-        (acc, item) => acc + item.totalPrice,
-        0
-      );
+      existingCartItem.quantity = newQuantity;
+      existingCartItem.totalPrice = existingCartItem.price * newQuantity;
+    } else {
+      cart.product.push({
+        productId,
+        size,
+        quantity: parseInt(quantity),
+        price: product.price,
+        totalPrice: product.price * quantity
+      });
     }
 
     await cart.save();
 
-    return res
-      .status(statusCode.OK)
-      .json({ success: true, message: "Product added to cart successfully" });
+    return res.status(statusCode.OK).json({
+      success: true,
+      message: "Product added to cart successfully"
+    });
+
   } catch (error) {
-    console.error("Error adding product to cart:", error);
-    next(error);
+    console.error("Error adding to cart from wishlist:", error);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal server error"
+    });
   }
 };
 
@@ -419,5 +432,5 @@ module.exports = {
   addProductCart,
   deleteProductCart,
   updateProductQuantity,
-  addProductToCartFromWishlist,
+  addToCartFromWishlist,
 };
