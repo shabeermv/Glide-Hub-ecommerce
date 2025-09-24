@@ -389,7 +389,7 @@ const buyNow = async (req, res) => {
         .json({ success: false, message: "No items in cart" });
     }
 
-    // Check stock availability before processing order
+    
     for (const item of cart.product) {
       const product = await Product.findById(item.productId._id);
       if (!product) {
@@ -409,6 +409,7 @@ const buyNow = async (req, res) => {
       }
     }
 
+    
     const subtotal = cart.product.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
@@ -416,7 +417,7 @@ const buyNow = async (req, res) => {
 
     const finalAmount = Math.max(0, subtotal - couponDiscount);
 
-    // Wallet balance check for wallet payments
+    
     if (formData.paymentMethod && formData.paymentMethod.toLowerCase().includes("wallet")) {
       const user = await User.findById(userId);
       if (!user || user.wallet < finalAmount) {
@@ -426,6 +427,7 @@ const buyNow = async (req, res) => {
       }
     }
 
+    
     const shippingAddress = {
       fullName: `${formData.firstName} ${formData.lastName}`,
       address:
@@ -438,6 +440,7 @@ const buyNow = async (req, res) => {
       phone: formData.phone,
     };
 
+    
     const orderProducts = cart.product.map((item) => ({
       productId: item.productId._id,
       size: item.size,
@@ -445,6 +448,7 @@ const buyNow = async (req, res) => {
       price: item.price,
     }));
 
+    
     let paymentMethod = formData.paymentMethod;
     if (typeof paymentMethod === "string") {
       if (paymentMethod.toLowerCase().includes("wallet")) {
@@ -459,6 +463,7 @@ const buyNow = async (req, res) => {
       }
     }
 
+    
     const newOrder = new Order({
       orderId: generateOrderId(),
       userId: userId,
@@ -474,7 +479,7 @@ const buyNow = async (req, res) => {
 
     await newOrder.save();
 
-    // Handle wallet payment
+    
     if (paymentMethod === "wallet") {
       const user = await User.findById(userId);
       if (user) {
@@ -483,37 +488,45 @@ const buyNow = async (req, res) => {
           date: new Date(),
           amount: -finalAmount,
           description: `Order payment - ${newOrder.orderId}`,
-          type: 'debit'
+          type: "debit",
         });
         await user.save();
       }
     }
 
-    // Update stock for each product with better error handling
+    
     for (const item of cart.product) {
       const updateResult = await Product.updateOne(
-        { 
+        {
           _id: item.productId._id,
           "sizes.size": item.size,
-          "sizes.stock": { $gte: item.quantity } // Ensure sufficient stock
+          "sizes.stock": { $gte: item.quantity },
         },
         {
           $inc: {
             "sizes.$.stock": -item.quantity,
+            saleCount: item.quantity,
             totalStock: -item.quantity,
-            saleCount: item.quantity
-          }
+          },
         }
       );
 
-      // Check if the update was successful
       if (updateResult.modifiedCount === 0) {
-        console.error(`Failed to update stock for product ${item.productId._id}, size ${item.size}`);
-        // You might want to implement rollback logic here
+        console.error(
+          `Failed to update stock for product ${item.productId._id}, size ${item.size}`
+        );
+      } else {
+        
+        const updatedProduct = await Product.findById(item.productId._id);
+        updatedProduct.totalStock = updatedProduct.sizes.reduce(
+          (sum, s) => sum + s.stock,
+          0
+        );
+        await updatedProduct.save();
       }
     }
 
-    // Clear the cart
+    
     await Cart.findOneAndUpdate(
       { userId: userId },
       { $set: { product: [], totalPrice: 0 } }
@@ -532,6 +545,7 @@ const buyNow = async (req, res) => {
       .json({ success: false, message: "Internal server error" });
   }
 };
+
 const cancelOrder = async (req, res) => {
   try {
     const orderId = req.params.id;
