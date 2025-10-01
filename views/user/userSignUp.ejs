@@ -150,7 +150,8 @@
   
         const emailRegex = /^(?!.*\.\.)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
        
-        const passwordRegex = /^[a-zA-Z0-9]{6,}$/;
+        const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-={}\[\]|:;"'<>,.?/~`]).{6,}$/;
+
         const contactNumberRegex = /^[0-9]{10}$/;
   
         if (!emailRegex.test(email)) {

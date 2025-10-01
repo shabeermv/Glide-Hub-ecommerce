@@ -4,7 +4,9 @@
     <div class="page-header text-center" style="background-image: url('/asset3/images/page-header-bg.jpg')">
         <div class="container">
             <h1 class="page-title">Shopping Cart<span>Shop</span></h1>
+            <%- include("../../views/partials/breadcrumps.ejs") %>
         </div>
+        
     </div>
 
   
@@ -205,7 +207,7 @@
           .then((response) => response.json())
           .then((data) => {
             if (data.success) {
-              // Find the updated item in the returned cart data
+              
               const cartItem = data.cart.product.find(
                 (item) => item.productId._id === productId && item.size === size
               );
@@ -230,13 +232,12 @@
                   cartTotalElement.textContent = formattedTotal;
                 }
 
-                // Check if we need to disable the increase button due to stock limitations
                 const increaseButton = row.querySelector(".btn-num-product-up");
                 if (data.stockInfo && data.stockInfo.isMaxed) {
                   increaseButton.classList.add("disabled");
                   increaseButton.disabled = true;
 
-                  // Show stock warning
+                  
                   stockWarningElement.textContent = `Maximum stock (${data.stockInfo.available}) reached`;
                   stockWarningElement.classList.remove("hidden");
                 } else {

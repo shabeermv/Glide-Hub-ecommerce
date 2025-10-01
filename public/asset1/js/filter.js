@@ -1,23 +1,23 @@
-// filter.js - Enhanced with date and status filtering functions
+
 
 function categoryFilter(categoryId) {
     if (categoryId && categoryId !== "All Categories") {
         window.location.href = `/admin/orderFilterByCategory?categoryId=${categoryId}`;
     } else {
-        // ✅ Redirect correctly to show all orders
+        
         window.location.href = `/admin/orderFilterByCategory`;
     }
 }
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize date filter event listener
+    
     const dateFilterElement = document.getElementById("dateFilter");
     if (dateFilterElement) {
         dateFilterElement.addEventListener('change', filterOrdersByDate);
     }
     
-    // Set default values for date filters
+    
     const today = new Date();
     const formattedToday = formatDateForInput(today);
     
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
         endDateInput.value = formattedToday;
     }
     
-    // Set start date to 30 days ago by default
+    
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const formattedThirtyDaysAgo = formatDateForInput(thirtyDaysAgo);

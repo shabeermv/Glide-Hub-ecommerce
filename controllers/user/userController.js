@@ -383,7 +383,7 @@ const postSignUp = async (req, res) => {
     const otp = generateOtp();
     console.log("genarate ot is calling is ==>",otp)
     const emailSent = await sendVerificationEmail(email, otp);
-    console.log("email sent  ot is calling is ==>",emailSent)
+    // console.log("email sent  ot is calling is ==>",emailSent)
     if (!emailSent) {
       console.log("calling the not email")
       return res.json({ success: false, message: "Email not sent" });

@@ -4,16 +4,13 @@
   <header class="main-header navbar">
     <div class="col-search">
       <a href="/admin/home" class="btn btn-success btn-lg">Back</a>
-        
-        </div>
-        <datalist id="search_terms">
-          <option value="Products"></option>
-          <option value="New orders"></option>
-          <option value="Apple iphone"></option>
-          <option value="Ahmed Hassan"></option>
-        </datalist>
-      </form>
     </div>
+    <datalist id="search_terms">
+      <option value="Products"></option>
+      <option value="New orders"></option>
+      <option value="Apple iphone"></option>
+      <option value="Ahmed Hassan"></option>
+    </datalist>
   </header>
 
   <section class="content-main">
@@ -25,14 +22,15 @@
       <header class="card-header">
         <div class="row gx-3">
           <div class="col-lg-4 col-md-6 me-auto">
-            <form method="GET" action="/users">
-              <input
-                type="text"
-                placeholder="Search..."
-                class="form-control"
-                name="search"
-                value="<%= search %>"
+            <form action="/admin/users" method="get" class="d-flex mx-3">
+              <input 
+                type="text" 
+                name="search" 
+                placeholder="Search users..." 
+                value="<%= searchValue %>"
+                class="form-control me-2"
               />
+              <button type="submit" class="btn btn-primary">Search</button>
             </form>
           </div>
         </div>
@@ -72,7 +70,6 @@
                       <%= user.isBlocked ? 'Unblock' : 'Block' %>
                     </button>
                   </td>
-                  
                 </tr>
                 <% }) %>
               <% } %>
@@ -87,19 +84,19 @@
         <ul class="pagination justify-content-start">
           <% if (currentPage > 1) { %>
             <li class="page-item">
-              <a class="page-link" href="?page=<%= currentPage - 1 %>&search=<%= search %>">
+              <a class="page-link" href="?page=<%= currentPage - 1 %>&search=<%= searchValue %>">
                 <i class="material-icons md-chevron_left"></i>
               </a>
             </li>
           <% } %>
           <% for (let i = 1; i <= totalPages; i++) { %>
             <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-              <a class="page-link" href="?page=<%= i %>&search=<%= search %>"><%= i %></a>
+              <a class="page-link" href="?page=<%= i %>&search=<%= searchValue %>"><%= i %></a>
             </li>
           <% } %>
           <% if (currentPage < totalPages) { %>
             <li class="page-item">
-              <a class="page-link" href="?page=<%= currentPage + 1 %>&search=<%= search %>">
+              <a class="page-link" href="?page=<%= currentPage + 1 %>&search=<%= searchValue %>">
                 <i class="material-icons md-chevron_right"></i>
               </a>
             </li>
@@ -109,7 +106,6 @@
     </div>
   </section>
 </main>
-
 
 <script>
   document.querySelectorAll('.toggle-btn').forEach((btn) => {
@@ -141,6 +137,3 @@
       });
   });
 </script>
-
-  
-

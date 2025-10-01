@@ -188,8 +188,8 @@ const cartCheckoutPage = async (req, res, next) => {
 
   try {
     let user = null;
-    if (req.session.userId) {
-      user = await User.findById(req.session.userId);
+    if (userId) {
+      user = await User.findById(userId);
     }
 
     if (!user) {
@@ -212,11 +212,11 @@ const cartCheckoutPage = async (req, res, next) => {
         products: [],
         totalPrice: 0,
         user: {
-          email: user.email,
-          username: user.username,
-          contact: user.contact,
-          address: user.address?.length > 0 ? user.address[0] : null,
-        },
+  email: user.email,
+  username: user.username,
+  contact: user.contact,
+  address: user.address || [],   // send the array
+}
       });
     }
 
@@ -226,30 +226,34 @@ const cartCheckoutPage = async (req, res, next) => {
         const product = item.productId;
         const originalPrice = product.originalPrice || product.price || 0;
 
-        const productOffer = await ProductOffer.findOne({
+        const productOfferDoc = await ProductOffer.findOne({
           productId: product._id,
         });
-        const categoryOffer = await CategoryOffer.findOne({
-          categoryId: product.category._id,
-        });
+
+        let categoryOfferDoc = null;
+        if (product.category && product.category._id) {
+          categoryOfferDoc = await CategoryOffer.findOne({
+            categoryId: product.category._id,
+          });
+        }
 
         let finalPrice = originalPrice;
         let appliedOffer = null;
 
-        if (productOffer) {
+        if (productOfferDoc) {
           finalPrice =
-            productOffer.discountType === "percentage"
+            productOfferDoc.discountType === "percentage"
               ? originalPrice -
-                (originalPrice * productOffer.discountValue) / 100
-              : originalPrice - productOffer.discountValue;
-          appliedOffer = productOffer;
-        } else if (categoryOffer) {
+                (originalPrice * productOfferDoc.discountValue) / 100
+              : originalPrice - productOfferDoc.discountValue;
+          appliedOffer = productOfferDoc;
+        } else if (categoryOfferDoc) {
           finalPrice =
-            categoryOffer.discountType === "percentage"
+            categoryOfferDoc.discountType === "percentage"
               ? originalPrice -
-                (originalPrice * categoryOffer.discountValue) / 100
-              : originalPrice - categoryOffer.discountValue;
-          appliedOffer = categoryOffer;
+                (originalPrice * categoryOfferDoc.discountValue) / 100
+              : originalPrice - categoryOfferDoc.discountValue;
+          appliedOffer = categoryOfferDoc;
         } else if (product.hasDiscount) {
           finalPrice = product.discountedPrice;
         }
@@ -282,13 +286,19 @@ const cartCheckoutPage = async (req, res, next) => {
       products,
       totalPrice: totalPrice.toFixed(2),
       applicableCoupons,
-      user: {
-        email: user.email,
-        username: user.username,
-        contact: user.contact,
-        address: defaultAddress,
-      },
-      user,
+      breadcrumbs:[
+        {name:"Home",url:"/"},
+        {name:"Shop",url:"/shop"},
+        {name:"Cart",url:"/cart"},
+        {name:"Checkout"}
+
+      ],
+     user: {
+  email: user.email,
+  username: user.username,
+  contact: user.contact,
+  address: user.address || [],   
+},
       paymentError: req.query.error === "payment" ? true : false,
       errorMessage:
         req.query.error === "payment"
@@ -297,12 +307,13 @@ const cartCheckoutPage = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error fetching cart checkout data:", error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).render("user/error", {
-      error: err.message,
+    res.status(statusCode.INTERNAL_SERVER_ERROR).render("error", {
+      error: error.message,
       user: req.session.userId ? { username: "User" } : null,
     });
   }
 };
+
 const applyCoupon = async (req, res) => {
   try {
     const { couponCode, subtotal } = req.body;

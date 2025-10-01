@@ -1,83 +1,96 @@
 <%- include("../../views/partials/admin/header.ejs") %>
 <main class="main-wrap">
   <header class="main-header navbar">
-      <div class="col-search">
-          
-      </div>
+    <div class="col-search"></div>
   </header>
 
   <section class="content-main">
-    <div class="content-header">
-      <h2 class="content-title card-title">Products Grid</h2>
-      <a href="/admin/addProduct" class="btn btn-primary btn-sm rounded"
-        >Create New</a
-      >
+    <div class="content-header d-flex justify-content-between align-items-center">
+      <h2 class="content-title card-title mb-0">Products Grid</h2>
+
+      <form action="/admin/products" method="get" class="d-flex mx-3">
+        <input 
+          type="text" 
+          name="search" 
+          placeholder="Search products..." 
+          value="<%= searchValue %>"
+          class="form-control me-2"
+        />
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+
+      <a href="/admin/addProduct" class="btn btn-primary btn-sm rounded">
+        Create New
+      </a>
     </div>
 
-   
-          <div class="row">
-            <% updatedProducts?.forEach(product => { %>
-            <div class="col-xl-3 col-lg-4 col-md-6">
-                <div class="card card-product-grid">
-                    <a href="#" class="img-wrap">
-                        <img
-                            src="<%= product.image && product.image.length > 0 ? product.image[0] : '/images/placeholder.jpg' %>"
-                            alt="<%= product.title %>"
-                            
-                            class="img-fluid"
-                        />
-                    </a>
-                    <div class="info-wrap">
-                        <h5 class="title"><%= product.title %></h5>
-                        <div class="price mt-1"><%= product.price %></div>
-                        <div>Stock: <%= product.totalStock || 'Out of Stock' %></div>
-                        <div>
-                            <%= product.category ? product.category.name : 'Uncategorized' %>
-                        </div>
-                    </div>
-                    
-          <!-- Show Details Button -->
-          <div class="card-footer">
-            <a
-              href="/admin/productDetails/<%= product._id %>"
-              class="btn btn-info btn-sm"
-              >Show Details</a
-            >
+    <div class="row">
+      <% if (updatedProducts && updatedProducts.length > 0) { %>
+        <% updatedProducts.forEach(product => { %>
+          <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card card-product-grid">
+              <a href="#" class="img-wrap">
+                <img
+                  src="<%= product.image && product.image.length > 0 ? product.image[0] : '/images/placeholder.jpg' %>"
+                  alt="<%= product.title %>"
+                  class="img-fluid"
+                />
+              </a>
+              <div class="info-wrap">
+                <h5 class="title"><%= product.title %></h5>
+                <div class="price mt-1">₹<%= product.price %></div>
+                <div>Stock: <%= product.totalStock || 'Out of Stock' %></div>
+                <div>
+                  <%= product.category ? product.category.name : 'Uncategorized' %>
+                </div>
+              </div>
+
+              <!-- Show Details Button -->
+              <div class="card-footer">
+                <a
+                  href="/admin/productDetails/<%= product._id %>"
+                  class="btn btn-info btn-sm"
+                >Show Details</a>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      <% }); %>
+        <% }) %>
+      <% } else { %>
+        <p class="text-center mt-4">No products found</p>
+      <% } %>
     </div>
+
+    <!-- ✅ FIX: Preserve search query in pagination -->
     <nav aria-label="Page navigation example">
       <ul class="pagination">
         <% if (currentPage > 1) { %>
-        <li class="page-item">
-          <a
-            class="page-link"
-            href="/admin/products?page=<%= currentPage - 1 %>&limit=<%= limit %>"
-            >Previous</a
-          >
-        </li>
-        <% } %> <% for (let i = 1; i <= totalPages; i++) { %>
-        <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-          <a
-            class="page-link"
-            href="/admin/products?page=<%= i %>&limit=<%= limit %>"
-            ><%= i %></a
-          >
-        </li>
-        <% } %> <% if (currentPage < totalPages) { %>
-        <li class="page-item">
-          <a
-            class="page-link"
-            href="/admin/products?page=<%= currentPage + 1 %>&limit=<%= limit %>"
-            >Next</a
-          >
-        </li>
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="/admin/products?page=<%= currentPage - 1 %>&limit=<%= limit %>&search=<%= searchValue %>"
+            >Previous</a>
+          </li>
+        <% } %>
+
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+            <a
+              class="page-link"
+              href="/admin/products?page=<%= i %>&limit=<%= limit %>&search=<%= searchValue %>"
+            ><%= i %></a>
+          </li>
+        <% } %>
+
+        <% if (currentPage < totalPages) { %>
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="/admin/products?page=<%= currentPage + 1 %>&limit=<%= limit %>&search=<%= searchValue %>"
+            >Next</a>
+          </li>
         <% } %>
       </ul>
     </nav>
   </section>
 </main>
-
 <%- include("../../views/partials/admin/footer.ejs") %>

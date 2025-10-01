@@ -1,0 +1,30 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <% breadcrumbs.forEach((crumb, index) => { %>
+      <% if (index === breadcrumbs.length - 1) { %>
+        <li class="breadcrumb-item active" aria-current="page"><%= crumb.name %></li>
+      <% } else { %>
+        <li class="breadcrumb-item">
+          <a href="<%= crumb.url %>"><%= crumb.name %></a>
+        </li>
+      <% } %>
+    <% }) %>
+  </ol>
+</nav>
+<style>
+    .breadcrumb-nav {
+  background-color: transparent;
+  padding: 0.5rem 0;
+}
+
+.breadcrumb {
+  margin: 0;
+  font-size: 0.95rem;
+  justify-content: flex-start; /* left align */
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  content: "›";  /* nicer separator than / */
+  color: #6c757d;
+}
+</style>

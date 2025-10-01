@@ -273,13 +273,15 @@ Input, textarea : 14px/1.6 '', Arial, sans-serif;
 [ Menu ]*/
 
 .wrap-menu-desktop {
-  position:fixed;
+  position: fixed;
   z-index: 1100;
-  background-color: transparent;
-  width: 120%; /* Increased width */
+  background-color: #fff; /* or transparent, depending on design */
+  width: 100%;            /* Always full width */
   height: 70px;
-  top: 40px;
-  left: -10%; /* Adjusted to keep it centered */
+  top: 0;                 /* Stick to top */
+  left: 0;                /* Align to left */
+  transition: height 0.3s, background-color 0.3s;
+
   
   -webkit-transition: height 0.3s, background-color 0.3s;
   -o-transition: height 0.3s, background-color 0.3s;
@@ -289,16 +291,11 @@ Input, textarea : 14px/1.6 '', Arial, sans-serif;
 
 .limiter-menu-desktop {
   height: 100%;
-  width: 13z0%; /* Increase this to make it wider than wrap-menu-desktop */
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -moz-box;
-  display: -ms-flexbox;
+  width: 100%;  /* ❌ currently it's "13z0%" which breaks layout */
   display: flex;
   align-items: center;
   background-color: transparent;
-  margin-bottom: 10px;
-  left: -15%; /* Adjust positioning to maintain alignment */
+  margin-bottom: 10px; /* Adjust positioning to maintain alignment */
 }
 
 .header-v2 .wrap-menu-desktop {

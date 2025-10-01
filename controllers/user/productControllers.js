@@ -469,9 +469,14 @@ const getDetailInfo = async (req, res) => {
       availableSizes,
       totalStock,
       user,
+      breadcrumbs:[
+        {name:"Home",url:"/"},
+        {name:"Shop",url:"/shop"},
+        {name:"List"}
+      ]
     });
   } catch (error) {
-    next(error);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({message:'internal server error'})
     console.error("Detail page error:", error);
   }
 };

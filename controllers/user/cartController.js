@@ -90,7 +90,11 @@ const cartPageInfo = async (req, res, next) => {
       await cartData.save();
     }
 
-    res.render("userCart", { cart: cartData, user });
+    res.render("userCart", { cart: cartData, user,breadcrumbs: [
+    { name: "Shop", url: "/shop" },
+    
+    { name: "Cart" } 
+  ] });
   } catch (error) {
     console.log("this is the internal server error");
     return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: "internal server errror" });

@@ -1,176 +1,170 @@
 <%- include("../../views/partials/users/header.ejs") %>
 
-
 <!-- Product Detail -->
 <section class="sec-product-detail bg0 p-t-65 p-b-60" style="margin-top: 50px;">
     <div class="container">
         <div class="d-flex justify-content-start mb-3">
-            <a href="/shop" class="btn btn-success btn-lg">Back</a>
+    <%- include("../../views/partials/breadcrumps.ejs") %>                
         </div>
-        
+ 
         <div class="row">
-            <!-- Product /asset1/images Section -->
+            <!-- Product Images Section -->
             <div class="col-md-6 col-lg-7 p-b-30">
                 <div class="p-l-25 p-r-30 p-lr-0-lg">
-                    <div class="wrap-slick3 flex-sb flex-w">
-                        <div class="wrap-slick3-dots"></div>
-                        <div class="wrap-slick3-arrows flex-sb-m flex-w"></div>
-            
-                        <div class="slick3 gallery-lb">
-    <% if (product.image && product.image.length > 0) { %>
-        <% product.image.forEach((imagePath, index) => { %>
-            <div class="item-slick3" data-thumb="<%= imagePath %>">
-                <div class="wrap-pic-w pos-relative">
-                    <img src="<%= imagePath %>" 
-                         alt="Product Image <%= index + 1 %>" 
-                         class="img-fluid zoom-img" 
-                         data-zoom-image="<%= imagePath %>">
+                    <div class="image-zoom-container">
+                        <div class="image-gallery-layout">
+                            <!-- Main Image Display -->
+                            <div class="main-image-wrapper">
+                                <% if (product.image && product.image.length > 0) { %>
+                                    <img id="mainImage" 
+                                         src="<%= product.image[0] %>" 
+                                         alt="<%= product.title %>" 
+                                         class="main-product-image">
+                                    <div id="zoomLens" class="zoom-lens"></div>
+                                <% } else { %>
+                                    <img id="mainImage" 
+                                         src="/images/placeholder.jpg" 
+                                         alt="No Image Available" 
+                                         class="main-product-image">
+                                <% } %>
+                            </div>
 
-                    <a class="btn-view-image" href="<%= imagePath %>">View Image</a>
-                    <i class="fa fa-expand"></i>
-                </div>
-            </div>
-        <% }); %>
-    <% } else { %>
-        <div class="item-slick3">
-            <div class="wrap-pic-w pos-relative">
-                <img src="/images/placeholder.jpg" alt="No Image Available" class="img-fluid">
-            </div>
-        </div>
-    <% } %>
-</div>
+                            <!-- Thumbnail Images - Right Side -->
+                            <div class="thumbnail-container">
+                                <% if (product.image && product.image.length > 0) { %>
+                                    <% product.image.forEach((imagePath, index) => { %>
+                                        <img src="<%= imagePath %>" 
+                                             alt="Product Image <%= index + 1 %>" 
+                                             class="thumbnail-image <%= index === 0 ? 'active' : '' %>"
+                                             data-full-image="<%= imagePath %>">
+                                    <% }); %>
+                                <% } %>
+                            </div>
+                        </div>
 
+                        <!-- Zoom Result - Below Main Image -->
+                        <div id="zoomResult" class="zoom-result"></div>
                     </div>
                 </div>
             </div>
+
             <!-- Product Details Section -->
-            <!-- Product Details Section -->
-<div class="col-md-6 col-lg-5 p-b-30">
-    <div class="p-r-50 p-t-5 p-lr-0-lg">
-        <!-- Product Title -->
-        <p class="mtext-106 cl2" style="font-size: 24px; font-weight: bold; color: #555;">
-            <%= product.title %>
-        </p>
+            <div class="col-md-6 col-lg-5 p-b-30">
+                <div class="p-r-50 p-t-5 p-lr-0-lg">
+                    <!-- Product Title -->
+                    <p class="mtext-106 cl2" style="font-size: 24px; font-weight: bold; color: #555;">
+                        <%= product.title %>
+                    </p>
 
-        <!-- Product Prict -->
-       <!-- Product Price -->
-<% if (product.hasDiscount) { %>
-    
-    <!-- Price display with strikethrough -->
-    <div class="price-container">
-        <span class="original-price mtext-106 cl2" style="font-size: 20px; text-decoration: line-through; color: #999;">
-            ₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
-        </span>
-        <span class="discounted-price mtext-106 cl2" style="font-size: 24px; font-weight: bold; color: #4CAF50; margin-left: 10px;">
-            ₹<%= parseFloat(product.discountedPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
-        </span>
-    </div>
-    
-    <!-- Discount information -->
-    <div class="discount-info" style="margin-top: 10px; margin-bottom: 15px;">
-        <span class="discount-badge" style="background-color: #dc3545; color: white; padding: 3px 8px; border-radius: 4px; font-size: 14px;">
-            <% if (product.appliedOffer.discountType === 'percentage') { %>
-                <%= product.appliedOffer.discountValue %>% OFF
-            <% } else { %>
-                ₹<%= product.appliedOffer.discountValue %> OFF
-            <% } %>
-        </span>
-        <span class="savings" style="margin-left: 8px; color: #666; font-size: 14px;">
-            (Save ₹<%= Math.round(product.appliedOffer.discountAmount) %>)
-        </span>
-    </div>
-    
-    <!-- Offer description -->
-    <div class="offer-description" style="margin-top: 5px; color: #666; font-size: 14px; font-style: italic;">
-        <%= product.appliedOffer.description %>
-    </div>
-<% } else { %>
-    <span class="mtext-106 cl2" style="font-size: 24px; font-weight: bold; color: #4CAF50;">
-        ₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
-    </span>
-<% } %>
-        <!-- Product Description -->
-        <p class="stext-102 cl3 p-t-23" style="font-size: 16px; color: #555;">
-            <%= product.description %>
-        </p>
-
-        <!-- Stock Availability -->
-        <div class="p-t-20">
-            <% if (product.totalStock > 0) { %>
-                <p class="text-success" style="font-size: 18px; font-weight: 500;">
-                    In Stock: <%= product.totalStock %> items available
-                </p>
-            <% } else { %>
-                <p class="text-danger" style="font-size: 18px; font-weight: 500;">
-                    Sold Out
-                </p>
-            <% } %>
-        </div>
-
-        <!-- Size and Color Selectors -->
-        <div class="p-t-33">
-            <!-- Size Selector -->
-            <div class="flex-w flex-r-m p-b-10">
-                <div class="size-203 flex-c-m respon6">
-                    Size
-                </div>
-                <div class="size-204 respon6-next">
-                    <div class="rs1-select2 bor8 bg0">
-                        <select class="js-select2" name="size" id="sizeSelect">
-                            <option value="">Choose a size</option>
-                            <% if (availableSizes && availableSizes.length > 0) { %>
-                                <% availableSizes.forEach(sizeObj => { %>
-                                    <option value="<%= sizeObj.size %>">
-                                        <%= sizeObj.size %>
-                                    </option>
-                                <% }); %>
-                            <% } else { %>
-                                <option value="" disabled>No sizes available</option>
-                            <% } %>
-                        </select>
-                        <div class="dropDownSelect2"></div>
-                    </div>
-                </div>
-                
-            <!-- Color Selector -->
-            
-
-            <!-- Quantity Selector -->
-           
-
-                    <% if (product.totalStock > 0) { %>
-                        <div class="p-t-20 display-flex" style="display: flex; justify-content: space-between; align-items: center;">
-                            <!-- Add to Cart Button -->
-                            <button id="addCart" class="flex-c-m stext-101 cl0 size-101 bg-warning bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail">
-                                Add to Cart
-                            </button>
-                            <!-- Buy Now Button -->
-                            <button 
-                              id="proceedCheckout" class="flex-c-m stext-101 cl0 size-101 bg-success bor1 hov-btn1 p-lr-15 trans-04 js-buynow-detail" 
-                              window.location.href='/checkout'">
-                              Add to Wishlist
-                            </button>
-
+                    <!-- Product Price -->
+                    <% if (product.hasDiscount) { %>
+                        <!-- Price display with strikethrough -->
+                        <div class="price-container">
+                            <span class="original-price mtext-106 cl2" style="font-size: 20px; text-decoration: line-through; color: #999;">
+                                ₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                            </span>
+                            <span class="discounted-price mtext-106 cl2" style="font-size: 24px; font-weight: bold; color: #4CAF50; margin-left: 10px;">
+                                ₹<%= parseFloat(product.discountedPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                            </span>
+                        </div>
+                        
+                        <!-- Discount information -->
+                        <div class="discount-info" style="margin-top: 10px; margin-bottom: 15px;">
+                            <span class="discount-badge" style="background-color: #dc3545; color: white; padding: 3px 8px; border-radius: 4px; font-size: 14px;">
+                                <% if (product.appliedOffer.discountType === 'percentage') { %>
+                                    <%= product.appliedOffer.discountValue %>% OFF
+                                <% } else { %>
+                                    ₹<%= product.appliedOffer.discountValue %> OFF
+                                <% } %>
+                            </span>
+                            <span class="savings" style="margin-left: 8px; color: #666; font-size: 14px;">
+                                (Save ₹<%= Math.round(product.appliedOffer.discountAmount) %>)
+                            </span>
+                        </div>
+                        
+                        <!-- Offer description -->
+                        <div class="offer-description" style="margin-top: 5px; color: #666; font-size: 14px; font-style: italic;">
+                            <%= product.appliedOffer.description %>
                         </div>
                     <% } else { %>
-                        <button class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04" disabled>
-                            Sold Out
-                        </button>
+                        <span class="mtext-106 cl2" style="font-size: 24px; font-weight: bold; color: #4CAF50;">
+                            ₹<%= parseFloat(product.originalPrice).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %>
+                        </span>
                     <% } %>
-                </div>
-            </div>
-        </div>
-    </div>
+
+                    <!-- Product Description -->
+                    <p class="stext-102 cl3 p-t-23" style="font-size: 16px; color: #555;">
+                        <%= product.description %>
+                    </p>
+
+                    <!-- Stock Availability -->
+                    <div class="p-t-20">
+                        <% if (product.totalStock > 0) { %>
+                            <p class="text-success" style="font-size: 18px; font-weight: 500;">
+                                In Stock: <%= product.totalStock %> items available
+                            </p>
+                        <% } else { %>
+                            <p class="text-danger" style="font-size: 18px; font-weight: 500;">
+                                Sold Out
+                            </p>
+                        <% } %>
+                    </div>
+                    <!-- Warning message placeholder -->
+<div id="sizeWarning" class="alert alert-warning" style="display: none; margin-bottom: 10px;">
+    Please choose an available size.
 </div>
 
-                    
-                   
+
+     
+                    <div class="p-t-33">
+                        <!-- Size Selector -->
+                        <div class="flex-w flex-r-m p-b-10">
+                            <div class="size-203 flex-c-m respon6">
+                                Size
+                            </div>
+                            <div class="size-204 respon6-next">
+                                <div class="rs1-select2 bor8 bg0">
+                                    <select class="js-select2" name="size" id="sizeSelect">
+                                        <option value="">Choose a size</option>
+                                        <% if (availableSizes && availableSizes.length > 0) { %>
+                                            <% availableSizes.forEach(sizeObj => { %>
+                                                <option value="<%= sizeObj.size %>">
+                                                    <%= sizeObj.size %>
+                                                </option>
+                                            <% }); %>
+                                        <% } else { %>
+                                            <option value="" disabled>No sizes available</option>
+                                        <% } %>
+                                    </select>
+                                    <div class="dropDownSelect2"></div>
+                                </div>
+                            </div>
+
+                            <% if (product.totalStock > 0) { %>
+                                <div class="p-t-20 display-flex" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <!-- Add to Cart Button -->
+                                    <button id="addCart" class="flex-c-m stext-101 cl0 size-101 bg-warning bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail">
+                                        Add to Cart
+                                    </button>
+                                    <!-- Buy Now Button -->
+                                    <button id="proceedCheckout" class="flex-c-m stext-101 cl0 size-101 bg-success bor1 hov-btn1 p-lr-15 trans-04 js-buynow-detail">
+                                        Add to Wishlist
+                                    </button>
+                                </div>
+                            <% } else { %>
+                                <button class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04" disabled>
+                                    Sold Out
+                                </button>
+                            <% } %>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
+<!-- Related Products Section -->
 <section class="sec-relate-product bg0 p-t-45 p-b-105">
     <div class="container">
         <div class="p-b-45">
@@ -187,11 +181,10 @@
                         <!-- Block2 -->
                         <div class="block2">
                             <div class="block2-pic hov-img0">
-                                
                                 <img src="<%= product.image && product.image.length > 0 ? product.image[0] : '/images/placeholder.jpg' %>" alt="<%= product.image %>">
-                                <a href="/product/<%= product._id %>" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-                                    Quick View
-                                </a>
+                                <a href="/show/<%= product._id %>" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04">
+                                Quick View
+                            </a>
                             </div>
 
                             <div class="block2-txt flex-w flex-t p-t-14">
@@ -219,6 +212,8 @@
         </div>
     </div>
 </section>
+
+<!-- Cart Modal -->
 <div id="cartModal" class="cart-modal-overlay">
     <div class="cart-modal">
         <div class="cart-modal-icon">
@@ -229,84 +224,169 @@
     </div>
 </div>
 
-
-
 <!-- Product SKU and Categories -->
 <div class="bg6 flex-c-m flex-w size-302 m-t-73 p-tb-15">
     <span class="stext-107 cl6 p-lr-25">
         SKU: JAK-01
     </span>
-
     <span class="stext-107 cl6 p-lr-25">
         Categories: Jacket, Men
     </span>
 </div>
+
 <style>
-    .cart-modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        display: none;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
+/* Image Zoom Styles */
+.image-zoom-container {
+    max-width: 100%;
+}
 
-    .cart-modal {
-        background: white;
-        padding: 30px;
-        border-radius: 10px;
-        text-align: center;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        max-width: 400px;
-        width: 90%;
-        position: relative;
-        opacity: 0;
-        transform: scale(0.7);
-        transition: all 0.3s ease-in-out;
-    }
+.image-gallery-layout {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
 
-    .cart-modal.show {
-        opacity: 1;
-        transform: scale(1);
-    }
+.main-image-wrapper {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
 
-    .cart-modal-icon {
-        font-size: 60px;
-        color: #4CAF50;
-        margin-bottom: 20px;
-        animation: bounce 0.5s ease;
-    }
+.main-product-image {
+    width: 100%;
+    height: auto;
+    cursor: crosshair;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
 
-    .cart-modal-title {
-        font-size: 24px;
-        font-weight: bold;
-        margin-bottom: 15px;
-        color: #333;
-    }
+.main-product-image:hover {
+    border-color: #007bff;
+}
 
-    .cart-modal-message {
-        color: #666;
-        margin-bottom: 20px;
-    }
+.zoom-lens {
+    position: absolute;
+    border: 2px solid #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+    cursor: none;
+    pointer-events: none;
+    display: none;
+    border-radius: 50%;
+    z-index: 10;
+}
 
-    @keyframes bounce {
-        0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-        40% {transform: translateY(-20px);}
-        60% {transform: translateY(-10px);}
-    }
+.zoom-result {
+    width: 100%;
+    height: 300px;
+    background-repeat: no-repeat;
+    background-size: 800px 800px;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    display: none;
+    margin-top: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    background-color: #f8f9fa;
+}
 
-    @keyframes fadeOut {
-        from {opacity: 1; transform: scale(1);}
-        to {opacity: 0; transform: scale(0.7);}
-    }
+.thumbnail-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 90px;
+    max-height: 400px;
+    overflow-y: auto;
+}
 
-    .cart-modal.fade-out {
-        animation: fadeOut 0.3s ease-in-out forwards;
-    }
+.thumbnail-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.thumbnail-image:hover {
+    border-color: #007bff;
+    transform: scale(1.05);
+}
+
+.thumbnail-image.active {
+    border-color: #007bff;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+}
+
+/* Cart Modal Styles */
+.cart-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.cart-modal {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+    opacity: 0;
+    transform: scale(0.7);
+    transition: all 0.3s ease-in-out;
+}
+
+.cart-modal.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.cart-modal-icon {
+    font-size: 60px;
+    color: #4CAF50;
+    margin-bottom: 20px;
+    animation: bounce 0.5s ease;
+}
+
+.cart-modal-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.cart-modal-message {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+    40% {transform: translateY(-20px);}
+    60% {transform: translateY(-10px);}
+}
+
+@keyframes fadeOut {
+    from {opacity: 1; transform: scale(1);}
+    to {opacity: 0; transform: scale(0.7);}
+}
+
+.cart-modal.fade-out {
+    animation: fadeOut 0.3s ease-in-out forwards;
+}
+
+/* Pricing Styles */
 .offer-type-badge {
     display: inline-block;
     padding: 4px 8px;
@@ -358,49 +438,149 @@
     font-style: italic;
 }
 
+/* Responsive Design */
+@media (max-width: 768px) {
+    .image-gallery-layout {
+        flex-direction: column;
+    }
+    
+    .thumbnail-container {
+        flex-direction: row;
+        max-width: 100%;
+        max-height: none;
+        overflow-x: auto;
+        overflow-y: visible;
+        padding: 10px 0;
+        justify-content: flex-start;
+    }
+    
+    .zoom-result {
+        height: 250px;
+        background-size: 600px 600px;
+    }
+    
+    .main-image-wrapper {
+        max-width: 100%;
+    }
+}
 </style>
 
 <!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<!-- ElevateZoom -->
-<script src="https://cdn.rawgit.com/elevateweb/elevatezoom/master/jquery.elevateZoom.min.js"></script>
-
 <script>
-  $(document).ready(function() {
-      // Apply zoom effect to every product image
-      $('.zoom-img').each(function() {
-          $(this).elevateZoom({
-              zoomType: "inner",      // zoom inside image
-              cursor: "crosshair",    // cursor style
-              scrollZoom: true        // zoom with scroll
-          });
-      });
-  });
-</script>
+// Image Zoom Functionality
+function initializeImageZoom() {
+    const mainImage = document.getElementById('mainImage');
+    const zoomLens = document.getElementById('zoomLens');
+    const zoomResult = document.getElementById('zoomResult');
+    
+    if (!mainImage || !zoomLens || !zoomResult) return;
 
+    let isZooming = false;
 
+    // Set up zoom lens size
+    const lensSize = 100;
+    zoomLens.style.width = lensSize + 'px';
+    zoomLens.style.height = lensSize + 'px';
 
-
-<script>
-    document.getElementById('sizeSelect').addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        const stockInfo = document.getElementById('stockInfo');
+    // Mouse enter event
+    mainImage.addEventListener('mouseenter', function(e) {
+        isZooming = true;
+        zoomLens.style.display = 'block';
+        zoomResult.style.display = 'block';
         
-        if (this.value) {
-            const stock = selectedOption.getAttribute('data-stock');
-            const stockClass = parseInt(stock) <= 5 ? 'text-warning' : 'text-success';
+        // Set the background image for zoom result
+        zoomResult.style.backgroundImage = `url('${mainImage.src}')`;
+    });
+
+    // Mouse leave event
+    mainImage.addEventListener('mouseleave', function() {
+        isZooming = false;
+        zoomLens.style.display = 'none';
+        zoomResult.style.display = 'none';
+    });
+
+    // Mouse move event
+    mainImage.addEventListener('mousemove', function(e) {
+        if (!isZooming) return;
+
+        const rect = mainImage.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Calculate lens position
+        let lensX = x - (lensSize / 2);
+        let lensY = y - (lensSize / 2);
+
+        // Keep lens within image bounds
+        if (lensX > mainImage.width - lensSize) lensX = mainImage.width - lensSize;
+        if (lensX < 0) lensX = 0;
+        if (lensY > mainImage.height - lensSize) lensY = mainImage.height - lensSize;
+        if (lensY < 0) lensY = 0;
+
+        // Set lens position
+        zoomLens.style.left = lensX + 'px';
+        zoomLens.style.top = lensY + 'px';
+
+        // Calculate zoom result background position
+        const fx = zoomResult.offsetWidth / lensSize;
+        const fy = zoomResult.offsetHeight / lensSize;
+        
+        zoomResult.style.backgroundSize = (mainImage.width * fx) + 'px ' + (mainImage.height * fy) + 'px';
+        zoomResult.style.backgroundPosition = '-' + (lensX * fx) + 'px -' + (lensY * fy) + 'px';
+    });
+}
+
+// Thumbnail click functionality
+function initializeThumbnails() {
+    const thumbnails = document.querySelectorAll('.thumbnail-image');
+    const mainImage = document.getElementById('mainImage');
+    const zoomResult = document.getElementById('zoomResult');
+
+    thumbnails.forEach(thumbnail => {
+        thumbnail.addEventListener('click', function() {
+            // Remove active class from all thumbnails
+            thumbnails.forEach(thumb => thumb.classList.remove('active'));
+            
+            // Add active class to clicked thumbnail
+            this.classList.add('active');
+            
+            // Change main image source
+            const newImageSrc = this.getAttribute('data-full-image');
+            mainImage.src = newImageSrc;
+            
+            // Update zoom result background image
+            if (zoomResult) {
+                zoomResult.style.backgroundImage = `url('${newImageSrc}')`;
+            }
+        });
+    });
+}
+
+// Size selector functionality
+document.getElementById('sizeSelect').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const stockInfo = document.getElementById('stockInfo');
+    
+    if (this.value) {
+        const stock = selectedOption.getAttribute('data-stock');
+        const stockClass = parseInt(stock) <= 5 ? 'text-warning' : 'text-success';
+        if (stockInfo) {
             stockInfo.innerHTML = `<span class="${stockClass}">
                 ${stock} pieces available
                 ${parseInt(stock) <= 5 ? ' (Low Stock)' : ''}
             </span>`;
-        } else {
+        }
+    } else {
+        if (stockInfo) {
             stockInfo.innerHTML = '';
         }
-        
-        
-    });
-    document.getElementById('proceedCheckout').addEventListener('click', async function(e) {
+    }
+});
+
+// Add to wishlist functionality
+document.getElementById('proceedCheckout').addEventListener('click', async function(e) {
     e.preventDefault();
     const productId = "<%= product._id %>";
 
@@ -421,71 +601,63 @@
         alert('An error occurred while adding to wishlist');
     }
 });
+document.getElementById('addCart').addEventListener('click', async function(e) {
+    e.preventDefault();
 
-   
+    const selectedSize = document.getElementById('sizeSelect').value;
+    const sizeWarning = document.getElementById('sizeWarning');
 
-    
+    if (!selectedSize) {
+        // Show warning
+        sizeWarning.style.display = 'block';
+        return;
+    } else {
+        // Hide warning if size is selected
+        sizeWarning.style.display = 'none';
+    }
 
-    document.getElementById('addCart').addEventListener('click', async function(e) {
-        e.preventDefault();
+    const productId = "<%= product._id %>";
 
-        const selectedSize = document.getElementById('sizeSelect').value;
-        if (!selectedSize) {
-            alert('Please select a size');
-            return;
+    try {
+        const response = await fetch('/cart/add', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                productId,
+                size: selectedSize
+            }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            window.location.href = '/cart';
+        } else {
+            
+            sizeWarning.innerText = result.message;
+            sizeWarning.style.display = 'block';
         }
+    } catch (error) {
+        console.error('Error:', error);
+        sizeWarning.innerText = 'An error occurred while adding to cart';
+        sizeWarning.style.display = 'block';
+    }
+});
 
-        const productId = "<%= product._id %>";
-        
 
-        try {
-            const response = await fetch('/cart/add', {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    productId,
-                    
-                    size: selectedSize
-                }),
-            });
 
-            const result = await response.json();
+document.addEventListener('DOMContentLoaded', function() {
+    initializeImageZoom();
+    initializeThumbnails();
+});
 
-            if (result.success) {
-                window.location.href = '/cart';
-            } else {
-                alert(result.message);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred while adding to cart');
-        }
-    });
+
+$(document).ready(function() {
+    initializeImageZoom();
+    initializeThumbnails();
+});
 </script>
-
-<style>
-    .zoomWrapper {
-    border: 3px solid #ddd; 
-}
-    .stock-info {
-        font-size: 0.9em;
-        margin-top: 5px;
-    }
-    
-    .text-warning {
-        color: #ffc107;
-    }
-    
-    .text-success {
-        color: #28a745;
-    }
-
-    .size-out-of-stock {
-        color: #999;
-        text-decoration: line-through;
-    }
-</style>
 
 <%- include("../../views/partials/users/footer.ejs") %>

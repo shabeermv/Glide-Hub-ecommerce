@@ -9,15 +9,24 @@ const statusCode = require("../../utils/statusCodes")
 const { nextTick } = require("process");
 const sharp = require("sharp");
 
-const productsInfo = async (req, res) => {
+const productsInfo = async (req, res, next) => {
   try {
+    const searchValue = req.query.search || "";
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
 
-    const totalProducts = await Product.countDocuments();
+    let filter = {};
+    if (searchValue) {
+      filter = { title: { $regex: searchValue, $options: "i" } };
+    }
 
-    const products = await Product.find()
+    
+    const totalProducts = await Product.countDocuments(filter);
+
+    
+    const products = await Product.find(filter)
       .populate("category", "name")
       .skip(skip)
       .limit(limit)
@@ -35,12 +44,14 @@ const productsInfo = async (req, res) => {
       currentPage: page,
       totalPages,
       limit,
+      searchValue, 
     });
   } catch (error) {
     console.error("Error fetching products:", error);
     next(error);
   }
 };
+
 
 const addProductInfo = async (req, res) => {
   try {
