@@ -165,15 +165,27 @@ const checkoutPageInfo = async (req, res) => {
     const defaultAddress = user.address?.length > 0 ? user.address[0] : null;
 
     res.render("checkout", {
-      products,
-      totalPrice,
+       products,
+      totalPrice: totalPrice.toFixed(2),
       applicableCoupons,
-      user: {
-        email: user.email,
-        username: user.username,
-        contact: user.contact,
-        address: defaultAddress,
-      },
+      breadcrumbs:[
+        {name:"Home",url:"/"},
+        {name:"Shop",url:"/shop"},
+        {name:"Cart",url:"/cart"},
+        {name:"Checkout"}
+
+      ],
+     user: {
+  email: user.email,
+  username: user.username,
+  contact: user.contact,
+  address: user.address || [],   
+},
+      paymentError: req.query.error === "payment" ? true : false,
+      errorMessage:
+        req.query.error === "payment"
+          ? "Your payment was not successful. Please try again or select another payment method."
+          : "",
     });
   } catch (error) {
     console.error("Error fetching checkout data:", error);

@@ -42,7 +42,7 @@
                                         </h3>
                                     </div>
                                 </td>
-                                <td class="price-col">$<%= item.productId.price %></td>
+                                <td class="price-col"><%= item.productId.price %></td>
                                 <td class="stock-col">
                                     <span class="<%= item.productId.stock > 0 ? 'in-stock' : 'out-of-stock' %>">
                                         <%= item.productId.totalStock > 0 ? 'In stock' : 'Out of stock' %>
@@ -107,7 +107,7 @@
                 <div class="modal-body">
                     <div class="product-info mb-3">
                         <h6 id="modalProductTitle"></h6>
-                        <p class="text-muted">Price: $<span id="modalProductPrice"></span></p>
+                        <p class="text-muted">Price: <span id="modalProductPrice"></span></p>
                     </div>
                     <form id="sizeForm">
                         <input type="hidden" id="modalProductId" />
@@ -128,32 +128,42 @@
         </div>
     </div>
 
-    <!-- Success Modal -->
-    <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="successModalLabel">
-                        <i class="fa fa-check-circle mr-2"></i>Success!
-                    </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body text-center">
-                    <div class="success-icon mb-3">
-                        <i class="fa fa-check-circle text-success" style="font-size: 3rem;"></i>
-                    </div>
-                    <h5 id="successMessage">Product added to cart successfully!</h5>
-                    <p class="text-muted mb-0">Your item has been added to the shopping cart.</p>
-                </div>
-                <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Continue Shopping</button>
-                    <a href="/cart" class="btn btn-success">View Cart</a>
-                </div>
-            </div>
+   <!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      
+      <!-- Modal Body -->
+      <div class="modal-body text-center p-5">
+        <!-- Animated check circle -->
+        <div class="mb-3">
+          <i class="fa fa-check-circle text-success" style="font-size: 4rem; animation: pop 0.4s ease;"></i>
         </div>
+        <h4 class="fw-bold text-dark mb-2">Item Added!</h4>
+        <p class="text-muted">Your product has been successfully added to the cart.</p>
+      </div>
+
+      <!-- Modal Footer -->
+     <div class="modal-footer border-0 justify-content-center pb-4">
+    <a href="/shop" class="btn btn-outline-secondary px-4">
+        <i class="fa fa-arrow-left me-1"></i> Continue Shopping
+    </a>
+    <a href="/cart" class="btn btn-success px-4">
+        <i class="fa fa-shopping-cart me-1"></i> Go to Cart
+    </a>
+</div>
     </div>
+  </div>
+</div>
+
+
+<style>
+@keyframes pop {
+  0%   { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+</style>
+
 
     <!-- Remove Confirmation Modal -->
 <div class="modal fade" id="removeConfirmModal" tabindex="-1" role="dialog" aria-labelledby="removeConfirmModalLabel" aria-hidden="true">

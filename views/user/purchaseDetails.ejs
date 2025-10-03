@@ -29,42 +29,53 @@
             <span class="badge-status"><%= order.orderStatus %></span>
         
             <h2>Products Ordered</h2>
-            <ul class="list-unstyled">
-                <% 
-                let cancelableProductsCount = order.products.filter(product => 
-                    !["Cancel Requested", "Cancelled"].includes(product.status)
-                ).length;
+<ul class="list-unstyled">
+    <% 
+    let cancelableProductsCount = order.products.filter(product => 
+        !["Cancel Requested", "Cancelled", "Returned"].includes(product.status)
+    ).length;
 
-                //  Define `allProductsReturned` and `hasReturnableProducts`
-                const allProductsReturned = order.products.every(product => product.status === "Returned");
-                const hasReturnableProducts = order.products.some(product => product.status === "Delivered");
-                %>
-                
-                <% order.products.forEach(product => { %>
-        <li class="d-flex justify-content-between align-items-center border-bottom py-3">
-            <div>
-                <p><strong>Product:</strong> <%= product.productId.title || 'No title available' %></p>
-                
-                <!-- Show product original price vs discounted price -->
-                <p>
-                    <strong>Price:</strong> 
-                    <% if (product.productId.price !== product.price) { %>
-                        <span class="text-muted text-decoration-line-through">₹<%= product.productId.price.toFixed(2) %></span>
-                        <span class="text-success fw-bold ms-2">₹<%= product.price.toFixed(2) %></span>
-                    <% } else { %>
-                        ₹<%= product.price.toFixed(2) %>
-                    <% } %>
-                </p>
+    const allProductsReturned = order.products.every(product => product.status === "Returned");
+    const hasReturnableProducts = order.products.some(product => product.status === "Delivered");
+    %>
+    
+    <% order.products.forEach(product => { %>
+    <li class="d-flex justify-content-between align-items-center border-bottom py-3">
+        <div>
+            <p><strong>Product:</strong> <%= product.productId.title || 'No title available' %></p>
+            
+            <!-- Show product original price vs discounted price -->
+            <p>
+                <strong>Price:</strong> 
+                <% if (product.productId.price !== product.price) { %>
+                    <span class="text-muted text-decoration-line-through">₹<%= product.productId.price.toFixed(2) %></span>
+                    <span class="text-success fw-bold ms-2">₹<%= product.price.toFixed(2) %></span>
+                <% } else { %>
+                    ₹<%= product.price.toFixed(2) %>
+                <% } %>
+            </p>
 
-                <p><strong>Quantity:</strong> <%= product.quantity %></p>
-                <p><strong>Size:</strong> <%= product.size %></p>
-            </div>
+            <p><strong>Quantity:</strong> <%= product.quantity %></p>
+            <p><strong>Size:</strong> <%= product.size %></p>
 
-            <div>
-                <img src="<%= product.productId.image.length > 0 ? product.productId.image[0] : '/images/placeholder.jpg' %>" 
-                     alt="<%= product.productId.title %>" width="200" class="img-fluid rounded">
-            </div>
-        </li>
+            
+  <% if (
+    order.products.length > 1 &&
+    order.orderStatus === "Confirmed" &&
+    !["Cancel Requested", "Cancelled", "Returned"].includes(product.status)
+) { %>
+    <button type="button" 
+            class="btn btn-danger btn-sm mt-2" 
+            onclick="cancelProduct('<%= order._id %>', '<%= product.productId._id %>')">
+        Cancel Product
+    </button>
+<% } %>
+
+        <div>
+            <img src="<%= product.productId.image.length > 0 ? product.productId.image[0] : '/images/placeholder.jpg' %>" 
+                 alt="<%= product.productId.title %>" width="200" class="img-fluid rounded">
+        </div>
+    </li>
     <% }) %>
 </ul>
 
@@ -322,7 +333,7 @@
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
-// Function to handle order cancellation
+
 function cancelOrder(orderId) {
     console.log("cancelOrder called with:", { orderId });
 
@@ -331,20 +342,20 @@ function cancelOrder(orderId) {
         return;
     }
 
-    // Set values in the hidden fields
+    
     document.getElementById('cancelOrderId').value = orderId;
-    document.getElementById('cancelProductId').value = ''; // Clear product ID for order cancellation
-    document.getElementById('cancelType').value = 'order'; // Indicate it's an order cancellation
+    document.getElementById('cancelProductId').value = ''; 
+    document.getElementById('cancelType').value = 'order'; 
 
-    // Update modal title
+    
     document.getElementById('cancelReasonModalLabel').textContent = 'Cancel Order';
 
-    // Show the cancel reason modal
+    
     var cancelModal = new bootstrap.Modal(document.getElementById('cancelReasonModal'));
     cancelModal.show();
 }
 
-// Function to open the return modal for a specific product
+
 function openReturnModal(orderId, productId, productOrderId) {
     console.log("openReturnModal called with:", { orderId, productId, productOrderId });
 
