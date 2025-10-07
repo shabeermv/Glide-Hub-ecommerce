@@ -90,14 +90,16 @@ const cartPageInfo = async (req, res, next) => {
       await cartData.save();
     }
 
-    res.render("userCart", { cart: cartData, user,breadcrumbs: [
-    { name: "Shop", url: "/shop" },
-    
-    { name: "Cart" } 
-  ] });
+    res.render("userCart", {
+      cart: cartData,
+      user,
+      breadcrumbs: [{ name: "Shop", url: "/shop" }, { name: "Cart" }],
+    });
   } catch (error) {
     console.log("this is the internal server error");
-    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({ message: "internal server errror" });
+    return res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ message: "internal server errror" });
   }
 };
 
@@ -210,14 +212,14 @@ const addToCartFromWishlist = async (req, res) => {
     if (!userId) {
       return res.status(statusCode.UNAUTHORIZED).json({
         success: false,
-        message: "Please login to add items to cart"
+        message: "Please login to add items to cart",
       });
     }
 
     if (!productId || !size) {
       return res.status(statusCode.BAD_REQUEST).json({
         success: false,
-        message: "Product ID and size are required"
+        message: "Product ID and size are required",
       });
     }
 
@@ -225,15 +227,15 @@ const addToCartFromWishlist = async (req, res) => {
     if (!product) {
       return res.status(statusCode.NOT_FOUND).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
 
-    const sizeObj = product.sizes.find(s => s.size === size);
+    const sizeObj = product.sizes.find((s) => s.size === size);
     if (!sizeObj) {
       return res.status(statusCode.BAD_REQUEST).json({
         success: false,
-        message: "Selected size is not available"
+        message: "Selected size is not available",
       });
     }
 
@@ -243,7 +245,7 @@ const addToCartFromWishlist = async (req, res) => {
     }
 
     const existingCartItem = cart.product.find(
-      item => item.productId.toString() === productId && item.size === size
+      (item) => item.productId.toString() === productId && item.size === size
     );
 
     if (existingCartItem) {
@@ -252,7 +254,7 @@ const addToCartFromWishlist = async (req, res) => {
       if (newQuantity > sizeObj.stock) {
         return res.status(statusCode.BAD_REQUEST).json({
           success: false,
-          message: `Cannot add more items. Only ${sizeObj.stock} available for size ${size}, you already have ${existingCartItem.quantity} in cart`
+          message: `Cannot add more items. Only ${sizeObj.stock} available for size ${size}, you already have ${existingCartItem.quantity} in cart`,
         });
       }
 
@@ -264,7 +266,7 @@ const addToCartFromWishlist = async (req, res) => {
         size,
         quantity: parseInt(quantity),
         price: product.price,
-        totalPrice: product.price * quantity
+        totalPrice: product.price * quantity,
       });
     }
 
@@ -272,14 +274,13 @@ const addToCartFromWishlist = async (req, res) => {
 
     return res.status(statusCode.OK).json({
       success: true,
-      message: "Product added to cart successfully"
+      message: "Product added to cart successfully",
     });
-
   } catch (error) {
     console.error("Error adding to cart from wishlist:", error);
     return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: "Internal server error"
+      message: "Internal server error",
     });
   }
 };

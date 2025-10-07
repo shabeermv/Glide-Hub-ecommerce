@@ -4,13 +4,13 @@
     <div class="container">
         <div class="flex-w flex-sb-m p-b-52">
             <div class="flex-w flex-l-m filter-tope-group m-tb-10">
-                <a href="/shop" class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5 how-active1">
+                <a href="/shop" class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5 <%= !selectedCategory ? 'how-active1' : '' %>">
                     All Products
                 </a>
                 
                 <% categories.forEach(category => { %>
                     <button 
-                        class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5"
+                        class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5 <%= selectedCategory === category.name ? 'how-active1' : '' %>"
                         onclick="categoryFilter('<%= category.name %>')">
                         <%= category.name %>
                     </button>
@@ -106,6 +106,7 @@
             </div>
         </div>
 
+        <% if (updatedProducts && updatedProducts.length > 0) { %>
         <div class="row flex-wrap">
             <% updatedProducts.forEach(product => { %>
                 <div class="col-sm-6 col-md-6 col-lg-3 p-b-35 isotope-item women">
@@ -179,27 +180,72 @@
                 </div>
             <% }) %>
         </div>
+        <% } else { %>
+        <div class="row">
+            <div class="col-12 text-center p-t-50 p-b-50">
+                <h3 class="mtext-111 cl2">No products found</h3>
+                <p class="stext-113 cl6 p-t-10">Try adjusting your filters or search terms</p>
+            </div>
+        </div>
+        <% } %>
         
         
         <!-- Pagination -->
         <div class="flex-c-m flex-w w-full p-t-45">
             <% if (totalPages > 1) { %>
                 <% if (currentPage > 1) { %>
-                    <a href="?page=<%= currentPage - 1 %>&search=<%= searchValue %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>&priceRange=<%= selectedPriceRange %>" 
+                    <a href="javascript:void(0)" 
+                       onclick="goToPage(<%= currentPage - 1 %>)"
                        class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 m-r-5">
                         Previous
                     </a>
                 <% } %>
 
-                <% for (let i = 1; i <= totalPages; i++) { %>
-                    <a href="?page=<%= i %>&search=<%= searchValue %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>&priceRange=<%= selectedPriceRange %>" 
+                <% 
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, currentPage + 2);
+                
+                if (currentPage <= 3) {
+                    endPage = Math.min(5, totalPages);
+                }
+                if (currentPage > totalPages - 3) {
+                    startPage = Math.max(1, totalPages - 4);
+                }
+                %>
+
+                <% if (startPage > 1) { %>
+                    <a href="javascript:void(0)" 
+                       onclick="goToPage(1)"
+                       class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 m-lr-3">
+                        1
+                    </a>
+                    <% if (startPage > 2) { %>
+                        <span class="flex-c-m stext-101 cl5 size-103 p-lr-15 m-lr-3">...</span>
+                    <% } %>
+                <% } %>
+
+                <% for (let i = startPage; i <= endPage; i++) { %>
+                    <a href="javascript:void(0)" 
+                       onclick="goToPage(<%= i %>)"
                        class="flex-c-m stext-101 cl5 size-103 <%= i === currentPage ? 'bg1' : 'bg2' %> bor1 hov-btn1 p-lr-15 trans-04 m-lr-3">
                         <%= i %>
                     </a>
                 <% } %>
 
+                <% if (endPage < totalPages) { %>
+                    <% if (endPage < totalPages - 1) { %>
+                        <span class="flex-c-m stext-101 cl5 size-103 p-lr-15 m-lr-3">...</span>
+                    <% } %>
+                    <a href="javascript:void(0)" 
+                       onclick="goToPage(<%= totalPages %>)"
+                       class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 m-lr-3">
+                        <%= totalPages %>
+                    </a>
+                <% } %>
+
                 <% if (currentPage < totalPages) { %>
-                    <a href="?page=<%= currentPage + 1 %>&search=<%= searchValue %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>&priceRange=<%= selectedPriceRange %>" 
+                    <a href="javascript:void(0)" 
+                       onclick="goToPage(<%= currentPage + 1 %>)"
                        class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 m-l-5">
                         Next
                     </a>
@@ -215,12 +261,90 @@
 <script src="/asset1/js/shop-ajax.js"></script>
 
 <script>
-   document.querySelectorAll('.js-addwish-b2').forEach(button => {
+function searchValue(val) {
+    const params = new URLSearchParams(window.location.search);
+    params.set('search', val);
+    params.set('page', '1'); 
+    window.location.href = `/shop?${params.toString()}`;
+}
+
+function categoryFilter(val) {
+    const params = new URLSearchParams(window.location.search);
+    
+    const search = params.get('search');
+    const sort = params.get('sort');
+    const priceRange = params.get('priceRange');
+    
+    const newParams = new URLSearchParams();
+    
+    if (val) {
+        newParams.set('category', val);
+    }
+    
+    if (search) newParams.set('search', search);
+    if (sort) newParams.set('sort', sort);
+    if (priceRange) newParams.set('priceRange', priceRange);
+    
+    newParams.set('page', '1');
+    
+    window.location.href = `/shop?${newParams.toString()}`;
+}
+
+function sortByPrice(val) {
+    const params = new URLSearchParams(window.location.search);
+    
+    const category = params.get('category');
+    const search = params.get('search');
+    const priceRange = params.get('priceRange');
+    
+    const newParams = new URLSearchParams();
+    
+    if (val) {
+        newParams.set('sort', val);
+    }
+    
+    if (category) newParams.set('category', category);
+    if (search) newParams.set('search', search);
+    if (priceRange) newParams.set('priceRange', priceRange);
+    
+    newParams.set('page', '1');
+    
+    window.location.href = `/shop?${newParams.toString()}`;
+}
+
+function filterByPriceRange(range) {
+    const params = new URLSearchParams(window.location.search);
+    
+    const category = params.get('category');
+    const search = params.get('search');
+    const sort = params.get('sort');
+    
+    const newParams = new URLSearchParams();
+    
+    if (range !== 'all') {
+        newParams.set('priceRange', range);
+    }
+    
+    if (category) newParams.set('category', category);
+    if (search) newParams.set('search', search);
+    if (sort) newParams.set('sort', sort);
+    
+    newParams.set('page', '1');
+    
+    window.location.href = `/shop?${newParams.toString()}`;
+}
+
+function goToPage(pageNum) {
+    const params = new URLSearchParams(window.location.search);
+    params.set('page', pageNum.toString());
+    window.location.href = `/shop?${params.toString()}`;
+}
+
+document.querySelectorAll('.js-addwish-b2').forEach(button => {
     button.addEventListener('click', function (e) {
         e.preventDefault();
 
         const productId = this.getAttribute('data-id');
-        console.log(productId, 'product added to wishlist');
 
         fetch(`/wishlist/add/${productId}`, {
             method: "POST",
@@ -230,7 +354,6 @@
         }).then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log('Product added to wishlist successfully...');
                 window.location.href = '/shop';
             } else {
                 console.log('Product can\'t be added to wishlist');
@@ -240,8 +363,8 @@
         });
     });
 });
-
 </script>
+
 <style>
     /* Add these custom styles for better offer display */
     .price-container {
@@ -292,15 +415,20 @@
         border-radius: 3px;
     }
     
-    /* Enhanced hover effect for product cards */
+    
     .block2:hover {
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
     }
     
-    /* Improve pagination styling */
+    
     .bg1 {
         background-color: #717fe0 !important;
         color: white !important;
     }
-    </style>
+
+    .how-active1 {
+        color: #717fe0 !important;
+        border-color: #717fe0 !important;
+    }
+</style>

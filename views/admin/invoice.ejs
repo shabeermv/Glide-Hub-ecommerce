@@ -1,139 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Invoice</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 0;
-            background-color: #f8f9fa;
-        }
-        .invoice-container {
-            max-width: 800px;
-            background: white;
-            padding: 20px;
-            margin: auto;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 5px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .header h2 {
-            margin: 10px 0;
-            color: #333;
-        }
-        .invoice-details {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .table-container {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .table-container th, .table-container td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-        .table-container th {
-            background: #007bff;
-            color: white;
-        }
-        .total-section {
-            text-align: right;
-            margin-top: 20px;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 12px;
-            color: #777;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        padding: 0;
+        background-color: #f8f9fa;
+      }
+      .invoice-container {
+        max-width: 800px;
+        background: white;
+        padding: 20px;
+        margin: auto;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 5px;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .header h2 {
+        margin: 10px 0;
+        color: #333;
+      }
+      .invoice-details {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .table-container {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .table-container th,
+      .table-container td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: center;
+      }
+      .table-container th {
+        background: #007bff;
+        color: white;
+      }
+      .total-section {
+        text-align: right;
+        margin-top: 20px;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 12px;
+        color: #777;
+      }
+      .btn-print {
+        display: block;
+        width: 100%;
+        max-width: 200px;
+        margin: 20px auto;
+        padding: 10px;
+        text-align: center;
+        background: #28a745;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .btn-print:hover {
+        background: #218838;
+      }
+      @media print {
         .btn-print {
-            display: block;
-            width: 100%;
-            max-width: 200px;
-            margin: 20px auto;
-            padding: 10px;
-            text-align: center;
-            background: #28a745;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
+          display: none;
         }
-        .btn-print:hover {
-            background: #218838;
-        }
-        @media print {
-            .btn-print {
-                display: none;
-            }
-        }
+      }
     </style>
-</head>
-<body>
-
-<div class="invoice-container">
-    <div class="header">
+  </head>
+  <body>
+    <div class="invoice-container">
+      <div class="header">
         <h2>Invoice</h2>
-    </div>
+      </div>
 
-    <div class="invoice-details">
+      <div class="invoice-details">
         <div class="customer-info">
-            <strong>Billing To:</strong><br>
-            <p><%= order.userId.username %></p>
-            <p><%= order.userId.email %></p>
-            <p><%= order.shippingAddress.address %>, <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> - <%= order.shippingAddress.postalCode %></p>
+          <strong>Billing To:</strong><br />
+          <p><%= order.userId.username %></p>
+          <p><%= order.userId.email %></p>
+          <p>
+            <%= order.shippingAddress.address %>, <%= order.shippingAddress.city
+            %>, <%= order.shippingAddress.state %> - <%=
+            order.shippingAddress.postalCode %>
+          </p>
         </div>
         <div class="invoice-info">
-            <strong>Invoice No:</strong> #<%= order.orderId %><br>
-            <strong>Date:</strong> <%= new Date(order.createdAt).toLocaleDateString() %><br>
-            <strong>Payment Method:</strong> <%= order.paymentMethod.join(", ") %>
+          <strong>Invoice No:</strong> #<%= order.orderId %><br />
+          <strong>Date:</strong> <%= new
+          Date(order.createdAt).toLocaleDateString() %><br />
+          <strong>Payment Method:</strong> <%= order.paymentMethod.join(", ") %>
         </div>
-    </div>
+      </div>
 
-    <table class="table-container">
+      <table class="table-container">
         <thead>
-            <tr>
-                <th>Product</th>
-                <th>Size</th>
-                <th>Quantity</th>
-                <th>Unit Price (₹)</th>
-                <th>Total (₹)</th>
-            </tr>
+          <tr>
+            <th>Product</th>
+            <th>Size</th>
+            <th>Quantity</th>
+            <th>Unit Price (₹)</th>
+            <th>Total (₹)</th>
+          </tr>
         </thead>
         <tbody>
-            <% order.products.forEach(product => { %>
-                <tr>
-                    <td><%= product.productId.title %></td>
-                    <td><%= product.size %></td>
-                    <td><%= product.quantity %></td>
-                    <td>₹<%= product.productId.price.toFixed(2) %></td>
-                    <td>₹<%= (product.productId.price * product.quantity).toFixed(2) %></td>
-                </tr>
-            <% }) %>
+          <% order.products.forEach(product => { %>
+          <tr>
+            <td><%= product.productId.title %></td>
+            <td><%= product.size %></td>
+            <td><%= product.quantity %></td>
+            <td>₹<%= product.productId.price.toFixed(2) %></td>
+            <td>
+              ₹<%= (product.productId.price * product.quantity).toFixed(2) %>
+            </td>
+          </tr>
+          <% }) %>
         </tbody>
-    </table>
+      </table>
 
-    <div class="total-section">
+      <div class="total-section">
         <p><strong>Subtotal:</strong> ₹<%= order.totalAmount.toFixed(2) %></p>
         <p><strong>Payment Status:</strong> <%= order.paymentStatus %></p>
+      </div>
+
+      <button class="btn-print" onclick="window.print()">Print Invoice</button>
+
+      <div class="footer">
+        Thank you for your purchase! If you have any questions, contact us at
+        glidehub.sales@gmail.com .
+      </div>
     </div>
-
-    <button class="btn-print" onclick="window.print()">Print Invoice</button>
-
-    <div class="footer">
-        Thank you for your purchase! If you have any questions, contact us at glidehub.sales@gmail.com .
-    </div>
-</div>
-
-</body>
+  </body>
 </html>

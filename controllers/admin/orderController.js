@@ -2,7 +2,7 @@ const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const User = require("../../models/userSchema");
 const Order = require("../../models/orderSchema");
-const statusCode = require("../../utils/statusCodes")
+const statusCode = require("../../utils/statusCodes");
 
 const userOrdersInfo = async (req, res) => {
   try {
@@ -296,12 +296,10 @@ const setUpReturnRequest = async (req, res) => {
     }
 
     if (order.paymentStatus !== "completed") {
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .json({
-          success: false,
-          message: "Refund cannot be processed. Payment is not completed.",
-        });
+      return res.status(statusCode.BAD_REQUEST).json({
+        success: false,
+        message: "Refund cannot be processed. Payment is not completed.",
+      });
     }
 
     const user = order.userId;
@@ -373,7 +371,9 @@ const setUpReturnRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("Error processing return request:", error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal Server Error" });
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -392,12 +392,10 @@ const setCancelAction = async (req, res) => {
     }
 
     if (order.paymentStatus !== "completed") {
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .json({
-          success: false,
-          message: "Refund cannot be processed. Payment is not completed.",
-        });
+      return res.status(statusCode.BAD_REQUEST).json({
+        success: false,
+        message: "Refund cannot be processed. Payment is not completed.",
+      });
     }
 
     const user = order.userId;
@@ -499,7 +497,9 @@ const setCancelAction = async (req, res) => {
     res.json({ success: true, refundAmount });
   } catch (error) {
     console.error("Error handling cancel action:", error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal Server Error" });
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };
 

@@ -1,54 +1,128 @@
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Forgot Password | Glide_hub</title>
-    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="/css/forgotPass.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
+
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/forgotPass.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
     <div class="form">
-        <form class="form-horizontal forgot-password">
-            <div class="form-wrap" style="position: relative;">
-              <h2>Forgot Password</h2>
-              <p>Enter your email to receive a password reset link.</p>
+      <form class="form-horizontal forgot-password">
+        <div class="form-wrap" style="position: relative">
+          <h2>Forgot Password</h2>
+          <p>Enter your email to receive a password reset link.</p>
 
-              <div class="form-group">
-                <div id="error-message" style="color: red;"></div>
-                <input class="form-control" id="email" type="email" required placeholder="Email">
-              </div>
+          <div class="form-group">
+            <div id="error-message" style="color: red"></div>
+            <input
+              class="form-control"
+              id="email"
+              type="email"
+              required
+              placeholder="Email"
+            />
+          </div>
 
-              <div class="reset-btn">
-                <button class="btn btn-primary" id="forgotPasswordForm" type="button">Send OTP</button>
-              </div>
-            </div>
-        </form>
+          <div class="reset-btn">
+            <button
+              class="btn btn-primary"
+              id="forgotPasswordForm"
+              type="button"
+            >
+              Send OTP
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
 
     <!-- OTP Modal -->
-    <div class="modal fade" id="otpModal" tabindex="-1" aria-labelledby="otpModalLabel" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="otpModal"
+      tabindex="-1"
+      aria-labelledby="otpModalLabel"
+      aria-hidden="true"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="otpModalLabel">Enter OTP</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
           <div class="modal-body">
-            <p>An OTP has been sent to your email. Enter the 6-digit OTP below.</p>
+            <p>
+              An OTP has been sent to your email. Enter the 6-digit OTP below.
+            </p>
             <div class="d-flex justify-content-center gap-2">
-              <input type="text" id="1" class="otp-input form-control text-center" maxlength="1" oninput="moveToNext(this, 0)">
-              <input type="text" id="2" class="otp-input form-control text-center" maxlength="1" oninput="moveToNext(this, 1)">
-              <input type="text" id="3" class="otp-input form-control text-center" maxlength="1" oninput="moveToNext(this, 2)">
-              <input type="text" id="4" class="otp-input form-control text-center" maxlength="1" oninput="moveToNext(this, 3)">
-              <input type="text" id="5" class="otp-input form-control text-center" maxlength="1" oninput="moveToNext(this, 4)">
-              <input type="text" id="6" class="otp-input form-control text-center" maxlength="1" oninput="moveToNext(this, 5)">
+              <input
+                type="text"
+                id="1"
+                class="otp-input form-control text-center"
+                maxlength="1"
+                oninput="moveToNext(this, 0)"
+              />
+              <input
+                type="text"
+                id="2"
+                class="otp-input form-control text-center"
+                maxlength="1"
+                oninput="moveToNext(this, 1)"
+              />
+              <input
+                type="text"
+                id="3"
+                class="otp-input form-control text-center"
+                maxlength="1"
+                oninput="moveToNext(this, 2)"
+              />
+              <input
+                type="text"
+                id="4"
+                class="otp-input form-control text-center"
+                maxlength="1"
+                oninput="moveToNext(this, 3)"
+              />
+              <input
+                type="text"
+                id="5"
+                class="otp-input form-control text-center"
+                maxlength="1"
+                oninput="moveToNext(this, 4)"
+              />
+              <input
+                type="text"
+                id="6"
+                class="otp-input form-control text-center"
+                maxlength="1"
+                oninput="moveToNext(this, 5)"
+              />
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="verifyOtp">Verify OTP</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="button" class="btn btn-primary" id="verifyOtp">
+              Verify OTP
+            </button>
           </div>
         </div>
       </div>
@@ -56,73 +130,75 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('forgotPasswordForm').addEventListener('click', function() {
-            const email = document.getElementById('email').value;
-            
-            fetch('/forgetPassword', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
+      document
+        .getElementById("forgotPasswordForm")
+        .addEventListener("click", function () {
+          const email = document.getElementById("email").value;
+
+          fetch("/forgetPassword", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                const otpModal = new bootstrap.Modal(
+                  document.getElementById("otpModal")
+                );
+                otpModal.show();
+              } else {
+                document.getElementById("error-message").innerText =
+                  data.message;
+              }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const otpModal = new bootstrap.Modal(document.getElementById('otpModal'));
-                    otpModal.show();
-                } else {
-                    document.getElementById('error-message').innerText = data.message;
-                }
-            })
-            .catch(error => console.error('Error:', error));
+            .catch((error) => console.error("Error:", error));
         });
 
-        function moveToNext(element, index) {
-            const inputs = document.querySelectorAll('.otp-input');
-            if (element.value.length === 1 && index < inputs.length - 1) {
-                inputs[index + 1].focus();
-            } else if (element.value.length === 0 && index > 0) {
-                inputs[index - 1].focus();
-            }
+      function moveToNext(element, index) {
+        const inputs = document.querySelectorAll(".otp-input");
+        if (element.value.length === 1 && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        } else if (element.value.length === 0 && index > 0) {
+          inputs[index - 1].focus();
         }
+      }
 
-        document.getElementById('verifyOtp').addEventListener('click',function(e) {
+      document
+        .getElementById("verifyOtp")
+        .addEventListener("click", function (e) {
           e.preventDefault();
 
-    const one = document.getElementById('1').value;
-    const two = document.getElementById('2').value;
-    const three = document.getElementById('3').value;
-    const four = document.getElementById('4').value;
-    const five = document.getElementById('5').value;
-    const six = document.getElementById('6').value;
+          const one = document.getElementById("1").value;
+          const two = document.getElementById("2").value;
+          const three = document.getElementById("3").value;
+          const four = document.getElementById("4").value;
+          const five = document.getElementById("5").value;
+          const six = document.getElementById("6").value;
 
-    const totalOtp = [one, two, three, four, five, six];
-    const fillOtp = totalOtp.join('');
+          const totalOtp = [one, two, three, four, five, six];
+          const fillOtp = totalOtp.join("");
 
-    
-    const otpAsInt = parseInt(fillOtp, 10);
-    console.log(otpAsInt);
-    
+          const otpAsInt = parseInt(fillOtp, 10);
+          console.log(otpAsInt);
 
-    fetch('/resetPassOtp',{
-      method:"POST",
-      headers:{
-        'Content-Type':'application/json'
-      },
-      body: JSON.stringify({otp:otpAsInt} )
-    }).then(response =>response.json())
-    .then(data =>{
-      if(data.success){
-        window.location.href='/resetPasswordByOtp'
-
-      }
-    }).catch(err =>{
-      alert('failed..',err.message)
-    })
-
-
-
-
-        })
+          fetch("/resetPassOtp", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ otp: otpAsInt }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                window.location.href = "/resetPasswordByOtp";
+              }
+            })
+            .catch((err) => {
+              alert("failed..", err.message);
+            });
+        });
     </script>
-</body>
+  </body>
 </html>

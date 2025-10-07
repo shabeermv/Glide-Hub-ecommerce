@@ -7,7 +7,7 @@ const ProductOffer = require("../../models/productOffer");
 const Coupon = require("../../models/couponSchema");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
-const statusCode = require("../../utils/statusCodes")
+const statusCode = require("../../utils/statusCodes");
 
 const checkoutPageInfo = async (req, res) => {
   const userId = req.session.userId;
@@ -15,14 +15,18 @@ const checkoutPageInfo = async (req, res) => {
 
   try {
     const user = await User.findById(userId);
+    if (!user) {
+      return res.redirect("/login");
+    }
 
     let products = [];
     let totalPrice = 0;
 
     if (productId) {
+      
       const product = await Product.findById(productId).populate("category");
       if (!product) {
-        return res.status(statusCode.NOT_FOUND).render("checkout", {
+        return res.status(404).render("checkout", {
           error: "Product not found",
           products: [],
           user: {
@@ -34,10 +38,9 @@ const checkoutPageInfo = async (req, res) => {
         });
       }
 
+      
       const productOffer = await ProductOffer.findOne({ productId });
-      const categoryOffer = await CategoryOffer.findOne({
-        categoryId: product.category._id,
-      });
+      const categoryOffer = await CategoryOffer.findOne({ categoryId: product.category._id });
 
       let finalPrice = product.price;
       let appliedOffer = null;
@@ -51,8 +54,7 @@ const checkoutPageInfo = async (req, res) => {
       } else if (categoryOffer) {
         finalPrice =
           categoryOffer.discountType === "percentage"
-            ? product.price -
-              (product.price * categoryOffer.discountValue) / 100
+            ? product.price - (product.price * categoryOffer.discountValue) / 100
             : product.price - categoryOffer.discountValue;
         appliedOffer = categoryOffer;
       }
@@ -74,21 +76,19 @@ const checkoutPageInfo = async (req, res) => {
           quantity: cartItem ? cartItem.quantity : 1,
           size: cartItem ? cartItem.size : "M",
           totalPrice: finalPrice * (cartItem ? cartItem.quantity : 1),
-          image:
-            product.image?.length > 0
-              ? product.image[0]
-              : "default-product.jpg",
+          image: product.image?.[0] || "default-product.jpg",
         },
       ];
       totalPrice = finalPrice * (cartItem ? cartItem.quantity : 1);
     } else {
+      // full cart checkout
       const cart = await Cart.findOne({ userId }).populate(
         "product.productId",
         "title price image category hasDiscount discountedPrice"
       );
 
       if (!cart || !cart.product || cart.product.length === 0) {
-        return res.status(statusCode.BAD_REQUEST).render("checkout", {
+        return res.status(400).render("checkout", {
           error: "Your cart is empty",
           products: [],
           user: {
@@ -103,31 +103,22 @@ const checkoutPageInfo = async (req, res) => {
       products = await Promise.all(
         cart.product.map(async (item) => {
           const product = item.productId;
-          let finalPrice = product.hasDiscount
-            ? product.discountedPrice
-            : product.price;
+          let finalPrice = product.hasDiscount ? product.discountedPrice : product.price;
           let appliedOffer = null;
 
-          const categoryOffer = await categoryOffer.findOne({
-            categoryId: product.category,
-          });
-
-          const productOffer = await productOffer.findOne({
-            productId: product._id,
-          });
+          const categoryOffer = await CategoryOffer.findOne({ categoryId: product.category });
+          const productOffer = await ProductOffer.findOne({ productId: product._id });
 
           if (productOffer) {
             finalPrice =
               productOffer.discountType === "percentage"
-                ? product.price -
-                  (product.price * productOffer.discountValue) / 100
+                ? product.price - (product.price * productOffer.discountValue) / 100
                 : product.price - productOffer.discountValue;
             appliedOffer = productOffer;
           } else if (categoryOffer) {
             finalPrice =
               categoryOffer.discountType === "percentage"
-                ? product.price -
-                  (product.price * categoryOffer.discountValue) / 100
+                ? product.price - (product.price * categoryOffer.discountValue) / 100
                 : product.price - categoryOffer.discountValue;
             appliedOffer = categoryOffer;
           }
@@ -143,45 +134,43 @@ const checkoutPageInfo = async (req, res) => {
             quantity: item.quantity,
             size: item.size,
             totalPrice: finalPrice * item.quantity,
-            image:
-              product.image?.length > 0
-                ? product.image[0]
-                : "default-product.jpg",
+            image: product.image?.[0] || "default-product.jpg",
           };
         })
       );
 
-      totalPrice = products.reduce(
-        (sum, product) => sum + product.totalPrice,
-        0
-      );
+      totalPrice = products.reduce((sum, product) => sum + product.totalPrice, 0);
     }
 
-    const applicableCoupons = await Coupon.find({
+    
+    const allCoupons = await Coupon.find({
       minPurchase: { $lte: totalPrice },
       expireDate: { $gte: new Date() },
     });
 
-    const defaultAddress = user.address?.length > 0 ? user.address[0] : null;
+    const usedCoupons = await Order.find({ userId, coupon: { $ne: null } }).distinct("coupon");
+
+    const applicableCoupons = allCoupons.filter(
+      (coupon) => !usedCoupons.includes(coupon._id.toString())
+    );
 
     res.render("checkout", {
-       products,
+      products,
       totalPrice: totalPrice.toFixed(2),
       applicableCoupons,
-      breadcrumbs:[
-        {name:"Home",url:"/"},
-        {name:"Shop",url:"/shop"},
-        {name:"Cart",url:"/cart"},
-        {name:"Checkout"}
-
+      breadcrumbs: [
+        { name: "Home", url: "/" },
+        { name: "Shop", url: "/shop" },
+        { name: "Cart", url: "/cart" },
+        { name: "Checkout" },
       ],
-     user: {
-  email: user.email,
-  username: user.username,
-  contact: user.contact,
-  address: user.address || [],   
-},
-      paymentError: req.query.error === "payment" ? true : false,
+      user: {
+        email: user.email,
+        username: user.username,
+        contact: user.contact,
+        address: user.address || [],
+      },
+      paymentError: req.query.error === "payment",
       errorMessage:
         req.query.error === "payment"
           ? "Your payment was not successful. Please try again or select another payment method."
@@ -189,46 +178,34 @@ const checkoutPageInfo = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching checkout data:", error);
-    return res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({ success: false, message: "internal server error" });
+    return res.status(500).json({ success: false, message: "internal server error" });
   }
 };
 
-const cartCheckoutPage = async (req, res, next) => {
+const cartCheckoutPage = async (req, res) => {
   const userId = req.session.userId;
 
   try {
-    let user = null;
-    if (userId) {
-      user = await User.findById(userId);
-    }
-
-    if (!user) {
-      return res.redirect("/login");
-    }
+    let user = await User.findById(userId);
+    if (!user) return res.redirect("/login");
 
     const cart = await Cart.findOne({ userId }).populate({
       path: "product.productId",
-      select:
-        "title price image category hasDiscount originalPrice discountedPrice",
-      populate: {
-        path: "category",
-        select: "_id",
-      },
+      select: "title price image category hasDiscount originalPrice discountedPrice",
+      populate: { path: "category", select: "_id" },
     });
 
     if (!cart || !cart.product || cart.product.length === 0) {
-      return res.status(statusCode.BAD_REQUEST).render("checkout", {
+      return res.status(400).render("checkout", {
         error: "Your cart is empty",
         products: [],
         totalPrice: 0,
         user: {
-  email: user.email,
-  username: user.username,
-  contact: user.contact,
-  address: user.address || [],   // send the array
-}
+          email: user.email,
+          username: user.username,
+          contact: user.contact,
+          address: user.address || [],
+        },
       });
     }
 
@@ -238,15 +215,10 @@ const cartCheckoutPage = async (req, res, next) => {
         const product = item.productId;
         const originalPrice = product.originalPrice || product.price || 0;
 
-        const productOfferDoc = await ProductOffer.findOne({
-          productId: product._id,
-        });
-
+        const productOfferDoc = await ProductOffer.findOne({ productId: product._id });
         let categoryOfferDoc = null;
         if (product.category && product.category._id) {
-          categoryOfferDoc = await CategoryOffer.findOne({
-            categoryId: product.category._id,
-          });
+          categoryOfferDoc = await CategoryOffer.findOne({ categoryId: product.category._id });
         }
 
         let finalPrice = originalPrice;
@@ -255,15 +227,13 @@ const cartCheckoutPage = async (req, res, next) => {
         if (productOfferDoc) {
           finalPrice =
             productOfferDoc.discountType === "percentage"
-              ? originalPrice -
-                (originalPrice * productOfferDoc.discountValue) / 100
+              ? originalPrice - (originalPrice * productOfferDoc.discountValue) / 100
               : originalPrice - productOfferDoc.discountValue;
           appliedOffer = productOfferDoc;
         } else if (categoryOfferDoc) {
           finalPrice =
             categoryOfferDoc.discountType === "percentage"
-              ? originalPrice -
-                (originalPrice * categoryOfferDoc.discountValue) / 100
+              ? originalPrice - (originalPrice * categoryOfferDoc.discountValue) / 100
               : originalPrice - categoryOfferDoc.discountValue;
           appliedOffer = categoryOfferDoc;
         } else if (product.hasDiscount) {
@@ -288,30 +258,35 @@ const cartCheckoutPage = async (req, res, next) => {
       })
     );
 
-    const defaultAddress = user.address?.length > 0 ? user.address[0] : null;
-    const applicableCoupons = await Coupon.find({
+    
+    const allCoupons = await Coupon.find({
       minPurchase: { $lte: totalPrice },
       expireDate: { $gte: new Date() },
     });
+
+    const usedCoupons = await Order.find({ userId, coupon: { $ne: null } }).distinct("coupon");
+
+    const applicableCoupons = allCoupons.filter(
+      (coupon) => !usedCoupons.includes(coupon._id.toString())
+    );
 
     res.render("checkout", {
       products,
       totalPrice: totalPrice.toFixed(2),
       applicableCoupons,
-      breadcrumbs:[
-        {name:"Home",url:"/"},
-        {name:"Shop",url:"/shop"},
-        {name:"Cart",url:"/cart"},
-        {name:"Checkout"}
-
+      breadcrumbs: [
+        { name: "Home", url: "/" },
+        { name: "Shop", url: "/shop" },
+        { name: "Cart", url: "/cart" },
+        { name: "Checkout" },
       ],
-     user: {
-  email: user.email,
-  username: user.username,
-  contact: user.contact,
-  address: user.address || [],   
-},
-      paymentError: req.query.error === "payment" ? true : false,
+      user: {
+        email: user.email,
+        username: user.username,
+        contact: user.contact,
+        address: user.address || [],
+      },
+      paymentError: req.query.error === "payment",
       errorMessage:
         req.query.error === "payment"
           ? "Your payment was not successful. Please try again or select another payment method."
@@ -319,12 +294,10 @@ const cartCheckoutPage = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error fetching cart checkout data:", error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).render("error", {
-      error: error.message,
-      user: req.session.userId ? { username: "User" } : null,
-    });
+    res.status(500).render("error", { error: error.message, user: req.session.userId ? { username: "User" } : null });
   }
 };
+
 
 const applyCoupon = async (req, res) => {
   try {
@@ -370,10 +343,10 @@ const applyCoupon = async (req, res) => {
       discount = coupon.discountValue;
     }
 
-    discount = parseFloat(discount.toFixed(2)); 
+    discount = parseFloat(discount.toFixed(2));
 
     let discountedTotal = Math.max(0, subtotal - discount);
-    discountedTotal = parseFloat(discountedTotal.toFixed(2)); 
+    discountedTotal = parseFloat(discountedTotal.toFixed(2));
 
     res.status(statusCode.OK).json({
       success: true,
@@ -384,7 +357,9 @@ const applyCoupon = async (req, res) => {
     });
   } catch (error) {
     console.error("Error applying coupon:", error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal server error" });
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -412,7 +387,6 @@ const buyNow = async (req, res) => {
         .json({ success: false, message: "No items in cart" });
     }
 
-    
     for (const item of cart.product) {
       const product = await Product.findById(item.productId._id);
       if (!product) {
@@ -421,18 +395,19 @@ const buyNow = async (req, res) => {
           .json({ success: false, message: `Product not found` });
       }
 
-      const sizeInfo = product.sizes.find(s => s.size === item.size);
+      const sizeInfo = product.sizes.find((s) => s.size === item.size);
       if (!sizeInfo || sizeInfo.stock < item.quantity) {
-        return res
-          .status(statusCode.BAD_REQUEST)
-          .json({ 
-            success: false, 
-            message: `Insufficient stock for ${product.title} in size ${item.size}. Available: ${sizeInfo ? sizeInfo.stock : 0}, Requested: ${item.quantity}` 
-          });
+        return res.status(statusCode.BAD_REQUEST).json({
+          success: false,
+          message: `Insufficient stock for ${product.title} in size ${
+            item.size
+          }. Available: ${sizeInfo ? sizeInfo.stock : 0}, Requested: ${
+            item.quantity
+          }`,
+        });
       }
     }
 
-    
     const subtotal = cart.product.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
@@ -440,8 +415,10 @@ const buyNow = async (req, res) => {
 
     const finalAmount = Math.max(0, subtotal - couponDiscount);
 
-    
-    if (formData.paymentMethod && formData.paymentMethod.toLowerCase().includes("wallet")) {
+    if (
+      formData.paymentMethod &&
+      formData.paymentMethod.toLowerCase().includes("wallet")
+    ) {
       const user = await User.findById(userId);
       if (!user || user.wallet < finalAmount) {
         return res
@@ -450,7 +427,6 @@ const buyNow = async (req, res) => {
       }
     }
 
-    
     const shippingAddress = {
       fullName: `${formData.firstName} ${formData.lastName}`,
       address:
@@ -463,7 +439,6 @@ const buyNow = async (req, res) => {
       phone: formData.phone,
     };
 
-    
     const orderProducts = cart.product.map((item) => ({
       productId: item.productId._id,
       size: item.size,
@@ -471,7 +446,6 @@ const buyNow = async (req, res) => {
       price: item.price,
     }));
 
-    
     let paymentMethod = formData.paymentMethod;
     if (typeof paymentMethod === "string") {
       if (paymentMethod.toLowerCase().includes("wallet")) {
@@ -486,7 +460,6 @@ const buyNow = async (req, res) => {
       }
     }
 
-    
     const newOrder = new Order({
       orderId: generateOrderId(),
       userId: userId,
@@ -502,7 +475,6 @@ const buyNow = async (req, res) => {
 
     await newOrder.save();
 
-    
     if (paymentMethod === "wallet") {
       const user = await User.findById(userId);
       if (user) {
@@ -517,7 +489,6 @@ const buyNow = async (req, res) => {
       }
     }
 
-    
     for (const item of cart.product) {
       const updateResult = await Product.updateOne(
         {
@@ -539,7 +510,6 @@ const buyNow = async (req, res) => {
           `Failed to update stock for product ${item.productId._id}, size ${item.size}`
         );
       } else {
-        
         const updatedProduct = await Product.findById(item.productId._id);
         updatedProduct.totalStock = updatedProduct.sizes.reduce(
           (sum, s) => sum + s.stock,
@@ -549,7 +519,6 @@ const buyNow = async (req, res) => {
       }
     }
 
-    
     await Cart.findOneAndUpdate(
       { userId: userId },
       { $set: { product: [], totalPrice: 0 } }
@@ -865,20 +834,16 @@ const orderCancel = async (req, res) => {
 
       await order.save();
 
-      return res
-        .status(statusCode.OK)
-        .json({
-          success: true,
-          message: "Order cancellation request submitted successfully",
-        });
+      return res.status(statusCode.OK).json({
+        success: true,
+        message: "Order cancellation request submitted successfully",
+      });
     } else {
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .json({
-          success: false,
-          message:
-            "All products are already cancelled or in cancel requested state",
-        });
+      return res.status(statusCode.BAD_REQUEST).json({
+        success: false,
+        message:
+          "All products are already cancelled or in cancel requested state",
+      });
     }
   } catch (error) {
     console.error("Error in orderCancel:", error);
@@ -1158,7 +1123,6 @@ const handleFailedPayments = async (req, res) => {
       });
     }
 
- 
     const cart = await Cart.findOne({ userId: order.userId });
 
     if (!cart || cart.product.length === 0) {
@@ -1238,12 +1202,10 @@ const returnOrder = async (req, res) => {
     });
 
     if (!hasUpdatedProduct) {
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .json({
-          success: false,
-          message: "All products are already return requested",
-        });
+      return res.status(statusCode.BAD_REQUEST).json({
+        success: false,
+        message: "All products are already return requested",
+      });
     }
 
     order.orderStatus = "Return Requested";
@@ -1291,8 +1253,11 @@ const returnRequest = async (req, res) => {
         skippedProducts.push(`Product already return requested`);
         return;
       }
-      
-      if (product.status === "Cancelled" || product.status === "Cancel Requested") {
+
+      if (
+        product.status === "Cancelled" ||
+        product.status === "Cancel Requested"
+      ) {
         console.log(
           `Skipping product ${product.productId}, already cancelled.`
         );
@@ -1301,62 +1266,67 @@ const returnRequest = async (req, res) => {
       }
 
       if (product.status === "Returned") {
-        console.log(
-          `Skipping product ${product.productId}, already returned.`
-        );
+        console.log(`Skipping product ${product.productId}, already returned.`);
         skippedProducts.push(`Product already returned`);
         return;
       }
 
-      if (["Delivered", "Shipped", "Confirmed", "Pending"].includes(product.status)) {
+      if (
+        ["Delivered", "Shipped", "Confirmed", "Pending"].includes(
+          product.status
+        )
+      ) {
         product.status = "Return Requested";
         hasUpdatedProduct = true;
         updatedProducts.push(product.productId);
         console.log(`Updated product ${product.productId} to Return Requested`);
       } else {
-        skippedProducts.push(`Product in ${product.status} state cannot be returned`);
+        skippedProducts.push(
+          `Product in ${product.status} state cannot be returned`
+        );
       }
     });
 
     if (!hasUpdatedProduct) {
-      const allProductsStatus = order.products.map(p => p.status);
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .json({
-          success: false,
-          message: "No products are eligible for return. All products are either already returned, cancelled, or in non-returnable states.",
-          productStatuses: allProductsStatus,
-          skippedReasons: skippedProducts
-        });
+      const allProductsStatus = order.products.map((p) => p.status);
+      return res.status(statusCode.BAD_REQUEST).json({
+        success: false,
+        message:
+          "No products are eligible for return. All products are either already returned, cancelled, or in non-returnable states.",
+        productStatuses: allProductsStatus,
+        skippedReasons: skippedProducts,
+      });
     }
 
-    const allProductsInFinalState = order.products.every(product => 
-      ["Return Requested", "Returned", "Cancelled", "Cancel Requested"].includes(product.status)
+    const allProductsInFinalState = order.products.every((product) =>
+      [
+        "Return Requested",
+        "Returned",
+        "Cancelled",
+        "Cancel Requested",
+      ].includes(product.status)
     );
 
     if (allProductsInFinalState) {
       order.orderStatus = "Return Requested";
     } else {
-      order.orderStatus = "Partial Return Requested"; 
+      order.orderStatus = "Partial Return Requested";
     }
 
     order.returnReason = reason || customReason;
 
     await order.save();
 
-    return res
-      .status(statusCode.OK)
-      .json({
-        success: true,
-        message: `Return request submitted successfully for ${updatedProducts.length} product(s)`,
-        updatedProducts: updatedProducts.length,
-        skippedProducts: skippedProducts.length,
-        details: {
-          updated: updatedProducts,
-          skipped: skippedProducts
-        }
-      });
-      
+    return res.status(statusCode.OK).json({
+      success: true,
+      message: `Return request submitted successfully for ${updatedProducts.length} product(s)`,
+      updatedProducts: updatedProducts.length,
+      skippedProducts: skippedProducts.length,
+      details: {
+        updated: updatedProducts,
+        skipped: skippedProducts,
+      },
+    });
   } catch (error) {
     console.error("Error in returnRequest:", error);
     return res
@@ -1406,12 +1376,10 @@ const returnPartialRequest = async (req, res) => {
 
     await order.save();
 
-    return res
-      .status(statusCode.OK)
-      .json({
-        success: true,
-        message: "Return request submitted successfully",
-      });
+    return res.status(statusCode.OK).json({
+      success: true,
+      message: "Return request submitted successfully",
+    });
   } catch (error) {
     console.error("Error processing return request:", error);
     return res
@@ -1444,7 +1412,9 @@ const getWalletBalance = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching wallet balance:", error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal server error" });
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 const payWithWallet = async (req, res) => {
@@ -1542,7 +1512,9 @@ const payWithWallet = async (req, res) => {
     });
   } catch (error) {
     console.error("Error processing wallet payment:", error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal server error" });
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 

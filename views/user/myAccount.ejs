@@ -211,6 +211,48 @@
                                                                     <i class="icon-minus"></i> Withdraw
                                                                 </button>
                                                             </div>
+                                                            <h4 class="mt-4">Wallet Transactions</h4>
+<table class="table table-bordered mt-3">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Description</th>
+      <th>Amount</th>
+      <th>Type</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% if (user.walletHistory && user.walletHistory.length > 0) { %>
+      <% user.walletHistory.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(txn => { %>
+        <tr>
+          <td><%= new Date(txn.date).toLocaleDateString("en-IN") %></td>
+          <td><%= txn.description || '-' %></td>
+          <td>
+            <% if (txn.type === "credit") { %>
+               <span class="text-danger">- ₹<%= txn.amount.toFixed(2) %></span>
+            <% } else { %>
+                <span class="text-success">+ ₹<%= txn.amount.toFixed(2) %></span>
+             
+            <% } %>
+          </td>
+          <td>
+            <% if (txn.type === "credit") { %>
+              <i class="icon-arrow-down text-danger"></i>
+            <% } else { %>
+                <i class="icon-arrow-up text-success"></i>
+              
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    <% } else { %>
+      <tr>
+        <td colspan="4" class="text-center text-muted">No wallet transactions yet.</td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+
         
                                                             
                                                         </div>
@@ -352,7 +394,7 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <form id="addMoneyForm" action="/wallet/add-money" method="POST">
+                    <form id="addMoneyForm" action="/add-money" method="POST">
                         <div class="modal-body">
                             <div class="form-group">
                                 <label for="amount">Amount ($)</label>
@@ -659,11 +701,9 @@ function saveChanges() {
     const newMobileNumber = mobileNumberInput.value.trim();
 
     const nameRegex = /^[A-Za-z\s]+$/;
-    const mobileRegex = /^[0-9]{10,}$/;
+    const mobileRegex = /^[0-9]{10}$/; // ✅ Exactly 10 digits only
 
-    
     errorMessagesDiv.innerHTML = "";
-
     let errors = [];
 
     if (!newFullName) {
@@ -675,7 +715,7 @@ function saveChanges() {
     if (!newMobileNumber) {
         errors.push("Mobile Number cannot be empty.");
     } else if (!mobileRegex.test(newMobileNumber)) {
-        errors.push("Mobile Number must contain only numbers and be at least 10 digits.");
+        errors.push("Mobile Number must be exactly 10 digits and contain only numbers.");
     }
 
     if (errors.length > 0) {
@@ -683,9 +723,11 @@ function saveChanges() {
         return;
     }
 
+    // ✅ Update the displayed values
     document.getElementById("fullName").textContent = newFullName;
     document.getElementById("mobileNumber").textContent = newMobileNumber;
 
+    // ✅ Toggle visibility back
     document.getElementById("fullName").classList.remove("d-none");
     document.getElementById("mobileNumber").classList.remove("d-none");
 
@@ -695,6 +737,7 @@ function saveChanges() {
     document.getElementById("editButton").classList.remove("d-none");
     document.getElementById("saveButton").classList.add("d-none");
 
+    
     fetch('/updateUserDetails', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

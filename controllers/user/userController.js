@@ -205,7 +205,8 @@ const loadLogin = async (req, res) => {
         if (plainProduct.category && plainProduct.category._id) {
           categoryOffer = categoryOffers.find(
             (offer) =>
-              offer.categoryId.toString() === plainProduct.category._id.toString()
+              offer.categoryId.toString() ===
+              plainProduct.category._id.toString()
           );
         }
 
@@ -281,7 +282,6 @@ const loadLogin = async (req, res) => {
   }
 };
 
-
 const postLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -328,22 +328,20 @@ function generateOtp() {
 
 async function sendVerificationEmail(email, otp) {
   try {
-    
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
-      secure: false, 
+      secure: false,
       auth: {
         user: process.env.NODEMAILER_EMAIL,
-        pass: process.env.NODEMAILER_PASSWORD, 
+        pass: process.env.NODEMAILER_PASSWORD,
       },
       tls: {
-        ciphers: 'SSLv3',
-        rejectUnauthorized: false
-      }
+        ciphers: "SSLv3",
+        rejectUnauthorized: false,
+      },
     });
 
-    
     console.log("testing smtp connection...");
     await transporter.verify();
     console.log("SMTP connection verified");
@@ -360,20 +358,19 @@ async function sendVerificationEmail(email, otp) {
     return true;
   } catch (error) {
     console.error("Detailed email error:", error);
-    
-   
+
     if (error.code) console.error("Error code:", error.code);
     if (error.response) console.error("Error response:", error.response);
     if (error.command) console.error("Failed command:", error.command);
-    
+
     return false;
   }
 }
 
 const postSignUp = async (req, res) => {
   const { email, userName, contact, password, referalCode } = req.body;
-  console.log("req.body fron post signup is ",req.body)
-   
+  console.log("req.body fron post signup is ", req.body);
+
   try {
     const findUser = await User.findOne({ email });
     if (findUser) {
@@ -381,11 +378,11 @@ const postSignUp = async (req, res) => {
     }
 
     const otp = generateOtp();
-    console.log("genarate ot is calling is ==>",otp)
+    console.log("genarate ot is calling is ==>", otp);
     const emailSent = await sendVerificationEmail(email, otp);
     // console.log("email sent  ot is calling is ==>",emailSent)
     if (!emailSent) {
-      console.log("calling the not email")
+      console.log("calling the not email");
       return res.json({ success: false, message: "Email not sent" });
     }
 
@@ -581,7 +578,9 @@ const postOtpForPasswordReset = async (req, res) => {
     console.log("Stored OTP in session:", req.session.userOtp);
 
     if (String(otp) !== String(req.session.userOtp)) {
-      return res.status(statusCode.BAD_REQUEST).json({ success: false, message: "Invalid OTP" });
+      return res
+        .status(statusCode.BAD_REQUEST)
+        .json({ success: false, message: "Invalid OTP" });
     }
 
     const user = await User.findOne({ email: req.session.userEmail });
@@ -664,8 +663,6 @@ const userProfileInfo = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-   
-
     const coupons = await Coupon.find({
       expireDate: { $gte: new Date() },
     }).sort({ expireDate: 1 });
@@ -686,7 +683,9 @@ const updateUserDetails = async (req, res) => {
     const userId = req.session.userId;
 
     if (!userId) {
-      return res.status(statusCode.UNAUTHORIZED).json({ success: false, message: "Unauthorized" });
+      return res
+        .status(statusCode.UNAUTHORIZED)
+        .json({ success: false, message: "Unauthorized" });
     }
 
     const { fullName, mobileNumber } = req.body;
@@ -713,7 +712,9 @@ const updateUserDetails = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating user details:", error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal server error" });
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -762,6 +763,56 @@ const editProfileInfo = async (req, res) => {
   }
 
   res.render("editProfile", { user });
+};
+const addMoneyToWallet = async (req, res) => {
+  try {
+    const { amount, paymentMethod } = req.body;
+    const userId = req.session.user?._id;
+
+    if (!userId) {
+      return res.status(401).send("User not logged in");
+    }
+
+    if (!amount || amount <= 0) {
+      return res.status(400).send("Invalid amount");
+    }
+
+    // Update wallet
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).send("User not found");
+
+    user.wallet += parseFloat(amount);
+
+    // Add wallet history entry (optional)
+    user.walletHistory.push({
+      amount: parseFloat(amount),
+      type: "credit",
+      description: "Added to wallet",
+    });
+
+    await user.save();
+
+    // Fetch orders and coupons to render myAccount page
+    const orders = await Order.find({ userId: userId })
+      .populate({ path: "products.productId", select: "title price" })
+      .sort({ createdAt: -1 });
+
+    const coupons = await Coupon.find({
+      expireDate: { $gte: new Date() },
+    }).sort({ expireDate: 1 });
+
+    // Render myAccount page with updated data
+    res.render("myAccount", {
+      user,
+      orders,
+      referralCode: user.referalCode,
+      coupons,
+      successMessage: `₹${amount} added to wallet successfully!`,
+    });
+  } catch (err) {
+    console.error("Error adding money to wallet:", err);
+    res.status(500).send("Something went wrong");
+  }
 };
 
 const editProfile = async (req, res) => {
@@ -900,7 +951,9 @@ const sendMessage = async (req, res) => {
   const { email, message } = req.body;
 
   if (!email || !message) {
-    return res.status(statusCode.BAD_REQUEST).json({ message: "All fields are required" });
+    return res
+      .status(statusCode.BAD_REQUEST)
+      .json({ message: "All fields are required" });
   }
 
   try {
@@ -954,6 +1007,7 @@ module.exports = {
   postResetPasswordByOtp,
   resendOtp,
   userProfileInfo,
+  addMoneyToWallet,
   updateUserDetails,
   addAccountDetails,
   editProfileInfo,

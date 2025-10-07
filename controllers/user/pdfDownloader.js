@@ -43,14 +43,20 @@ const downloadInvoice = async (req, res) => {
     doc.moveDown();
 
     // ================= CUSTOMER INFO =================
-    doc.fontSize(12).text("Customer Details \n", { underline: true }).moveDown(1.5);
+    doc
+      .fontSize(12)
+      .text("Customer Details \n", { underline: true })
+      .moveDown(1.5);
     doc.text(`Name: ${order.userId.username}`);
     doc.text(`Email: ${order.userId.email}`);
     doc.moveDown();
 
     // ================= SHIPPING INFO =================
     const shipping = order.shippingAddress;
-    doc.fontSize(12).text("Shipping Address ", { underline: true }).moveDown(1.5);
+    doc
+      .fontSize(12)
+      .text("Shipping Address ", { underline: true })
+      .moveDown(1.5);
     doc.text(`${shipping.fullName}`);
     doc.text(`${shipping.address}`);
     doc.text(`${shipping.city}, ${shipping.state}, ${shipping.postalCode}`);
@@ -59,7 +65,10 @@ const downloadInvoice = async (req, res) => {
     doc.moveDown();
 
     // ================= PRODUCTS TABLE =================
-    doc.fontSize(12).text("Products Ordered ", { underline: true }).moveDown(1.5);
+    doc
+      .fontSize(12)
+      .text("Products Ordered ", { underline: true })
+      .moveDown(1.5);
 
     // Column positions (absolute X coords)
     const startX = 50;
@@ -78,7 +87,10 @@ const downloadInvoice = async (req, res) => {
     doc.text("Price", priceX, y, { width: 60, align: "right" });
     doc.text("Total", totalX, y, { width: 80, align: "right" });
     y += 20;
-    doc.moveTo(startX, y - 5).lineTo(550, y - 5).stroke(); // header underline
+    doc
+      .moveTo(startX, y - 5)
+      .lineTo(550, y - 5)
+      .stroke(); // header underline
     doc.font("Helvetica");
 
     let subtotal = 0;
@@ -88,9 +100,18 @@ const downloadInvoice = async (req, res) => {
 
       doc.text(item.productId.title, itemX, y, { width: 180 });
       doc.text(item.size || "-", sizeX, y);
-      doc.text(item.quantity.toString(), qtyX, y, { width: 40, align: "center" });
-      doc.text(`₹${item.price.toFixed(2)}`, priceX, y, { width: 60, align: "right" });
-      doc.text(`₹${lineTotal.toFixed(2)}`, totalX, y, { width: 80, align: "right" });
+      doc.text(item.quantity.toString(), qtyX, y, {
+        width: 40,
+        align: "center",
+      });
+      doc.text(`₹${item.price.toFixed(2)}`, priceX, y, {
+        width: 60,
+        align: "right",
+      });
+      doc.text(`₹${lineTotal.toFixed(2)}`, totalX, y, {
+        width: 80,
+        align: "right",
+      });
 
       y += 20;
     });
@@ -101,17 +122,26 @@ const downloadInvoice = async (req, res) => {
     // ================= TOTALS =================
     doc.font("Helvetica-Bold");
     doc.text("Subtotal", priceX, y, { width: 80, align: "right" });
-    doc.text(`₹${subtotal.toFixed(2)}`, totalX, y, { width: 80, align: "right" });
+    doc.text(`₹${subtotal.toFixed(2)}`, totalX, y, {
+      width: 80,
+      align: "right",
+    });
     y += 20;
 
     if (order.couponDiscount) {
       doc.text("Discount", priceX, y, { width: 80, align: "right" });
-      doc.text(`-₹${order.couponDiscount.toFixed(2)}`, totalX, y, { width: 80, align: "right" });
+      doc.text(`-₹${order.couponDiscount.toFixed(2)}`, totalX, y, {
+        width: 80,
+        align: "right",
+      });
       y += 20;
     }
 
     doc.text("Grand Total", priceX, y, { width: 80, align: "right" });
-    doc.text(`₹${order.totalAmount.toFixed(2)}`, totalX, y, { width: 80, align: "right" });
+    doc.text(`₹${order.totalAmount.toFixed(2)}`, totalX, y, {
+      width: 80,
+      align: "right",
+    });
 
     y += 40;
     doc.font("Helvetica");
@@ -120,10 +150,13 @@ const downloadInvoice = async (req, res) => {
 
     // ================= FOOTER =================
     doc.moveDown(5);
-    doc.fontSize(10).fillColor("#777").text(
-      "Thank you for shopping with GlideHub!\nThis is a computer-generated invoice and does not require a signature.",
-      { align: "center" }
-    );
+    doc
+      .fontSize(10)
+      .fillColor("#777")
+      .text(
+        "Thank you for shopping with GlideHub!\nThis is a computer-generated invoice and does not require a signature.",
+        { align: "center" }
+      );
 
     doc.end();
   } catch (error) {

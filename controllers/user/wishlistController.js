@@ -135,11 +135,8 @@ const removeWishlistItem = async (req, res) => {
   }
 };
 
-
-
 module.exports = {
   wishlistPageInfo,
   addProductWishlist,
   removeWishlistItem,
- 
 };

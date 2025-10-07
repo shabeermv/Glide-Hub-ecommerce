@@ -19,109 +19,100 @@
         </tr>
       </thead>
       <tbody>
-        <% if (cancelRequests.length > 0) { %>
-          <% cancelRequests.forEach(order => { %>
-            <% order.products.forEach(product => { %>
-              <tr>
-                <td><%= order.orderId %></td>
-                <td>
-                  <% if (product.productId) { %>
-                    <%= product.productId.title %>
-                  <% } else { %>
-                    Unknown Product
-                  <% } %>
-                </td>
-                <td><%= product.cancelReason || "Not specified" %></td>
-                <td>₹<%= product.price ? product.price.toFixed(2) : "0.00" %></td>
-                <td>
-                  <% if (product.isFullOrderCancel) { %>
-                    <span class="badge bg-warning text-dark">Full Order Cancel</span>
-                  <% } else { %>
-                    <span class="badge bg-info text-dark">Item Cancel</span>
-                  <% } %>
-                </td>
-                <td>
-                  <button class="btn btn-success btn-sm approve-cancel"
-                          data-order-id="<%= order._id %>"
-                          data-product-order-id="<%= product.productId ? product.productId._id : '' %>"
-                          data-is-full-order="<%= product.isFullOrderCancel ? 'true' : 'false' %>">
-                    Approve
-                  </button>
-                  <button class="btn btn-danger btn-sm reject-cancel"
-                          data-order-id="<%= order._id %>"
-                          data-product-order-id="<%= product.productId ? product.productId._id : '' %>"
-                          data-is-full-order="<%= product.isFullOrderCancel ? 'true' : 'false' %>">
-                    Reject
-                  </button>
-                </td>
-              </tr>
-            <% }) %>
-          <% }) %>
-        <% } else { %>
-          <tr>
-            <td colspan="6" class="text-center">No cancel requests found.</td>
-          </tr>
+        <% if (cancelRequests.length > 0) { %> <% cancelRequests.forEach(order
+        => { %> <% order.products.forEach(product => { %>
+        <tr>
+          <td><%= order.orderId %></td>
+          <td>
+            <% if (product.productId) { %> <%= product.productId.title %> <% }
+            else { %> Unknown Product <% } %>
+          </td>
+          <td><%= product.cancelReason || "Not specified" %></td>
+          <td>₹<%= product.price ? product.price.toFixed(2) : "0.00" %></td>
+          <td>
+            <% if (product.isFullOrderCancel) { %>
+            <span class="badge bg-warning text-dark">Full Order Cancel</span>
+            <% } else { %>
+            <span class="badge bg-info text-dark">Item Cancel</span>
+            <% } %>
+          </td>
+          <td>
+            <button
+              class="btn btn-success btn-sm approve-cancel"
+              data-order-id="<%= order._id %>"
+              data-product-order-id="<%= product.productId ? product.productId._id : '' %>"
+              data-is-full-order="<%= product.isFullOrderCancel ? 'true' : 'false' %>"
+            >
+              Approve
+            </button>
+            <button
+              class="btn btn-danger btn-sm reject-cancel"
+              data-order-id="<%= order._id %>"
+              data-product-order-id="<%= product.productId ? product.productId._id : '' %>"
+              data-is-full-order="<%= product.isFullOrderCancel ? 'true' : 'false' %>"
+            >
+              Reject
+            </button>
+          </td>
+        </tr>
+        <% }) %> <% }) %> <% } else { %>
+        <tr>
+          <td colspan="6" class="text-center">No cancel requests found.</td>
+        </tr>
         <% } %>
       </tbody>
     </table>
-    
-    
   </div>
 </main>
 
 <%- include("../../views/partials/admin/footer.ejs") %>
 
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll(".approve-cancel").forEach(button => {
-    button.addEventListener("click", function () {
-      const orderId = this.getAttribute("data-order-id");
-      const productOrderId = this.getAttribute("data-product-order-id");
-      const isFullOrder = this.getAttribute("data-is-full-order") === "true";
-      handleReturnAction(orderId, productOrderId, "approved", isFullOrder);
+    document.querySelectorAll(".approve-cancel").forEach((button) => {
+      button.addEventListener("click", function () {
+        const orderId = this.getAttribute("data-order-id");
+        const productOrderId = this.getAttribute("data-product-order-id");
+        const isFullOrder = this.getAttribute("data-is-full-order") === "true";
+        handleReturnAction(orderId, productOrderId, "approved", isFullOrder);
+      });
     });
-  });
 
-  document.querySelectorAll(".reject-cancel").forEach(button => {
-    button.addEventListener("click", function () {
-      const orderId = this.getAttribute("data-order-id");
-      const productOrderId = this.getAttribute("data-product-order-id");
-      const isFullOrder = this.getAttribute("data-is-full-order") === "true";
-      handleReturnAction(orderId, productOrderId, "rejected", isFullOrder);
+    document.querySelectorAll(".reject-cancel").forEach((button) => {
+      button.addEventListener("click", function () {
+        const orderId = this.getAttribute("data-order-id");
+        const productOrderId = this.getAttribute("data-product-order-id");
+        const isFullOrder = this.getAttribute("data-is-full-order") === "true";
+        handleReturnAction(orderId, productOrderId, "rejected", isFullOrder);
+      });
     });
-  });
 
-  function handleReturnAction(orderId, productOrderId, action, isFullOrder) {
-    fetch("/admin/cancelOrderAction", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        orderId, 
-        productOrderId, 
-        action,
-        isFullOrder 
+    function handleReturnAction(orderId, productOrderId, action, isFullOrder) {
+      fetch("/admin/cancelOrderAction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          productOrderId,
+          action,
+          isFullOrder,
+        }),
       })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        alert(`Cancel request ${action} successfully!`);
-        location.reload(); // Refresh the page to update UI
-      } else {
-        alert(`Error: ${data.message}`);
-      }
-    })
-    .catch(error => {
-      console.error("Error:", error);
-      alert("Something went wrong. Please try again.");
-    });
-  }
-});
-
-
-    
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            alert(`Cancel request ${action} successfully!`);
+            location.reload(); // Refresh the page to update UI
+          } else {
+            alert(`Error: ${data.message}`);
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("Something went wrong. Please try again.");
+        });
+    }
+  });
 </script>
-

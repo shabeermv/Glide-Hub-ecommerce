@@ -1,9 +1,9 @@
 const User = require("../../models/userSchema");
-const statusCode = require("../../utils/statusCodes")
+const statusCode = require("../../utils/statusCodes");
 
 const userInfo = async (req, res, next) => {
   try {
-    const searchValue = req.query.search || "";  
+    const searchValue = req.query.search || "";
     const page = parseInt(req.query.page) || 1;
     const limit = 6;
     const validPage = Math.max(page, 1);
@@ -16,7 +16,6 @@ const userInfo = async (req, res, next) => {
         { email: { $regex: searchQuery } },
       ];
 
-      
       if (!isNaN(searchValue)) {
         query.$or.push({ contact: Number(searchValue) });
       }
@@ -34,14 +33,13 @@ const userInfo = async (req, res, next) => {
       data: userData,
       currentPage: validPage,
       totalPages,
-      searchValue, 
+      searchValue,
     });
   } catch (error) {
     console.error("Error in userInfo:", error);
     next(error); // goes to error middleware
   }
 };
-
 
 const toggleBlockStatus = async (req, res) => {
   try {
@@ -58,12 +56,10 @@ const toggleBlockStatus = async (req, res) => {
 
     await user.save();
 
-    res
-      .status(statusCode.OK)
-      .json({
-        success: true,
-        message: `User ${isBlocked ? "blocked" : "unblocked"} successfully.`,
-      });
+    res.status(statusCode.OK).json({
+      success: true,
+      message: `User ${isBlocked ? "blocked" : "unblocked"} successfully.`,
+    });
   } catch (error) {
     console.error("Error updating user status:", error);
     next(error);

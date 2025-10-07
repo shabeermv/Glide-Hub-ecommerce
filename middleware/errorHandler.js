@@ -1,34 +1,32 @@
 const errorHandler = (err, req, res, next) => {
-    console.error('Error:', err);
-    
-    const isAdmin = req.originalUrl.includes('/admin');
-    let user = null;
-    
-    if (req.session && req.session.userId) {
-        user = { id: req.session.userId }; 
-    }
-    
-    try {
-        
-        const statusCode = err.statusCode || 500;
-        
-        if (isAdmin) {
-    res.status(statusCode).render('admin/error', {
-        message: err.message || 'Internal Server Error',
-        error: process.env.NODE_ENV === 'development' ? err : {}
-    });
-} else {
-    res.status(statusCode).render('error', {
-        message: err.message || 'Internal Server Error',
-        user: user,
-        error: process.env.NODE_ENV === 'development' ? err : {}
-    });
-}
+  console.error("Error:", err);
 
-    } catch (renderError) {
-        console.error('Error rendering error page:', renderError);
-        res.status(500).send('Internal Server Error');
+  const isAdmin = req.originalUrl.includes("/admin");
+  let user = null;
+
+  if (req.session && req.session.userId) {
+    user = { id: req.session.userId };
+  }
+
+  try {
+    const statusCode = err.statusCode || 500;
+
+    if (isAdmin) {
+      res.status(statusCode).render("admin/error", {
+        message: err.message || "Internal Server Error",
+        error: process.env.NODE_ENV === "development" ? err : {},
+      });
+    } else {
+      res.status(statusCode).render("error", {
+        message: err.message || "Internal Server Error",
+        user: user,
+        error: process.env.NODE_ENV === "development" ? err : {},
+      });
     }
+  } catch (renderError) {
+    console.error("Error rendering error page:", renderError);
+    res.status(500).send("Internal Server Error");
+  }
 };
 
 module.exports = errorHandler;

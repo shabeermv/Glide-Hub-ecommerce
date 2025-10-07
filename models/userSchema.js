@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const userSchema = new Schema(
@@ -24,10 +24,8 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    referalCode:{
-      type:String,
-      
-
+    referalCode: {
+      type: String,
     },
     contact: {
       type: Number,
@@ -63,26 +61,33 @@ const userSchema = new Schema(
         },
       },
     ],
-   
-  
-   
-   
-    wallet:{
-      type:Number,
-      default:0
-  },
-  walletHistory:[{
-    date:{
-      type:Date,
 
+    wallet: {
+      type: Number,
+      default: 0,
     },
-    amount:{
-      type:Number,
-    }
-  }],
+    walletHistory: [
+  {
+    date: {
+      type: Date,
+      default: Date.now,
+    },
+    amount: {
+      type: Number,
+    },
+    type: {
+      type: String,
+      enum: ["credit", "debit"],
+    },
+    description: {
+      type: String, 
+    },
   },
-  { timestamps: true } 
+],
+
+  },
+  { timestamps: true }
 );
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 module.exports = User;

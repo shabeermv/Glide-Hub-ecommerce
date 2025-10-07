@@ -2,9 +2,7 @@
 
 <main class="main-wrap">
   <header class="main-header navbar">
-    <div class="col-search">
-      
-    </div>
+    <div class="col-search"></div>
   </header>
   <section class="content-main">
     <div class="content-header">
@@ -13,21 +11,44 @@
         <p>Add, edit, or delete a category</p>
       </div>
     </div>
-    <div id="error-message" class="text-danger mb-3" style="display: none;"></div>
+    <div
+      id="error-message"
+      class="text-danger mb-3"
+      style="display: none"
+    ></div>
 
     <!-- Success Modal -->
-    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="successModal"
+      tabindex="-1"
+      aria-labelledby="successModalLabel"
+      aria-hidden="true"
+    >
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-body text-center p-4">
             <div class="mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="green" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check-circle">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="64"
+                height="64"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="green"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="feather feather-check-circle"
+              >
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
               </svg>
             </div>
             <h4 class="mb-3">Category Created Successfully!</h4>
-            <p class="text-muted">Your new category has been added to the list.</p>
+            <p class="text-muted">
+              Your new category has been added to the list.
+            </p>
           </div>
         </div>
       </div>
@@ -40,16 +61,27 @@
             <form>
               <div class="mb-4">
                 <label for="categoryName" class="form-label">Name</label>
-                <input type="text" placeholder="Type here" class="form-control" id="categoryName" />
+                <input
+                  type="text"
+                  placeholder="Type here"
+                  class="form-control"
+                  id="categoryName"
+                />
               </div>
 
               <div class="mb-4">
                 <label class="form-label">Description</label>
-                <textarea placeholder="Type here" class="form-control" id="categoryDescription"></textarea>
+                <textarea
+                  placeholder="Type here"
+                  class="form-control"
+                  id="categoryDescription"
+                ></textarea>
               </div>
 
               <div class="d-grid">
-                <button class="btn btn-primary" id="Add">Create category</button>
+                <button class="btn btn-primary" id="Add">
+                  Create category
+                </button>
               </div>
             </form>
           </div>
@@ -57,96 +89,121 @@
           <div class="col-md-9">
             <!-- Rest of the table and pagination content remains the same -->
             <div class="table-responsive">
-<table class="table table-hover">
-  <thead>
-    <tr>
-      <th class="text-center">
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" value="" />
-        </div>
-      </th>
-      <th>ID</th>
-      <th>Name</th>
-      <th>Description</th>
-      <th>Status</th>
-      <th class="text-end">Action</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% if (cat && cat.length > 0) { %>
-      <% cat.forEach((category, index) => { %>
-        <tr>
-          <td class="text-center">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" value="" />
-            </div>
-          </td>
-          <td><%= index + 1 + ((currentPage - 1) * 4) %></td>
-          <td><b><%= category.name %></b></td>
-          <td><%= category.description %></td>
-          <td><%= category.isDeleted ? 'Blocked' : 'Active' %></td>
-          <td class="text-end">
-            <div class="dropdown">
-              <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm">
-                <i class="material-icons md-more_horiz"></i>
-              </a>
-              <div class="dropdown-menu">
-                <!-- Edit Button -->
-                <a class="dropdown-item" href="/admin/editCategory/<%= category._id %>">Edit info</a>
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th class="text-center">
+                      <div class="form-check">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          value=""
+                        />
+                      </div>
+                    </th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th class="text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (cat && cat.length > 0) { %> <% cat.forEach((category,
+                  index) => { %>
+                  <tr>
+                    <td class="text-center">
+                      <div class="form-check">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          value=""
+                        />
+                      </div>
+                    </td>
+                    <td><%= index + 1 + ((currentPage - 1) * 4) %></td>
+                    <td><b><%= category.name %></b></td>
+                    <td><%= category.description %></td>
+                    <td><%= category.isDeleted ? 'Blocked' : 'Active' %></td>
+                    <td class="text-end">
+                      <div class="dropdown">
+                        <a
+                          href="#"
+                          data-bs-toggle="dropdown"
+                          class="btn btn-light rounded btn-sm font-sm"
+                        >
+                          <i class="material-icons md-more_horiz"></i>
+                        </a>
+                        <div class="dropdown-menu">
+                          <!-- Edit Button -->
+                          <a
+                            class="dropdown-item"
+                            href="/admin/editCategory/<%= category._id %>"
+                            >Edit info</a
+                          >
 
-                <!-- Block / Unblock Button -->
-                <button 
-                  class="dropdown-item toggle-status" 
-                  data-id="<%= category._id %>" 
-                  data-status="<%= category.isDeleted ? 'unblock' : 'block' %>"
-                >
-                  <%= category.isDeleted ? 'Unblock' : 'Block' %>
-                </button>
+                          <!-- Block / Unblock Button -->
+                          <button
+                            class="dropdown-item toggle-status"
+                            data-id="<%= category._id %>"
+                            data-status="<%= category.isDeleted ? 'unblock' : 'block' %>"
+                          >
+                            <%= category.isDeleted ? 'Unblock' : 'Block' %>
+                          </button>
 
-                <!-- Delete Button (only show if NOT blocked) -->
-                <% if (!category.isDeleted) { %>
-                  <button class="dropdown-item text-danger delete-category" data-id="<%= category._id %>">
-                    Delete
-                  </button>
-                <% } %>
-              </div>
+                          <!-- Delete Button (only show if NOT blocked) -->
+                          <% if (!category.isDeleted) { %>
+                          <button
+                            class="dropdown-item text-danger delete-category"
+                            data-id="<%= category._id %>"
+                          >
+                            Delete
+                          </button>
+                          <% } %>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <% }); %> <% } else { %>
+                  <tr>
+                    <td colspan="7" class="text-center">
+                      No categories found.
+                    </td>
+                  </tr>
+                  <% } %>
+                </tbody>
+              </table>
             </div>
-          </td>
-        </tr>
-      <% }); %>
-    <% } else { %>
-      <tr>
-        <td colspan="7" class="text-center">No categories found.</td>
-      </tr>
-    <% } %>
-  </tbody>
-</table>
 
-            </div>
-            
             <!-- Pagination remains the same -->
             <nav aria-label="Page navigation">
               <ul class="pagination justify-content-center">
                 <% if (currentPage > 1) { %>
-                  <li class="page-item">
-                    <a class="page-link" href="/admin/categories?page=<%= currentPage - 1 %>" aria-label="Previous">
-                      <span aria-hidden="true">&laquo;</span>
-                    </a>
-                  </li>
-                <% } %>
-          
-                <% for (let i = 1; i <= totalPages; i++) { %>
-                  <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-                    <a class="page-link" href="/admin/categories?page=<%= i %>"><%= i %></a>
-                  </li>
-                <% } %>
-          
-                <% if (currentPage < totalPages) { %>
-                  <li class="page-item">
-                    <a class="page-link" href="/admin/categories?page=<%= currentPage + 1 %>" aria-label="Next">
-                      <span aria-hidden="true">&raquo;</span>
-                    </a>
-                  </li>
+                <li class="page-item">
+                  <a
+                    class="page-link"
+                    href="/admin/categories?page=<%= currentPage - 1 %>"
+                    aria-label="Previous"
+                  >
+                    <span aria-hidden="true">&laquo;</span>
+                  </a>
+                </li>
+                <% } %> <% for (let i = 1; i <= totalPages; i++) { %>
+                <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                  <a class="page-link" href="/admin/categories?page=<%= i %>"
+                    ><%= i %></a
+                  >
+                </li>
+                <% } %> <% if (currentPage < totalPages) { %>
+                <li class="page-item">
+                  <a
+                    class="page-link"
+                    href="/admin/categories?page=<%= currentPage + 1 %>"
+                    aria-label="Next"
+                  >
+                    <span aria-hidden="true">&raquo;</span>
+                  </a>
+                </li>
                 <% } %>
               </ul>
             </nav>
@@ -157,56 +214,87 @@
   </section>
 </main>
 <!-- Soft Delete Success Modal -->
-<div class="modal fade" id="softDeleteModal" tabindex="-1" aria-labelledby="softDeleteModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="softDeleteModal"
+  tabindex="-1"
+  aria-labelledby="softDeleteModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-body text-center p-4">
         <div class="mb-3">
-          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" 
-               viewBox="0 0 24 24" fill="none" stroke="orange" stroke-width="2" 
-               stroke-linecap="round" stroke-linejoin="round" 
-               class="feather feather-alert-circle">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="64"
+            height="64"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="orange"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="feather feather-alert-circle"
+          >
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
           </svg>
         </div>
         <h4 class="mb-3">Category Soft Deleted</h4>
-        <p class="text-muted">The category has been moved to deleted state successfully.</p>
+        <p class="text-muted">
+          The category has been moved to deleted state successfully.
+        </p>
       </div>
     </div>
   </div>
 </div>
 <!-- Toggle Status Modal -->
-<div class="modal fade" id="toggleStatusModal" tabindex="-1" aria-labelledby="toggleStatusModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="toggleStatusModal"
+  tabindex="-1"
+  aria-labelledby="toggleStatusModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-body text-center p-4">
         <div class="mb-3">
-          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"
-               viewBox="0 0 24 24" fill="none" stroke="blue" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round"
-               class="feather feather-info">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="64"
+            height="64"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="blue"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="feather feather-info"
+          >
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="16" x2="12" y2="12"></line>
             <line x1="12" y1="8" x2="12.01" y2="8"></line>
           </svg>
         </div>
         <h4 class="mb-3" id="toggleStatusMessage"></h4>
-        <p class="text-muted">The category status has been updated successfully.</p>
+        <p class="text-muted">
+          The category status has been updated successfully.
+        </p>
       </div>
     </div>
   </div>
 </div>
 
-
 <script>
-  document.getElementById('Add').addEventListener('click', function (e) {
+  document.getElementById("Add").addEventListener("click", function (e) {
     e.preventDefault();
 
     const formData = {
-      name: document.getElementById('categoryName').value,
-      description: document.getElementById('categoryDescription').value,
+      name: document.getElementById("categoryName").value,
+      description: document.getElementById("categoryDescription").value,
     };
 
     fetch("/admin/addCategory", {
@@ -218,78 +306,81 @@
     })
       .then((response) => response.json())
       .then((data) => {
-        const errorMessageDiv = document.getElementById('error-message');
-        
+        const errorMessageDiv = document.getElementById("error-message");
+
         if (data.success) {
-          const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+          const successModal = new bootstrap.Modal(
+            document.getElementById("successModal")
+          );
           successModal.show();
 
           setTimeout(() => {
             successModal.hide();
-            window.location.href = '/admin/categories';
+            window.location.href = "/admin/categories";
           }, 2000);
         } else {
-          errorMessageDiv.style.display = 'block';
-          errorMessageDiv.innerText = data.message || 'Error adding category';
+          errorMessageDiv.style.display = "block";
+          errorMessageDiv.innerText = data.message || "Error adding category";
         }
       })
       .catch((error) => {
-        console.error('Fetch error:', error);
+        console.error("Fetch error:", error);
       });
   });
 
-  document.querySelectorAll('.delete-category').forEach((button) => {
-    button.addEventListener('click', function () {
-      const categoryId = this.getAttribute('data-id');
-      
+  document.querySelectorAll(".delete-category").forEach((button) => {
+    button.addEventListener("click", function () {
+      const categoryId = this.getAttribute("data-id");
 
-      
-        fetch(`/admin/soft-delete/${categoryId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.success) {
-               const softDeleteModal = new bootstrap.Modal(document.getElementById('softDeleteModal'));
+      fetch(`/admin/soft-delete/${categoryId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            const softDeleteModal = new bootstrap.Modal(
+              document.getElementById("softDeleteModal")
+            );
             softDeleteModal.show();
-              setTimeout(() => {
+            setTimeout(() => {
               softDeleteModal.hide();
               window.location.reload();
             }, 2000);
-            } else {
-              alert(data.message || 'Error soft deleting category');
-            }
-          })
-          .catch((error) => {
-            console.error('Error soft deleting category:', error);
-            alert('An error occurred. Please try again.');
-          });
-      }
-    );
+          } else {
+            alert(data.message || "Error soft deleting category");
+          }
+        })
+        .catch((error) => {
+          console.error("Error soft deleting category:", error);
+          alert("An error occurred. Please try again.");
+        });
+    });
   });
 
-  document.querySelectorAll('.toggle-status').forEach((button) => {
-    button.addEventListener('click', function () {
-      const categoryId = this.getAttribute('data-id');
-      const status = this.getAttribute('data-status');
-      
+  document.querySelectorAll(".toggle-status").forEach((button) => {
+    button.addEventListener("click", function () {
+      const categoryId = this.getAttribute("data-id");
+      const status = this.getAttribute("data-status");
 
-      
-        fetch(`/admin/toggle-status/${categoryId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ isDeleted: status === 'block' }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.success) {
-              document.getElementById('toggleStatusMessage').innerText = `Category ${status}ed successfully`;
-            const toggleStatusModal = new bootstrap.Modal(document.getElementById('toggleStatusModal'));
+      fetch(`/admin/toggle-status/${categoryId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isDeleted: status === "block" }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            document.getElementById(
+              "toggleStatusMessage"
+            ).innerText = `Category ${status}ed successfully`;
+            const toggleStatusModal = new bootstrap.Modal(
+              document.getElementById("toggleStatusModal")
+            );
             toggleStatusModal.show();
 
             // Auto-close modal and reload
@@ -300,13 +391,12 @@
           } else {
             alert(data.message || `Error ${status}ing category`);
           }
-          })
-          .catch((error) => {
-            console.error(`Error ${status}ing category:`, error);
-            alert('An error occurred. Please try again.');
-          });
-      }
-    );
+        })
+        .catch((error) => {
+          console.error(`Error ${status}ing category:`, error);
+          alert("An error occurred. Please try again.");
+        });
+    });
   });
 </script>
 

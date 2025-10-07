@@ -1,5 +1,5 @@
 const Coupon = require("../../models/couponSchema");
-const statusCode = require("../../utils/statusCodes")
+const statusCode = require("../../utils/statusCodes");
 
 const couponPageInfo = async (req, res) => {
   try {
@@ -24,7 +24,9 @@ const addCoupon = async (req, res) => {
       !expireDate ||
       !minPurchase
     ) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: "All fields are required!" });
+      return res
+        .status(statusCode.BAD_REQUEST)
+        .json({ message: "All fields are required!" });
     }
 
     const parsedDiscountValue = parseFloat(discountValue);
@@ -131,7 +133,9 @@ const editCoupon = async (req, res) => {
       !expireDate ||
       !minPurchase
     ) {
-      return res.status(statusCode.BAD_REQUEST).json({ message: "All fields are required!" });
+      return res
+        .status(statusCode.BAD_REQUEST)
+        .json({ message: "All fields are required!" });
     }
 
     if (isNaN(parsedDiscountValue) || isNaN(parsedMinPurchase)) {
@@ -169,7 +173,9 @@ const editCoupon = async (req, res) => {
     );
 
     if (!updatedCoupon) {
-      return res.status(statusCode.NOT_FOUND).json({ message: "Coupon not found!" });
+      return res
+        .status(statusCode.NOT_FOUND)
+        .json({ message: "Coupon not found!" });
     }
 
     console.log("Updated Coupon Data:", updatedCoupon);

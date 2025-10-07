@@ -1,212 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign Up Form with glide_hub</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up Form with glide_hub</title>
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.css"
+      rel="stylesheet"
+    />
 
-  <style>
-    /* Center form */
-    .form {
-      max-width: 400px;
-      margin: 50px auto;
-      padding: 20px;
-      background: #fff;
-      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-      border-radius: 10px;
-    }
+    <style>
+      /* Center form */
+      .form {
+        max-width: 400px;
+        margin: 50px auto;
+        padding: 20px;
+        background: #fff;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+      }
 
-    /* Position icons */
-    .relative {
-      position: relative;
-    }
-    
-    .relative i {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #888;
-    }
+      /* Position icons */
+      .relative {
+        position: relative;
+      }
 
-    /* Center button */
-    .login-btn {
-      display: flex;
-      justify-content: center;
-    }
+      .relative i {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #888;
+      }
 
-    /* Error message styling */
-    #error-message {
-      color: red;
-      text-align: center;
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-  </style>
-</head>
-<body>
+      /* Center button */
+      .login-btn {
+        display: flex;
+        justify-content: center;
+      }
 
-<div class="form">
-  <form class="form-horizontal signup">
-    <h2 class="text-center">Sign Up</h2>
+      /* Error message styling */
+      #error-message {
+        color: red;
+        text-align: center;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form">
+      <form class="form-horizontal signup">
+        <h2 class="text-center">Sign Up</h2>
 
-    <!-- Error Message -->
-    <p id="error-message"></p>
+        <!-- Error Message -->
+        <p id="error-message"></p>
 
-    <div class="mb-3 relative">
-      <input class="form-control" id="email" type="email" name="email" required placeholder="Email Address" />
-      <i class="fa fa-envelope"></i>
+        <div class="mb-3 relative">
+          <input
+            class="form-control"
+            id="email"
+            type="email"
+            name="email"
+            required
+            placeholder="Email Address"
+          />
+          <i class="fa fa-envelope"></i>
+        </div>
+
+        <div class="mb-3 relative">
+          <input
+            class="form-control"
+            id="username"
+            type="text"
+            required
+            name="name"
+            placeholder="Username"
+          />
+          <i class="fa fa-user"></i>
+        </div>
+
+        <div class="mb-3 relative">
+          <input
+            class="form-control"
+            id="contactNumber"
+            type="text"
+            name="contactNumber"
+            placeholder="Contact Number"
+          />
+          <i class="fa fa-phone"></i>
+        </div>
+
+        <div class="mb-3 relative">
+          <input
+            class="form-control"
+            id="referalCode"
+            type="text"
+            name="referalCode"
+            placeholder="Referral Code"
+          />
+          <i class="fa fa-gift"></i>
+        </div>
+
+        <div class="mb-3 relative">
+          <input
+            class="form-control"
+            id="password"
+            type="password"
+            name="password"
+            placeholder="Password"
+          />
+          <i class="fa fa-eye toggle-password" id="togglePassword1"></i>
+        </div>
+
+        <div class="mb-3 relative">
+          <input
+            class="form-control"
+            id="confirmPassword"
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm Password"
+          />
+          <i class="fa fa-eye toggle-password" id="togglePassword2"></i>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="login-btn">
+          <button class="btn btn-primary w-100" id="submitBtn" type="button">
+            Submit <i class="fa fa-paper-plane"></i>
+          </button>
+        </div>
+
+        <!-- OR Divider -->
+        <div class="relative text-center mt-3">
+          <hr />
+          <span class="login-text">or sign up with</span>
+        </div>
+
+        <!-- Social Login -->
+        <div class="text-center mt-2">
+          <a href="/auth/google" class="btn btn-danger w-100">
+            Google <i class="fab fa-google"></i>
+          </a>
+        </div>
+
+        <div class="text-center mt-3">
+          <a href="login"><small>Already a member? Sign in</small></a>
+        </div>
+      </form>
     </div>
 
-    <div class="mb-3 relative">
-      <input class="form-control" id="username" type="text" required name="name" placeholder="Username" />
-      <i class="fa fa-user"></i>
-    </div>
-
-    <div class="mb-3 relative">
-      <input class="form-control" id="contactNumber" type="text" name="contactNumber" placeholder="Contact Number" />
-      <i class="fa fa-phone"></i>
-    </div>
-
-    <div class="mb-3 relative">
-      <input class="form-control" id="referalCode" type="text" name="referalCode" placeholder="Referral Code" />
-      <i class="fa fa-gift"></i>
-    </div>
-
-    <div class="mb-3 relative">
-      <input class="form-control" id="password" type="password" name="password" placeholder="Password" />
-      <i class="fa fa-eye toggle-password" id="togglePassword1"></i>
-    </div>
-
-    <div class="mb-3 relative">
-      <input class="form-control" id="confirmPassword" type="password" name="confirmPassword" placeholder="Confirm Password" />
-      <i class="fa fa-eye toggle-password" id="togglePassword2"></i>
-    </div>
-
-    <!-- Submit Button -->
-    <div class="login-btn">
-      <button class="btn btn-primary w-100" id="submitBtn" type="button">
-        Submit <i class="fa fa-paper-plane"></i>
-      </button>
-    </div>
-
-    <!-- OR Divider -->
-    <div class="relative text-center mt-3">
-      <hr />
-      <span class="login-text">or sign up with</span>
-    </div>
-
-    <!-- Social Login -->
-    <div class="text-center mt-2">
-      <a href="/auth/google" class="btn btn-danger w-100">
-        Google <i class="fab fa-google"></i>
-      </a>
-    </div>
-
-    <div class="text-center mt-3">
-      <a href="login"><small>Already a member? Sign in</small></a>
-    </div>
-  </form>
-</div>
-  
     <script
       type="text/javascript"
       src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.js"
     ></script>
     <script>
       // Add event listeners for all toggle-password icons
-      document.querySelectorAll('.toggle-password').forEach((icon) => {
-        icon.addEventListener('click', function () {
+      document.querySelectorAll(".toggle-password").forEach((icon) => {
+        icon.addEventListener("click", function () {
           // Find the associated password input field
           const passwordInput = this.previousElementSibling;
-          
-          if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            this.classList.remove('fa-eye');
-            this.classList.add('fa-eye-slash'); 
+
+          if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            this.classList.remove("fa-eye");
+            this.classList.add("fa-eye-slash");
           } else {
-            passwordInput.type = 'password';
-            this.classList.remove('fa-eye-slash');
-            this.classList.add('fa-eye'); 
+            passwordInput.type = "password";
+            this.classList.remove("fa-eye-slash");
+            this.classList.add("fa-eye");
           }
         });
       });
     </script>
-    
-  
+
     <script>
-      document.getElementById("submitBtn").addEventListener("click", function (event) {
-        event.preventDefault();
-  
-        const email = document.getElementById("email").value;
-        const userName = document.getElementById("username").value;
-        const password = document.getElementById("password").value;
-        const referalCode = document.getElementById('referalCode').value;
-        const confirmPassword = document.getElementById("confirmPassword").value;
-        const contactNumber = document.getElementById("contactNumber").value;
-  
-        const emailRegex = /^(?!.*\.\.)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-       
-        const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-={}\[\]|:;"'<>,.?/~`]).{6,}$/;
+      document
+        .getElementById("submitBtn")
+        .addEventListener("click", function (event) {
+          event.preventDefault();
 
-        const contactNumberRegex = /^[0-9]{10}$/;
-  
-        if (!emailRegex.test(email)) {
-          document.getElementById("error-message").innerText = "Please enter a valid email address.";
-          return;
-        }
+          const email = document.getElementById("email").value;
+          const userName = document.getElementById("username").value;
+          const password = document.getElementById("password").value;
+          const referalCode = document.getElementById("referalCode").value;
+          const confirmPassword =
+            document.getElementById("confirmPassword").value;
+          const contactNumber = document.getElementById("contactNumber").value;
 
-        
-        if (!contactNumberRegex.test(contactNumber)) {
-          document.getElementById("error-message").innerText = "Contact number must be exactly 10 digits.";
-          return;
-        }
+          const emailRegex =
+            /^(?!.*\.\.)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-        if (!passwordRegex.test(password)) {
-          document.getElementById("error-message").innerText = "Password must be at least 8 characters long, include at least one number, one uppercase letter, and one special character.";
-          return;
-        }
+          const passwordRegex =
+            /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-={}\[\]|:;"'<>,.?/~`]).{6,}$/;
 
-        if (password !== confirmPassword) {
-          document.getElementById("error-message").innerText = "Passwords do not match.";
-          return;
-        }
+          const contactNumberRegex = /^[0-9]{10}$/;
 
-        const userData = {
-          email: email,
-          userName: userName,
-          contact: contactNumber,
-          password: password,
-          referalCode:referalCode
+          if (!emailRegex.test(email)) {
+            document.getElementById("error-message").innerText =
+              "Please enter a valid email address.";
+            return;
+          }
 
-        };
-  
-        fetch("/signup", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(userData),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            console.log("data from response is ==>")
-            if (data.success) {
-              window.location.href = "/otp";
-            } else if (data.success === false) {
-              document.getElementById("error-message").innerHTML = data.message;
-            } else {
-              alert("Error: 111111111111" + data.message);
-            }
+          if (!contactNumberRegex.test(contactNumber)) {
+            document.getElementById("error-message").innerText =
+              "Contact number must be exactly 10 digits.";
+            return;
+          }
+
+          if (!passwordRegex.test(password)) {
+            document.getElementById("error-message").innerText =
+              "Password must be at least 8 characters long, include at least one number, one uppercase letter, and one special character.";
+            return;
+          }
+
+          if (password !== confirmPassword) {
+            document.getElementById("error-message").innerText =
+              "Passwords do not match.";
+            return;
+          }
+
+          const userData = {
+            email: email,
+            userName: userName,
+            contact: contactNumber,
+            password: password,
+            referalCode: referalCode,
+          };
+
+          fetch("/signup", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(userData),
           })
-          .catch((error) => {
-            console.error("Error:", error);
-            // alert("Something went wrong! from eerr");
-          });
-      });
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("data from response is ==>");
+              if (data.success) {
+                window.location.href = "/otp";
+              } else if (data.success === false) {
+                document.getElementById("error-message").innerHTML =
+                  data.message;
+              } else {
+                alert("Error: 111111111111" + data.message);
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              // alert("Something went wrong! from eerr");
+            });
+        });
     </script>
   </body>
 </html>

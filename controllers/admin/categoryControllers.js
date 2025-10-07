@@ -1,7 +1,7 @@
 const Category = require("../../models/categorySchema");
 const categoryOffer = require("../../models/categoryOffer");
 const Product = require("../../models/productSchema");
-const statusCode = require("../../utils/statusCodes")
+const statusCode = require("../../utils/statusCodes");
 
 const getCategory = async (req, res) => {
   try {
@@ -65,7 +65,9 @@ const renderEditCategory = async (req, res) => {
     const categoryId = req.params.id;
     // console.log('category id:',categoryId);
     if (!categoryId) {
-      return res.status(statusCode.NOT_FOUND).json({ message: "category id found" });
+      return res
+        .status(statusCode.NOT_FOUND)
+        .json({ message: "category id found" });
     }
     const category = await Category.findById(categoryId);
 
@@ -99,13 +101,11 @@ const updateCategory = async (req, res) => {
         .json({ success: false, message: "Category not found" });
     }
 
-    res
-      .status(statusCode.OK)
-      .json({
-        success: true,
-        message: "Category updated successfully",
-        category: updatedCategory,
-      });
+    res.status(statusCode.OK).json({
+      success: true,
+      message: "Category updated successfully",
+      category: updatedCategory,
+    });
   } catch (error) {
     console.error("Error updating category:", error.message);
     next(error);
@@ -218,12 +218,10 @@ const addCategoryOffer = async (req, res, next) => {
       categoryId: selectedCategory,
     });
     if (existingOffer) {
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .json({
-          success: false,
-          message: "An offer already exists for this category",
-        });
+      return res.status(statusCode.BAD_REQUEST).json({
+        success: false,
+        message: "An offer already exists for this category",
+      });
     }
 
     const offerCategory = new categoryOffer({

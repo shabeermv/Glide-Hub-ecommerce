@@ -136,14 +136,10 @@
                             <h3 class="summary-title">Cart Total</h3>
 
                             <table class="table table-summary">
-                               
-
-                                   
-                                    
-
+                                <tbody>
                                     <tr class="summary-total">
                                         <td>Total:</td>
-                                        <td>₹<%= cart && cart.totalPrice ? cart.totalPrice.toFixed(2) : '0.00' %></td>
+                                        <td id="cart-total-amount">₹<%= cart && cart.totalPrice ? cart.totalPrice.toFixed(2) : '0.00' %></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -259,14 +255,7 @@
                   `₹${cartItem.totalPrice.toFixed(2)}`;
 
                 
-                const cartSubtotalElement = document.querySelector(".summary-subtotal td:last-child");
-                const cartTotalElement = document.querySelector(".summary-total td:last-child");
-                
-                if (cartSubtotalElement && cartTotalElement && data.cart.totalPrice) {
-                  const formattedTotal = `₹${data.cart.totalPrice.toFixed(2)}`;
-                  cartSubtotalElement.textContent = formattedTotal;
-                  cartTotalElement.textContent = formattedTotal;
-                }
+                updateCartTotal(data.cart.totalPrice);
 
                 const increaseButton = row.querySelector(".btn-num-product-up");
                 if (data.stockInfo && data.stockInfo.isMaxed) {
@@ -298,6 +287,14 @@
           });
       });
     });
+
+  // Function to update the cart total amount
+  function updateCartTotal(totalPrice) {
+    const cartTotalElement = document.getElementById("cart-total-amount");
+    if (cartTotalElement && totalPrice !== undefined) {
+      cartTotalElement.textContent = `₹${totalPrice.toFixed(2)}`;
+    }
+  }
 
   // Check initial stock status when page loads
   function checkInitialStockStatus() {
@@ -333,7 +330,7 @@
     });
   }
 
-    let removeProductId = null;
+  let removeProductId = null;
   let removeSize = null;
   let removeButton = null;
 
@@ -363,7 +360,12 @@
         .then((data) => {
           if (data.success) {
             removeButton.closest("tr").remove();
-            updateCartTotals(data.cart);
+            
+            // Update the cart total after removing item
+            if (data.cart && data.cart.totalPrice !== undefined) {
+              updateCartTotal(data.cart.totalPrice);
+            }
+            
             if (document.querySelectorAll(".table_row").length === 0) {
               location.reload();
             }
@@ -380,18 +382,6 @@
         });
     }
   });
-
-
-  function updateCartTotals(cart) {
-    const cartSubtotalElement = document.querySelector(".summary-subtotal td:last-child");
-    const cartTotalElement = document.querySelector(".summary-total td:last-child");
-    
-    if (cartSubtotalElement && cartTotalElement && cart.totalPrice) {
-      const formattedTotal = `₹${cart.totalPrice.toFixed(2)}`;
-      cartSubtotalElement.textContent = formattedTotal;
-      cartTotalElement.textContent = formattedTotal;
-    }
-  }
 
   // Optional: Run the initial stock check when the page loads
   document.addEventListener('DOMContentLoaded', checkInitialStockStatus);

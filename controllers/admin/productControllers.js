@@ -4,7 +4,7 @@ const categoryOffer = require("../../models/categoryOffer");
 const ProductOffer = require("../../models/productOffer");
 const fs = require("fs");
 const path = require("path");
-const statusCode = require("../../utils/statusCodes")
+const statusCode = require("../../utils/statusCodes");
 
 const { nextTick } = require("process");
 const sharp = require("sharp");
@@ -22,10 +22,8 @@ const productsInfo = async (req, res, next) => {
       filter = { title: { $regex: searchValue, $options: "i" } };
     }
 
-    
     const totalProducts = await Product.countDocuments(filter);
 
-    
     const products = await Product.find(filter)
       .populate("category", "name")
       .skip(skip)
@@ -44,14 +42,13 @@ const productsInfo = async (req, res, next) => {
       currentPage: page,
       totalPages,
       limit,
-      searchValue, 
+      searchValue,
     });
   } catch (error) {
     console.error("Error fetching products:", error);
     next(error);
   }
 };
-
 
 const addProductInfo = async (req, res) => {
   try {
@@ -80,12 +77,10 @@ const productAdd = async (req, res) => {
     const categoryName = categoryDetails.name;
 
     if (!Array.isArray(sizesWithStock) || sizesWithStock.length === 0) {
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .json({
-          success: false,
-          message: "Sizes with stock must be an array of size-stock pairs.",
-        });
+      return res.status(statusCode.BAD_REQUEST).json({
+        success: false,
+        message: "Sizes with stock must be an array of size-stock pairs.",
+      });
     }
 
     for (const size of sizesWithStock) {
@@ -109,7 +104,9 @@ const productAdd = async (req, res) => {
     );
 
     if (!req.files || req.files.length === 0) {
-      return res.status(statusCode.BAD_REQUEST).send("Please upload at least one image.");
+      return res
+        .status(statusCode.BAD_REQUEST)
+        .send("Please upload at least one image.");
     }
     console.log(req.files, "req.files.........");
 
@@ -457,12 +454,10 @@ const addProductOffer = async (req, res, next) => {
       productId: selectedProduct,
     });
     if (existingOffer) {
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .json({
-          success: false,
-          message: "An offer already exists for this product",
-        });
+      return res.status(statusCode.BAD_REQUEST).json({
+        success: false,
+        message: "An offer already exists for this product",
+      });
     }
 
     let discountedPrice;
