@@ -147,7 +147,7 @@
                             <a href="/cart-checkout" class="btn btn-outline-primary-2 btn-order btn-block proceed-to-checkout">PROCEED TO CHECKOUT</a>
                         </div>
 
-                        <a href="/" class="btn btn-outline-dark-2 btn-block mb-3"><span>CONTINUE SHOPPING</span><i class="icon-refresh"></i></a>
+                        <a href="/shop" class="btn btn-outline-dark-2 btn-block mb-3"><span>CONTINUE SHOPPING</span><i class="icon-refresh"></i></a>
                     </aside>
                 </div>
             </div>
@@ -183,9 +183,9 @@
   </div>
 </div>
 
-<!-- Optional Custom Styles -->
+
 <style>
-  /* Smooth transitions */
+  
   #removeConfirmModal .modal-content {
     transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
   }
@@ -271,7 +271,7 @@
                   stockWarningElement.classList.add("hidden");
                 }
 
-                // Display any stock warnings from the server
+                
                 if (data.stockWarning) {
                   stockWarningElement.textContent = data.stockWarning;
                   stockWarningElement.classList.remove("hidden");
@@ -288,7 +288,7 @@
       });
     });
 
-  // Function to update the cart total amount
+  
   function updateCartTotal(totalPrice) {
     const cartTotalElement = document.getElementById("cart-total-amount");
     if (cartTotalElement && totalPrice !== undefined) {
@@ -296,7 +296,7 @@
     }
   }
 
-  // Check initial stock status when page loads
+  
   function checkInitialStockStatus() {
     document.querySelectorAll(".table_row").forEach((row) => {
       const productId = row.getAttribute("data-product-id");
@@ -314,7 +314,7 @@
             const increaseButton = row.querySelector(".btn-num-product-up");
             const stockWarningElement = row.querySelector(".stock-warning");
 
-            // Disable increase button if at max stock
+            
             if (currentQuantity >= availableStock) {
               increaseButton.classList.add("disabled");
               increaseButton.disabled = true;
@@ -342,7 +342,7 @@
       removeSize = this.getAttribute("data-size");
       removeButton = this;
 
-      // Show modal instead of confirm
+      
       $("#removeConfirmModal").modal("show");
     });
   });
@@ -361,7 +361,7 @@
           if (data.success) {
             removeButton.closest("tr").remove();
             
-            // Update the cart total after removing item
+            
             if (data.cart && data.cart.totalPrice !== undefined) {
               updateCartTotal(data.cart.totalPrice);
             }
@@ -383,17 +383,16 @@
     }
   });
 
-  // Optional: Run the initial stock check when the page loads
+  
   document.addEventListener('DOMContentLoaded', checkInitialStockStatus);
 </script>
 
 <style>
-  /* Add these CSS rules to your existing styles */
 
-/* Center the quantity input in the td */
-/* Add these CSS rules to your existing styles */
 
-/* Center the quantity input in the td but with left offset */
+
+
+
 .quantity-col {
   vertical-align: middle;
 }
@@ -408,7 +407,7 @@
   transform: translateX(-15px); /* This moves the quantity input to the left */
 }
 
-/* Adjust the layout for the Buy and Remove buttons */
+
 .remove-col .d-flex {
   display: flex;
   flex-direction: column;
@@ -422,11 +421,11 @@
   text-align: center;
 }
 
-/* For mobile responsiveness */
+
 @media (max-width: 767px) {
   .cart-product-quantity {
     margin: 0 auto;
-    transform: translateX(0); /* Reset the offset on mobile */
+    transform: translateX(0);
   }
   
   .remove-col .d-flex {

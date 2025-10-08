@@ -63,14 +63,14 @@
           </td>
           <td class="action-col">
             <button
-              class="add-to-cart-btn btn btn-warning"
-              data-product-id="<%= item.productId._id %>"
-              data-product-title="<%= item.productId.title %>"
-              data-product-price="<%= item.productId.price %>"
-              data-product-sizes="<%- JSON.stringify(item.productId.sizes || []) %>"
-            >
-              Add to Cart
-            </button>
+  class="add-to-cart-btn btn btn-warning"
+  data-product-id="<%= item.productId._id %>"
+  data-product-title="<%= item.productId.title %>"
+  data-product-price="<%= item.productId.price %>"
+  data-product-sizes='<%- JSON.stringify(item.productId.sizes) %>'
+>
+  Add to Cart
+</button>
           </td>
           <td class="remove-col">
             <button class="btn-remove" data-id="<%= item.productId._id %>">
@@ -440,110 +440,145 @@
           alert("Internal server error. Please try again later.");
         });
     });
-  document.querySelectorAll(".add-to-cart-btn").forEach((button) => {
-    button.addEventListener("click", function (e) {
-      e.preventDefault();
+document.querySelectorAll(".add-to-cart-btn").forEach((button) => {
+  button.addEventListener("click", function (e) {
+    e.preventDefault();
 
-      const productId = this.getAttribute("data-product-id");
-      const productTitle = this.getAttribute("data-product-title");
-      const productPrice = this.getAttribute("data-product-price");
-      const sizesData = this.getAttribute("data-product-sizes");
+    const productId = this.getAttribute("data-product-id");
+    const productTitle = this.getAttribute("data-product-title");
+    const productPrice = this.getAttribute("data-product-price");
+    const sizesData = this.getAttribute("data-product-sizes");
 
-      console.log("Raw sizes data:", sizesData); // Debug log
+    console.log("Product ID:", productId);
+    console.log("Raw sizes data:", sizesData);
+    console.log("Type of sizes data:", typeof sizesData);
 
-      let productSizes = [];
-      try {
+    let productSizes = [];
+    try {
+      if (sizesData && sizesData !== 'null' && sizesData !== 'undefined') {
         productSizes = JSON.parse(sizesData);
-        console.log("Parsed sizes:", productSizes); // Debug log
-      } catch (error) {
-        console.error("Error parsing sizes:", error);
-        productSizes = [];
+        console.log("Parsed sizes:", productSizes);
+        console.log("Is Array?", Array.isArray(productSizes));
+        console.log("Length:", productSizes.length);
       }
+    } catch (error) {
+      console.error("Error parsing sizes:", error);
+      console.error("Problematic data:", sizesData);
+      alert("Error loading product sizes. Please try again.");
+      return;
+    }
 
-      // Populate modal with product information
-      document.getElementById("modalProductId").value = productId;
-      document.getElementById("modalProductTitle").textContent = productTitle;
-      document.getElementById("modalProductPrice").textContent = productPrice;
+    // Populate modal with product information
+    document.getElementById("modalProductId").value = productId;
+    document.getElementById("modalProductTitle").textContent = productTitle;
+    document.getElementById("modalProductPrice").textContent = productPrice;
 
-      // Clear and populate size options
-      const sizeSelect = document.getElementById("productSize");
-      sizeSelect.innerHTML = '<option value="">-- Select Size --</option>';
+    // Clear and populate size options
+    const sizeSelect = document.getElementById("productSize");
+    sizeSelect.innerHTML = '<option value="">-- Select Size --</option>';
 
-      // Handle the nested size structure from your schema
-      if (Array.isArray(productSizes) && productSizes.length > 0) {
-        productSizes.forEach((sizeObj) => {
-          if (sizeObj && sizeObj.size && sizeObj.stock > 0) {
-            // Only show sizes that are in stock
-            const option = document.createElement("option");
-            option.value = sizeObj.size;
+    let hasAvailableSizes = false;
+
+    if (Array.isArray(productSizes) && productSizes.length > 0) {
+      productSizes.forEach((sizeObj) => {
+        console.log("Processing size:", sizeObj); // Debug each size
+        
+        if (sizeObj && sizeObj.size) {
+          // Show all sizes, but disable out of stock ones
+          const option = document.createElement("option");
+          option.value = sizeObj.size;
+          
+          if (sizeObj.stock > 0) {
             option.textContent = `${sizeObj.size} (Stock: ${sizeObj.stock})`;
-            option.setAttribute("data-stock", sizeObj.stock);
-            sizeSelect.appendChild(option);
+            hasAvailableSizes = true;
+          } else {
+            option.textContent = `${sizeObj.size} (Out of Stock)`;
+            option.disabled = true;
           }
-        });
-      } else {
-        // Fallback if sizes data is not available
+          
+          option.setAttribute("data-stock", sizeObj.stock || 0);
+          sizeSelect.appendChild(option);
+        }
+      });
+
+      if (!hasAvailableSizes) {
         const option = document.createElement("option");
         option.value = "";
-        option.textContent = "No sizes available";
+        option.textContent = "All sizes out of stock";
         option.disabled = true;
         sizeSelect.appendChild(option);
+        document.getElementById("confirmAddToCart").disabled = true;
+      } else {
+        document.getElementById("confirmAddToCart").disabled = false;
       }
+    } else {
+      console.warn("No sizes available or invalid format");
+      const option = document.createElement("option");
+      option.value = "";
+      option.textContent = "No sizes available";
+      option.disabled = true;
+      sizeSelect.appendChild(option);
+      document.getElementById("confirmAddToCart").disabled = true;
+    }
 
-      // Reset quantity to 1 (hidden, always 1)
-      const quantity = 1;
-
-      // Show the modal
-      $("#sizeModal").modal("show");
-    });
+    // Show the modal
+    $("#sizeModal").modal("show");
   });
+});
 
-  // Confirm add to cart
-  document
-    .getElementById("confirmAddToCart")
-    .addEventListener("click", function () {
-      const productId = document.getElementById("modalProductId").value;
-      const selectedSize = document.getElementById("productSize").value;
-      const quantity = 1; // Always 1 since we removed quantity input
+// Confirm add to cart
+document.getElementById("confirmAddToCart").addEventListener("click", function () {
+  const productId = document.getElementById("modalProductId").value;
+  const selectedSize = document.getElementById("productSize").value;
+  const quantity = 1;
 
-      if (!selectedSize) {
-        alert("Please select a size.");
-        return;
-      }
+  if (!selectedSize) {
+    alert("Please select a size.");
+    return;
+  }
 
-      fetch("/cart/add-from-wishlist", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          productId: productId,
-          size: selectedSize,
-          quantity: quantity,
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.success) {
-            $("#sizeModal").modal("hide");
+  // Disable button to prevent double submission
+  this.disabled = true;
+  const originalText = this.textContent;
+  this.textContent = "Adding...";
 
-            $("#sizeModal").on("hidden.bs.modal", function () {
-              $("#successModal").modal("show");
-
-              $(this).off("hidden.bs.modal");
-            });
-          } else {
-            alert(data.message || "Error adding product to cart.");
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          alert("Internal server error. Please try again later.");
+  fetch("/cart/add-from-wishlist", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      productId: productId,
+      size: selectedSize,
+      quantity: quantity,
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        $("#sizeModal").modal("hide");
+        $("#sizeModal").on("hidden.bs.modal", function () {
+          $("#successModal").modal("show");
+          $(this).off("hidden.bs.modal");
         });
+      } else {
+        alert(data.message || "Error adding product to cart.");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("Internal server error. Please try again later.");
+    })
+    .finally(() => {
+      // Re-enable button
+      this.disabled = false;
+      this.textContent = originalText;
     });
+});
 
-  // Reset form when size modal is hidden
-  $("#sizeModal").on("hidden.bs.modal", function () {
-    document.getElementById("sizeForm").reset();
-  });
+// Reset form when size modal is hidden
+$("#sizeModal").on("hidden.bs.modal", function () {
+  document.getElementById("sizeForm").reset();
+  document.getElementById("confirmAddToCart").disabled = false;
+});
 </script>
