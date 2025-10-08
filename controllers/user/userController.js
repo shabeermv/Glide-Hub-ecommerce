@@ -783,7 +783,7 @@ const addMoneyToWallet = async (req, res) => {
 
     user.wallet += parseFloat(amount);
 
-    // Add wallet history entry (optional)
+    
     user.walletHistory.push({
       amount: parseFloat(amount),
       type: "credit",
@@ -792,7 +792,7 @@ const addMoneyToWallet = async (req, res) => {
 
     await user.save();
 
-    // Fetch orders and coupons to render myAccount page
+    
     const orders = await Order.find({ userId: userId })
       .populate({ path: "products.productId", select: "title price" })
       .sort({ createdAt: -1 });

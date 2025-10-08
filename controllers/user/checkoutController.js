@@ -364,11 +364,8 @@ const applyCoupon = async (req, res) => {
 };
 
 const generateOrderId = () => {
-  const timestamp = Date.now().toString();
-  const randomNum = Math.floor(Math.random() * 1000)
-    .toString()
-    .padStart(3, "0");
-  return `ORD${timestamp}${randomNum}`;
+  const randomNum = Math.floor(Math.random() * 1000000); 
+  return `ORD${randomNum.toString().padStart(6, "0")}`;
 };
 
 const buyNow = async (req, res) => {
