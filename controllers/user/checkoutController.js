@@ -1070,88 +1070,116 @@ const cancelPartialProduct = async (req, res) => {
   }
 };
 
-
 const orderCancel = async (req, res) => {
-  const orderId = req.params.id;
-  const { reason, additionalDetails } = req.body;
-
-  console.log("Cancelling order with ID:", orderId);
-  console.log(`Reason: ${reason}, Details: ${additionalDetails}`);
-
   try {
+    const orderId = req.params.id;
+    const userId = req.session.userId;
+    const { reason, additionalDetails } = req.body;
+
+    console.log(req.body, "this is the body..");
+
+    // Find order
     const order = await Order.findById(orderId);
     if (!order) {
-      return res
-        .status(statusCode.NOT_FOUND)
-        .json({ success: false, message: "Order not found" });
+      return res.status(statusCode.NOT_FOUND).json({
+        success: false,
+        message: "Order not found",
+      });
     }
 
-    let hasUpdatedProduct = false;
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(statusCode.NOT_FOUND).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-    for (const product of order.products) {
-      if (
-        product.status === "Cancelled" ||
-        product.status === "Cancel Requested"
-      ) {
-        console.log(
-          `Skipping product ${product.productId} as it is already cancelled or cancel requested.`
-        );
-        continue;
-      }
+    // ✅ Restore stock & reduce sale count
+    for (const item of order.products) {
+      const product = await Product.findById(item.productId);
+      if (product) {
+        // Reduce sale count (cannot go below 0)
+        product.saleCount = Math.max(0, (product.saleCount || 0) - item.quantity);
 
-      product.status = "Cancelled";
-      product.cancelReason = reason || "Order cancelled";
-      product.cancelDetails = additionalDetails || "";
-      product.cancelRequestDate = new Date();
-      order.markModified("products");
-      hasUpdatedProduct = true;
-
-      const productData = await Product.findById(product.productId);
-      if (productData) {
-        if (!Array.isArray(productData.sizes)) {
-          console.warn(`Product ${productData._id} has no sizes array`);
-        } else {
-          const sizeObj = productData.sizes.find(
-            (sizeObj) => sizeObj.size === product.size
-          );
-          if (sizeObj) {
-            sizeObj.stock += product.quantity;
-          } else {
-            console.warn(
-              `Size ${product.size} not found for Product ${productData._id}`
-            );
-          }
+        // Ensure sizes array exists
+        if (!Array.isArray(product.sizes)) {
+          console.warn(`Product ${product._id} has no sizes array`);
+          continue;
         }
 
-        await productData.save();
+        // Restore stock
+        const sizeIndex = product.sizes.findIndex(
+          (sizeObj) => sizeObj.size === item.size
+        );
+
+        if (sizeIndex !== -1) {
+          product.sizes[sizeIndex].stock += item.quantity;
+        } else {
+          // If size not found, add it
+          product.sizes.push({
+            size: item.size,
+            stock: item.quantity,
+          });
+        }
+
+        await product.save();
       }
     }
 
-    if (hasUpdatedProduct) {
-      order.orderStatus = "Cancelled";
-      order.cancelReason = reason || "Not specified";
-      order.cancelDetails = additionalDetails || "";
-      order.cancelRequestDate = new Date();
-      order.markModified("orderStatus");
+    // ✅ Mark products & order as cancelled
+    order.products.forEach((product) => {
+      product.status = "Cancelled";
+    });
 
-      await order.save();
-
-      return res.status(statusCode.OK).json({
-        success: true,
-        message: "Order cancellation request submitted successfully",
-      });
-    } else {
-      return res.status(statusCode.BAD_REQUEST).json({
-        success: false,
-        message:
-          "All products are already cancelled or in cancel requested state",
-      });
+    order.cancellationReason = reason || "No reason provided";
+    if (additionalDetails) {
+      order.cancelDetails = additionalDetails;
     }
+
+    order.orderStatus = "Cancelled";
+    order.markModified("products");
+
+    // ✅ Refund logic
+    let refundedAmount = 0;
+
+    // Refund only if payment completed and not COD
+    if (
+      order.paymentStatus === "completed" &&
+      !order.paymentMethod.includes("cod")
+    ) {
+      refundedAmount = order.totalAmount;
+
+      user.wallet += refundedAmount;
+      user.walletHistory.push({
+        amount: refundedAmount,
+        type: "credit",
+        description: `Refund for cancelled order ${order._id}`,
+      });
+
+      await user.save();
+
+      // Update order payment status
+      order.paymentStatus = "Refunded";
+    }
+
+    await order.save();
+
+    // ✅ Response
+    return res.status(statusCode.OK).json({
+      success: true,
+      message: "Order cancelled successfully",
+      refunded: refundedAmount,
+    });
   } catch (error) {
-    console.error("Error in orderCancel:", error);
+    console.error("Error in cancelOrder:", error);
     return res
       .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({ success: false, message: "Internal server error" });
+      .json({
+        success: false,
+        message: "Internal server error",
+      });
   }
 };
 
