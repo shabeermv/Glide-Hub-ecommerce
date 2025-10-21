@@ -91,20 +91,34 @@
     <h4>Product Details</h4>
     <div class="product-list">
         <% order.products.forEach(product => { %>
-            <div class="product-item">
-                <img src="<%= product.productId.image ? product.productId.image[0] : '/default-image.jpg' %>" 
-                     alt="<%= product.productId.title %>">
-                <div class="product-info">
-                    <p><strong>Product:</strong> <%= product.productId.title || 'No title available' %></p>
-                    <p><strong>Size:</strong> <%= product.size %> | <strong>Quantity:</strong> <%= product.quantity %></p>
+  <div class="product-item">
+    <% if (product.productId) { %>
+      <img 
+        src="<%= product.productId.image && product.productId.image.length ? product.productId.image[0] : '/default-image.jpg' %>" 
+        alt="<%= product.productId.title %>"
+      >
+      
+      <div class="product-info">
+                    <p>
+                        <strong>Product:</strong> <%= product.productId.title %> <br>
+                        <strong>Quantity:</strong> <%= product.quantity %>
+                    </p>
+                    <strong>Size:</strong> <%= product.size %>
                     <p><strong>Price:</strong> ₹<%= product.productId.price.toFixed(2) %></p>
-                    <h5><strong>Total Amount:</strong> ₹<%= order.totalAmount.toFixed(2) %></h5>
-                    <p><strong>Status:</strong> <%= (product.status)%></p>
+                    <p><strong>Status:</strong> <%= product.status %></p>
                 </div>
-            </div>
-        <% }) %>
+    <% } else { %>
+      <img src="/default-image.jpg" alt="Deleted Product">
+      <div class="product-info">
+        <p><em>Product not found (deleted)</em></p>
+      </div>
+    <% } %>
+  </div>
+<% }); %>
+
     </div>
 </div>
+
 
   
             <!-- ✏️ Notes Section -->

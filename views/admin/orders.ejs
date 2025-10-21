@@ -119,25 +119,37 @@
 <div class="pagination-area mt-3">
     <nav aria-label="Page navigation">
         <% if (typeof currentPage !== 'undefined' && typeof totalPages !== 'undefined' && totalPages > 1) { %>
-        <ul class="pagination justify-content-center">
-            <% if (currentPage > 1) { %>
-                <li class="page-item">
-                    <a class="page-link" href="?page=<%= currentPage - 1 %>">Previous</a>
-                </li>
-            <% } %>
+            <ul class="pagination justify-content-center">
 
-            <% for (let i = 1; i <= totalPages; i++) { %>
-                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-                </li>
-            <% } %>
+                <% 
+                    const pagesPerGroup = 4;
+                    const currentGroup = Math.floor((currentPage - 1) / pagesPerGroup);
+                    const startPage = currentGroup * pagesPerGroup + 1;
+                    const endPage = Math.min(startPage + pagesPerGroup - 1, totalPages);
+                %>
 
-            <% if (currentPage < totalPages) { %>
-                <li class="page-item">
-                    <a class="page-link" href="?page=<%= currentPage + 1 %>">Next</a>
-                </li>
-            <% } %>
-        </ul>
+                <!-- Previous group button -->
+                <% if (startPage > 1) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=<%= startPage - 1 %>">‹</a>
+                    </li>
+                <% } %>
+
+                <!-- Page numbers -->
+                <% for (let i = startPage; i <= endPage; i++) { %>
+                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                    </li>
+                <% } %>
+
+                <!-- Next group button -->
+                <% if (endPage < totalPages) { %>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=<%= endPage + 1 %>">›</a>
+                    </li>
+                <% } %>
+
+            </ul>
         <% } %>
     </nav>
 </div>
@@ -149,7 +161,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Update Order Status</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button"  class="btn-close" data-bs-dismiss="modal" onclick="statusModal.hide()"></button>
             </div>
             <div class="modal-body">
                 <form id="updateStatusForm">
@@ -166,7 +178,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" onclick="statusModal.hide()">Close</button>
+
                 <button type="button" class="btn btn-primary" onclick="submitStatusUpdate()">Update Status</button>
             </div>
         </div>
@@ -213,7 +226,7 @@ function submitStatusUpdate() {
     const newStatus = document.getElementById('orderStatusSelect').value;
     
     fetch('/admin/orders/update-status', {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
         },
@@ -243,5 +256,11 @@ function viewOrderDetails(orderId) {
     window.location.href = `/admin/orders/${orderId}`;
 }
 </script>
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 
 <%- include("../../views/partials/admin/footer.ejs") %>

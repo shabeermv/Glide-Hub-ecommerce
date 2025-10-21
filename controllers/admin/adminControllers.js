@@ -2,8 +2,12 @@ const User = require("../../models/userSchema");
 const Order = require("../../models/orderSchema");
 const Products = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
+const productOffer = require("../../models/productOffer");
+const categoryOffer = require("../../models/categoryOffer");
+const coupons = require("../../models/couponSchema")
 const bcrypt = require("bcrypt");
 const PDFDocument = require("pdfkit");
+const PDFtableDocument=require("pdfkit-table")
 const ExcelJS = require("exceljs");
 const statusCode = require("../../utils/statusCodes");
 
@@ -18,84 +22,108 @@ const adminLogin = async (req, res) => {
   }
 };
 
+
 const getHome = async (req, res) => {
   try {
-    if (req.session.admin) {
-      const orderCount = await Order.countDocuments({
-        orderStatus: { $in: ["Delivered", "Pending", "Shipped"] },
-      });
-      const productCount = await Products.countDocuments();
-      const categories = await Category.find();
-      const orderStatuses = await Order.distinct("orderStatus");
+    if (!req.session.admin) return res.render("adminLogin");
 
-      const page = parseInt(req.query.page) || 1;
-      const limit = 5;
-      const skip = (page - 1) * limit;
+    const orderCount = await Order.countDocuments({
+      orderStatus: { $in: ["Delivered", "Pending", "Shipped"] },
+      paymentStatus: "completed",
+    });
 
-      const recentOrders = await Order.find({
-        orderStatus: { $in: ["Delivered", "Pending", "Shipped"] },
-      })
-        .populate("userId", "name email")
-        .populate("products.productId", "title price")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
+    const productCount = await Products.countDocuments();
+    const categories = await Category.find();
+    const orderStatuses = await Order.distinct("orderStatus");
 
-      const totalOrders = await Order.countDocuments({
-        orderStatus: { $in: ["Delivered", "Pending", "Shipped", "Confirmed"] },
-      });
-      const totalPages = Math.ceil(totalOrders / limit);
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
 
-      const topSellingProducts = await Products.find()
-        .sort({ saleCount: -1 })
-        .limit(5);
+    // ✅ Fetch only DELIVERED orders with completed payment, latest first
+    const recentOrders = await Order.find({ 
+      orderStatus: "Delivered",
+      paymentStatus: "completed" 
+    })
+      .populate("userId", "name email")
+      .populate("products.productId", "title price")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-      const totalSalesResult = await Order.aggregate([
-        { $match: { orderStatus: "Delivered" } },
-        { $group: { _id: null, totalSales: { $sum: "$totalAmount" } } },
-      ]);
+    // ✅ Count ONLY delivered orders for pagination
+    const totalOrders = await Order.countDocuments({ 
+      orderStatus: "Delivered",
+      paymentStatus: "completed" 
+    });
 
-      const totalSales =
-        totalSalesResult.length > 0 ? totalSalesResult[0].totalSales : 0;
-          const recentUsers = await User.find()
+    const recentProductOffers = await productOffer.find()
+      .populate("productId", "title")
+      .sort({ startDate: -1 })
+      .limit(5);
+
+    const recentCategoryOffers = await categoryOffer.find()
+      .populate("categoryId", "name")
+      .sort({ startDate: -1 })
+      .limit(5);
+
+    const recentCoupons = await coupons.find().sort({ createdAt: -1 }).limit(5);
+
+    const totalPages = Math.ceil(totalOrders / limit);
+
+    const topSellingProducts = await Products.find().sort({ saleCount: -1 }).limit(5);
+
+    const totalSalesResult = await Order.aggregate([
+      { $match: { orderStatus: "Delivered", paymentStatus: "completed" } },
+      { $group: { _id: null, totalSales: { $sum: "$totalAmount" } } },
+    ]);
+
+    const totalSales =
+      totalSalesResult.length > 0 ? totalSalesResult[0].totalSales : 0;
+
+    const recentUsers = await User.find()
       .sort({ createdAt: -1 })
       .limit(5)
       .select("username email createdAt");
-        
 
-      return res.render("adminPanel", {
-        orderCount,
-        productCount,
-        recentUsers,
-        recentOrders,
-        categories,
-        orderStatuses,
-        currentPage: page,
-        totalPages,
-        totalOrders,
-        totalSales,
-        topSellingProducts,
-        
-        selectedCategory: "All Categories",
-      });
-    }
-    res.render("adminLogin");
+    return res.render("adminPanel", {
+      orderCount,
+      productCount,
+      recentUsers,
+      recentOrders,
+      categories,
+      orderStatuses,
+      currentPage: page,
+      totalPages,
+      totalOrders,
+      totalSales,
+      topSellingProducts,
+      recentCategoryOffers,
+      recentProductOffers,
+      recentCoupons,
+      selectedCategory: "All Categories",
+    });
   } catch (error) {
     console.error("Error in getHome:", error.message);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).render("error", {
+    res.status(500).render("error", {
       message: "Server error while loading dashboard",
       error,
     });
   }
 };
+
 const getReport = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
     if (!startDate || !endDate) {
-      return res.render("admin/salesReport", {
+      return res.render("report", {
         error: "Start date and end date are required",
-        salesData: []
+        salesData: [],
+        totalRevenue: 0,
+        orderStatusCounts: {},
+        totalCouponsUsed: 0,
+        topCategory: null,
       });
     }
 
@@ -108,27 +136,29 @@ const getReport = async (req, res) => {
     const today = new Date();
     today.setHours(23, 59, 59, 999);
 
+    // Validation
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return res.render("admin/salesReport", {
+      return res.render("report", {
         error: "Invalid date format",
-        salesData: []
+        salesData: [],
       });
     }
 
     if (start > end) {
-      return res.render("admin/salesReport", {
+      return res.render("report", {
         error: "Start date cannot be after end date",
-        salesData: []
+        salesData: [],
       });
     }
 
     if (start > today || end > today) {
-      return res.render("admin/salesReport", {
+      return res.render("report", {
         error: "Dates cannot be in the future",
-        salesData: []
+        salesData: [],
       });
     }
 
+    // 🧾 Sales by date
     const salesData = await Order.aggregate([
       {
         $match: {
@@ -154,21 +184,161 @@ const getReport = async (req, res) => {
       },
     ]);
 
+    // 🪙 Total Revenue
+    const totalRevenue = salesData.reduce((sum, item) => sum + item.totalSales, 0);
+
+    // 🧮 Order Status Counts
+    const orderStatusCounts = await Order.aggregate([
+      {
+        $match: { createdAt: { $gte: start, $lte: end } },
+      },
+      {
+        $group: {
+          _id: "$orderStatus",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const statusCounts = {};
+    orderStatusCounts.forEach((s) => (statusCounts[s._id] = s.count));
+
+    // 🎟️ Total Coupons Used
+    const totalCouponsUsed = await Order.countDocuments({
+      createdAt: { $gte: start, $lte: end },
+      couponCode: { $exists: true, $ne: null },
+    });
+
+    // 🏆 Top Selling Category
+    const topCategoryAgg = await Order.aggregate([
+      { $match: { createdAt: { $gte: start, $lte: end } } },
+      { $unwind: "$products" },
+      {
+        $lookup: {
+          from: "products",
+          localField: "products.productId",
+          foreignField: "_id",
+          as: "productInfo",
+        },
+      },
+      { $unwind: "$productInfo" },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "productInfo.category",
+          foreignField: "_id",
+          as: "categoryInfo",
+        },
+      },
+      { $unwind: "$categoryInfo" },
+      {
+        $group: {
+          _id: "$categoryInfo.name",
+          count: { $sum: "$products.quantity" },
+        },
+      },
+      { $sort: { count: -1 } },
+      { $limit: 1 },
+    ]);
+
+    const topCategory = topCategoryAgg[0] || { _id: "No Data", count: 0 };
+
     res.render("report", {
       salesData,
       startDate,
       endDate,
-      error: null
+      error: null,
+      totalRevenue,
+      orderStatusCounts: statusCounts,
+      totalCouponsUsed,
+      topCategory,
     });
   } catch (error) {
     console.error("Error fetching sales data:", error);
     res.render("report", {
       error: "Failed to fetch sales data",
-      salesData: []
+      salesData: [],
     });
   }
 };
+const downloadReportPDF = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
 
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    // Fetch completed orders in date range
+    const orders = await Order.find({
+      createdAt: { $gte: start, $lte: end },
+      paymentStatus: "completed",
+    }).sort({ createdAt: 1 });
+
+    if (orders.length === 0) {
+      return res.status(404).send("No orders found for this date range");
+    }
+
+    const doc = new PDFtableDocument({ margin: 40, size: "A4" });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="Sales_Report_${startDate}_to_${endDate}.pdf"`
+    );
+
+    doc.pipe(res);
+
+    // Title
+    doc.fontSize(18).text("📊 Sales Report", { align: "center" });
+    doc.moveDown(0.5);
+    doc
+      .fontSize(12)
+      .text(`Period: ${startDate} → ${endDate}`, { align: "center" });
+    doc.moveDown(1);
+
+    // Table data
+    const table = {
+      headers: [
+        { label: "Date", property: "date", width: 90 },
+        { label: "Order ID", property: "orderId", width: 100 },
+        { label: "User", property: "user", width: 100 },
+        { label: "Amount (₹)", property: "amount", width: 80 },
+        { label: "Status", property: "status", width: 80 },
+      ],
+      datas: orders.map((order) => ({
+        date: order.createdAt.toISOString().split("T")[0],
+        orderId: order.orderId || order._id.toString().slice(-6),
+        user: order.user?.username || "Guest",
+        amount: order.totalAmount.toFixed(2),
+        status: order.orderStatus,
+      })),
+    };
+
+    await doc.table(table, {
+      prepareHeader: () => doc.font("Helvetica-Bold").fontSize(12),
+      prepareRow: (row, i) => doc.font("Helvetica").fontSize(10),
+      columnSpacing: 5,
+      padding: 5,
+    });
+
+    // Summary
+    const totalSales = orders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
+    const totalOrders = orders.length;
+
+    doc.moveDown(1);
+    doc.fontSize(12).text(`Total Orders: ${totalOrders}`);
+    doc.fontSize(12).text(`Total Sales: ₹${totalSales.toFixed(2)}`);
+
+    doc.end();
+  } catch (err) {
+    console.error("PDF download error:", err);
+    res.status(500).send("Failed to generate PDF");
+  }
+};
 const getSalesData = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -233,31 +403,29 @@ const getSalesData = async (req, res) => {
   }
 };
 
+
 const filterCategoryList = async (req, res) => {
   try {
     const { categoryId } = req.query;
     const isAjaxRequest = req.xhr || req.headers.accept.indexOf("json") > -1;
 
-    let orderCount = await Order.countDocuments({ orderStatus: "Delivered" });
-    let productCount = await Products.countDocuments();
-    let categories = await Category.find();
-    let orderStatuses = ["Delivered"];
-    let paymentStatus = ["completed"];
-
     const page = parseInt(req.query.page) || 1;
     const limit = 5;
     const skip = (page - 1) * limit;
 
-    let query = { orderStatus: { $in: ["Delivered"] } };
+    // Build query for delivered orders with completed payment
+    let query = { 
+      orderStatus: "Delivered",
+      paymentStatus: "completed"
+    };
 
     if (categoryId && categoryId !== "All Categories" && categoryId !== "") {
       const products = await Products.find({ category: categoryId });
       const productIds = products.map((product) => product._id);
       query["products.productId"] = { $in: productIds };
-    } else {
-      delete query["products.productId"];
     }
 
+    // Fetch orders with pagination
     const recentOrders = await Order.find(query)
       .populate("userId", "name email")
       .populate("products.productId", "title price")
@@ -268,8 +436,27 @@ const filterCategoryList = async (req, res) => {
     const totalOrders = await Order.countDocuments(query);
     const totalPages = Math.ceil(totalOrders / limit);
 
+    // For AJAX requests, return only the table data
+    if (isAjaxRequest) {
+      return res.json({
+        recentOrders,
+        currentPage: page,
+        totalPages,
+        totalOrders,
+      });
+    }
+
+    // For full page render, fetch all required data
+    const orderCount = await Order.countDocuments({
+      orderStatus: { $in: ["Delivered", "Pending", "Shipped"] },
+      paymentStatus: "completed",
+    });
+
+    const productCount = await Products.countDocuments();
+    const categories = await Category.find();
+
     const totalSalesResult = await Order.aggregate([
-      { $match: { orderStatus: "Delivered" } },
+      { $match: { orderStatus: "Delivered", paymentStatus: "completed" } },
       { $group: { _id: null, totalSales: { $sum: "$totalAmount" } } },
     ]);
 
@@ -280,25 +467,35 @@ const filterCategoryList = async (req, res) => {
       .sort({ saleCount: -1 })
       .limit(5);
 
-    if (isAjaxRequest) {
-      return res.json({
-        recentOrders,
-        currentPage: page,
-        totalPages,
-      });
-    }
-      const recentUsers = await User.find()
+    // ✅ IMPORTANT: Fetch all missing template variables
+    const recentProductOffers = await productOffer.find()
+      .populate("productId", "title")
+      .sort({ startDate: -1 })
+      .limit(5);
+
+    const recentCategoryOffers = await categoryOffer.find()
+      .populate("categoryId", "name")
+      .sort({ startDate: -1 })
+      .limit(5);
+
+    const recentCoupons = await coupons.find()
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    const recentUsers = await User.find()
       .sort({ createdAt: -1 })
       .limit(5)
       .select("username email createdAt");
-        
 
+    const orderStatuses = await Order.distinct("orderStatus");
+
+    // Render with ALL required variables
     return res.render("adminPanel", {
       orderCount,
       productCount,
+      recentUsers,
       recentOrders,
       categories,
-      recentUsers,
       orderStatuses,
       currentPage: page,
       totalPages,
@@ -306,18 +503,22 @@ const filterCategoryList = async (req, res) => {
       totalSales,
       topSellingProducts,
       totalOrders,
-      paymentStatus,
+      recentProductOffers,
+      recentCategoryOffers,
+      recentCoupons,
     });
   } catch (error) {
     console.error("Error filtering orders by category:", error);
     if (req.xhr || req.headers.accept.indexOf("json") > -1) {
-      return res
-        .status(statusCode.INTERNAL_SERVER_ERROR)
-        .json({ error: "Server error while filtering orders" });
+      return res.status(500).json({ 
+        error: "Server error while filtering orders",
+        message: error.message 
+      });
     }
-    return res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal server error" });
+    return res.status(500).render("error", {
+      message: "Server error while filtering orders",
+      error,
+    });
   }
 };
 
@@ -591,6 +792,7 @@ module.exports = {
   postAdmin,
   getHome,
   getReport,
+  downloadReportPDF,
   getSalesData,
   filterCategoryList,
   getFilterByDate,

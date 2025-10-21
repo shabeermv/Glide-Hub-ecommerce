@@ -114,7 +114,7 @@ const changeOrderStatus = async (req, res, next) => {
   }
 };
 
-const viewOrderDetails = async (req, res) => {
+const viewOrderDetails = async (req, res, next) => {
   const id = req.params.id;
   console.log(id, "Order ID received");
 
@@ -122,12 +122,14 @@ const viewOrderDetails = async (req, res) => {
     const order = await Order.findById(id)
       .populate({
         path: "products.productId",
-        select: "name price image",
+        select: "title price image category",
+        populate: { path: "category", select: "name" },
       })
       .populate({
         path: "userId",
         select: "username email contact address isBlocked",
-      });
+      })
+      .lean();
 
     if (!order) {
       console.log("Order not found");
@@ -136,15 +138,47 @@ const viewOrderDetails = async (req, res) => {
         .render("admin/error", { message: "Order not found" });
     }
 
-    console.log("Fetched Order:", order);
+    // 🔍 Check what kind of offer or coupon was used
+    let offerType = null;
+    let offerDetails = null;
 
-    res.render("orderDetails", { order });
+    // If a coupon was used
+    if (order.couponCode) {
+      offerType = "Coupon";
+      offerDetails = {
+        code: order.couponCode,
+        discountAmount: order.discountAmount || 0,
+      };
+    } else {
+      // If product/category offers were applied to products
+      const productWithOffer = order.products.find(
+        (p) => p.appliedOffer && p.appliedOffer.discountAmount > 0
+      );
+
+      if (productWithOffer) {
+        offerType =
+          productWithOffer.appliedOfferType === "category"
+            ? "Category Offer"
+            : "Product Offer";
+        offerDetails = {
+          description: productWithOffer.appliedOffer.description,
+          discountAmount: productWithOffer.appliedOffer.discountAmount,
+        };
+      }
+    }
+
+    console.log("Fetched Order with offer info:", offerType, offerDetails);
+
+    res.render("orderDetails", {
+      order,
+      offerType,
+      offerDetails,
+    });
   } catch (error) {
     console.error("Error fetching order:", error.message);
     next(error);
   }
 };
-
 const getInvoice = async (req, res) => {
   const id = req.params.id;
 

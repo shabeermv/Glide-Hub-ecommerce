@@ -126,18 +126,20 @@
                                                                     <td><%= order.orderId %></td>
                                                                     <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
                                                                     <td>
-                                                                        <ul class="list-unstyled mb-0">
-                                                                            <% order.products.forEach(product => { %>
-                                                                                <li class="mb-1">
-                                                                                    <%= product.productId ? product.productId.title : 'Product Not Found' %> 
-                                                                                    - ₹<%= product.productId.price %> 
-                                                                                    <% if (product.status === "Cancelled") { %>
-                                                                                        <span class="text-danger">(Cancelled)</span>
-                                                                                    <% } %>
-                                                                                </li>
-                                                                            <% }) %>
-                                                                        </ul>
-                                                                    </td>
+    <ul class="list-unstyled mb-0">
+        <% order.products.forEach(product => { %>
+            <li class="mb-1">
+                <%= product.productId ? product.productId.title : 'Product Not Found' %> 
+                <% if (product.productId && product.productId.price) { %>
+                    - ₹<%= product.productId.price %>
+                <% } %>
+                <% if (product.status === "Cancelled") { %>
+                    <span class="text-danger">(Cancelled)</span>
+                <% } %>
+            </li>
+        <% }) %>
+    </ul>
+</td>
                                                                     <td>
                                                                         <strong>₹<%= order.totalAmount %></strong>
                                                                     </td>
@@ -227,17 +229,19 @@
           <td><%= txn.description || '-' %></td>
           <td>
             <% if (txn.type === "credit") { %>
-               <span class="text-danger">- ₹<%= txn.amount.toFixed(2) %></span>
+               
+               <span class="text-success">+ ₹<%= txn.amount.toFixed(2) %></span>
             <% } else { %>
-                <span class="text-success">+ ₹<%= txn.amount.toFixed(2) %></span>
+                <span class="text-danger">- ₹<%= txn.amount.toFixed(2) %></span>
              
             <% } %>
           </td>
           <td>
             <% if (txn.type === "credit") { %>
-              <i class="icon-arrow-down text-danger"></i>
+              
+              <i class="icon-arrow-up text-success"></i>
             <% } else { %>
-                <i class="icon-arrow-up text-success"></i>
+                <i class="icon-arrow-down text-danger"></i>
               
             <% } %>
           </td>

@@ -205,58 +205,62 @@
                                             <th>Total</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <% let subtotal = 0; %>
-                                        <% products.forEach(product => { %>
-                                            <tr>
-                                                <td>
-                                                    <a href="#"><%= product.title %></a>
-                                                    <% if (product.size) { %>
-                                                        <br>
-                                                        <small>Size: <%= product.size %></small>
-                                                    <% } %>
-                                                    <% if (product.quantity > 1) { %>
-                                                        <br>
-                                                        <small>Qty: <%= product.quantity %></small>
-                                                    <% } %>
-                                                    <!-- Show Applied Discount -->
-                                                    <% if (product.hasDiscount) { %>
-                                                        <br>
-                                                        <small class="badge bg-danger">
-                                                            Discount Applied
-                                                        </small>
-                                                    <% } %>
-                                                </td>
-                                                <td>
-                                                    <% if (product.hasDiscount) { %>
-                                                        <span class="original-price" style="text-decoration: line-through; color: #999;">
-                                                            ₹<%= (product.originalPrice * product.quantity).toFixed(2) %>
-                                                        </span>
-                                                        <br>
-                                                        <span class="discounted-price" style="color: #4CAF50; font-weight: bold;">
-                                                            ₹<%= (product.discountedPrice * product.quantity).toFixed(2) %>
-                                                        </span>
-                                                    <% } else { %>
-                                                        ₹<%= (product.originalPrice * product.quantity).toFixed(2) %>
-                                                    <% } %>
-                                                </td>
-                                            </tr>
-                                            <% subtotal += product.hasDiscount ? (product.discountedPrice * product.quantity) : (product.originalPrice * product.quantity); %>
-                                        <% }); %>
-                                    
-                                        <tr class="summary-subtotal">
-                                            <td>Subtotal:</td>
-                                            <td>₹<%= subtotal.toFixed(2) %></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Shipping:</td>
-                                            <td>Free shipping</td>
-                                        </tr>
-                                        <tr class="summary-total" id="finalAmount">
-                                            <td>Total:</td>
-                                            <td>₹<%= subtotal.toFixed(2) %></td>
-                                        </tr>
-                                    </tbody>
+                                   <tbody>
+  <% let subtotal = 0; %>
+
+  <% products.forEach(product => { %>
+    <tr>
+      <td>
+        <a href="#"><%= product.productId?.title || 'Unnamed Product' %></a>
+        <% if (product.size) { %>
+          <br><small>Size: <%= product.size %></small>
+        <% } %>
+        <% if (product.quantity > 1) { %>
+          <br><small>Qty: <%= product.quantity %></small>
+        <% } %>
+        <% if (product.offerDiscount && product.offerDiscount > 0) { %>
+          <br><small class="badge bg-danger">Discount Applied</small>
+        <% } %>
+      </td>
+
+      <td>
+        <% if (product.totalPriceWithOffer && product.totalPriceWithOffer < product.totalPrice) { %>
+          <span class="original-price" style="text-decoration: line-through; color: #999;">
+            ₹<%= product.totalPrice.toFixed(2) %>
+          </span>
+          <br>
+          <span class="discounted-price" style="color: #4CAF50; font-weight: bold;">
+            ₹<%= product.totalPriceWithOffer.toFixed(2) %>
+          </span>
+          <% subtotal += product.totalPriceWithOffer; %>
+        <% } else { %>
+₹<%= product.totalPrice.toFixed(2) %>
+          <% subtotal += product.totalPrice; %>
+        <% } %>
+      </td>
+
+      <!-- ✅ Hidden Inputs for Backend -->
+      <input type="hidden" class="product-id" value="<%= product.productId?._id %>">
+      <input type="hidden" class="product-size" value="<%= product.size %>">
+      <input type="hidden" class="product-quantity" value="<%= product.quantity %>">
+    </tr>
+  <% }); %>
+
+  <tr class="summary-subtotal">
+    <td>Subtotal:</td>
+    <td>₹<%= subtotal.toFixed(2) %></td>
+  </tr>
+  <tr>
+    <td>Shipping:</td>
+    <td>Free shipping</td>
+  </tr>
+  <tr class="summary-total" id="finalAmount">
+    <td>Total:</td>
+    <td>₹<%= subtotal.toFixed(2) %></td>
+  </tr>
+</tbody>
+
+
                                 </table>
                                 
                                 <!-- Hidden input for total amount -->
@@ -327,20 +331,21 @@
                 </form>
             </div><!-- End .container -->
         </div><!-- End .checkout -->
-    </div><!-- End .page-content -->
-</main>
-
-<!-- Order Confirmation Modal -->
-<div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
+    </div>
+    <!-- Order Confirmation Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content text-center p-3">
-      
+
+      <!-- Close button top-right (optional) -->
+      <button type="button" class="btn-close position-absolute end-0 mt-2 me-2" data-bs-dismiss="modal" aria-label="Close"></button>
+
       <!-- Success Icon -->
       <div class="mt-4 mb-3">
         <div class="success-animation d-inline-block">
-          <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-            <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
-            <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+          <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" width="80" height="80">
+            <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none" stroke="#28a745" stroke-width="2"/>
+            <path class="checkmark__check" fill="none" stroke="#28a745" stroke-width="3" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
           </svg>
         </div>
       </div>
@@ -359,17 +364,20 @@
 
       <!-- Redirect Info -->
       <div class="next-steps mb-3">
-        <p class="text-muted small">You will be redirected to the order details page shortly...</p>
+        <p class="text-muted small">You will be redirected to the homepage shortly...</p>
       </div>
 
       <!-- Footer Buttons -->
       <div class="modal-footer border-0 justify-content-center">
-        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
-        <a href="/profile" class="btn btn-primary ml-2">View Orders</a>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        <a href="/profile" class="btn btn-primary">View Orders</a>
       </div>
     </div>
   </div>
 </div>
+
+</main>
+
 
 <div id="paymentErrorModal" class="modaal fade" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- Centered & Larger Size -->
@@ -879,111 +887,99 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// REMOVED DUPLICATE EVENT LISTENER HERE
 
-function createOrderAndInitiatePayment(formData) {
-    fetch('/create-razorpay-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            if (!data.orderId || !data.amount || !data.razorpayKeyId) {
-                throw new Error('Missing required data from server');
-            }
+function createOrderAndInitiatePayment(formData) { 
+  fetch('/create-razorpay-order', { 
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' }, 
+    body: JSON.stringify(formData)  // formData now includes products array
+  }) 
+  .then(response => response.json()) 
+  .then(data => { 
+    if (data.success) { 
+      if (!data.orderId || !data.amount || !data.razorpayKeyId) { 
+        throw new Error('Missing required data from server'); 
+      } 
+      const options = { 
+        key: data.razorpayKeyId, 
+        amount: data.amount, 
+        currency: "INR", 
+        name: "Your Store Name", 
+        description: "Purchase Payment", 
+        order_id: data.orderId, 
+        prefill: { 
+          name: formData.firstName + " " + formData.lastName, 
+          email: formData.email, 
+          contact: formData.phone 
+        }, 
+        notes: { 
+          address: formData.streetAddress 
+        }, 
+        theme: { 
+          color: "#3399cc" 
+        }, 
+        handler: function (response) { 
+          verifyPayment({ 
+            razorpay_payment_id: response.razorpay_payment_id, 
+            razorpay_order_id: response.razorpay_order_id, 
+            razorpay_signature: response.razorpay_signature, 
+            order_id: data.yourOrderId,
+            products: formData.products  // Pass products to verification
+          }); 
+        } 
+      }; 
+      const rzp = new Razorpay(options); 
+      rzp.open(); 
+      rzp.on("payment.failed", function (response) { 
+        console.error("Payment failed:", response.error); 
+        document.getElementById("paymentErrorMessage").textContent = response.error.description || "Your payment was not successful. Please try again."; 
+        $("#paymentErrorModal").modal("show"); 
+        handleFailedPayment(data.yourOrderId); 
+      }); 
+    } else { 
+      alert(data.message || 'Failed to create order. Please try again.'); 
+    } 
+  }) 
+  .catch(error => { 
+    console.error('Error:', error); 
+    alert('An error occurred: ' + error.message); 
+  }); 
+} 
 
-            const options = {
-                key: data.razorpayKeyId, 
-                amount: data.amount, 
-                currency: "INR",
-                name: "Your Store Name",
-                description: "Purchase Payment",
-                order_id: data.orderId, 
-                prefill: {
-                    name: formData.firstName + " " + formData.lastName,
-                    email: formData.email,
-                    contact: formData.phone
-                },
-                notes: { address: formData.streetAddress },
-                theme: { color: "#3399cc" },
-                
-                handler: function (response) {
-                    verifyPayment({
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_signature: response.razorpay_signature,
-                        order_id: data.yourOrderId 
-                    });
-                }
-            };
-
-            const rzp = new Razorpay(options);
-            rzp.open();
-
-            rzp.on("payment.failed", function (response) {
-    console.error("Payment failed:", response.error);
-
-    
-    document.getElementById("paymentErrorMessage").textContent =
-        response.error.description || "Your payment was not successful. Please try again.";
-
-    
-    $("#paymentErrorModal").modal("show");
-    
-    // Send failed payment status to the backend
-    handleFailedPayment(data.yourOrderId);
-});
-
-        } else {
-            alert(data.message || 'Failed to create order. Please try again.');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred: ' + error.message);
-    });
-}
-
-function verifyPayment(paymentData) {
-    fetch('/verify-razorpay-payment', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(paymentData)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            
-            document.getElementById('modalOrderId').textContent = data.orderId || data._id || 'N/A';
-            document.getElementById('modalOrderTotal').textContent = data.total || data.amount || 'N/A';
-
-            $('#successModal').modal({
-                backdrop: 'static',
-                keyboard: false
-            });
-
-            setTimeout(() => {
-                window.location.href = '/shop';
-            }, 5000);
-        } else {
-            alert(data.message || 'Payment verification failed. Please contact support.');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred during payment verification: ' + error.message);
-    });
-}
-
+function verifyPayment(paymentData) { 
+  fetch('/verify-razorpay-payment', { 
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' }, 
+    body: JSON.stringify(paymentData)  // Now includes products
+  }) 
+  .then(response => { 
+    if (!response.ok) { 
+      throw new Error('Network response was not ok'); 
+    } 
+    return response.json(); 
+  }) 
+  .then(data => { 
+    if (data.success) { 
+      document.getElementById('modalOrderId').textContent = data.orderId || data._id || 'N/A'; 
+      document.getElementById('modalOrderTotal').textContent = data.total || data.amount || 'N/A'; 
+      const successModalEl = document.getElementById('successModal'); 
+      const successModal = new bootstrap.Modal(successModalEl, { 
+        backdrop: 'static', 
+        keyboard: false 
+      }); 
+      successModal.show(); 
+      setTimeout(() => { 
+        window.location.href = '/shop'; 
+      }, 5000); 
+    } else { 
+      alert(data.message || 'Payment verification failed. Please contact support.'); 
+    } 
+  }) 
+  .catch(error => { 
+    console.error('Error:', error); 
+    alert('An error occurred during payment verification: ' + error.message); 
+  }); 
+} 
 function handleFailedPayment(orderId) {
     fetch('/handle-failed-payment', {
         method: 'POST',
@@ -1037,13 +1033,12 @@ function submitOrderThroughRegularCheckout(formData) {
     })
     .then(data => {
         if (data.success) {
-            document.getElementById('modalOrderId').textContent = data.orderId || data._id || 'N/A';
-            document.getElementById('modalOrderTotal').textContent = data.finalAmount || data.amount || 'N/A'; 
+            document.getElementById("modalOrderId").innerText = data.orderId;
+      document.getElementById("modalOrderTotal").innerText = "₹" + data.totalAmount;
 
-            $('#successModal').modal({
-                backdrop: 'static',
-                keyboard: false
-            });
+           const successModalEl = document.getElementById('successModal');
+      const successModal = new bootstrap.Modal(successModalEl, { backdrop: 'static', keyboard: false });
+      successModal.show();
 
             setTimeout(() => {
                 window.location.href = '/';
@@ -1076,6 +1071,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const paymentTitle = div.previousElementSibling.querySelector('.card-title a').textContent.trim();
         selectedPaymentMethod = paymentTitle;
     });
+    const productElements = document.querySelectorAll('.product-id');
+const sizeElements = document.querySelectorAll('.product-size');
+const quantityElements = document.querySelectorAll('.product-quantity');
+
+const products = [];
+for (let i = 0; i < productElements.length; i++) {
+  products.push({
+    productId: productElements[i].value.trim(),
+    size: sizeElements[i].value.trim(),
+    quantity: parseInt(quantityElements[i].value)
+  });
+}
+
 
     // Get values from the form
     const formData = {
@@ -1101,7 +1109,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         
         couponCode: document.getElementById('couponCodeInput')?.value || '',
-        couponDiscount: parseFloat(document.getElementById('couponDiscountInput')?.value || 0)
+        couponDiscount: parseFloat(document.getElementById('couponDiscountInput')?.value || 0),
+        products: products
     };
 
     const requiredFields = ['firstName', 'lastName', 'country', 'streetAddress', 'city', 'state', 'postCode', 'phone', 'email'];
@@ -1209,10 +1218,9 @@ function submitWalletPayment(formData) {
             document.getElementById('modalOrderId').textContent = data.orderId || 'N/A';
             document.getElementById('modalOrderTotal').textContent = `₹${formData.finalAmount.toFixed(2)}`;
 
-            $('#successModal').modal({
-                backdrop: 'static',
-                keyboard: false
-            });
+            const successModalEl = document.getElementById('successModal');
+      const successModal = new bootstrap.Modal(successModalEl, { backdrop: 'static', keyboard: false });
+      successModal.show();
 
             setTimeout(() => {
                 window.location.href = '/';
