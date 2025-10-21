@@ -663,6 +663,18 @@ const userProfileInfo = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
+    // Filter out null productIds or add default values
+    orders.forEach(order => {
+      order.products.forEach(product => {
+        if (!product.productId) {
+          product.productId = {
+            title: 'Product Not Available',
+            price: 0
+          };
+        }
+      });
+    });
+
     const coupons = await Coupon.find({
       expireDate: { $gte: new Date() },
     }).sort({ expireDate: 1 });

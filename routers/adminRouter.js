@@ -19,6 +19,7 @@ adminRouter.get(
   adminController.getSalesData
 );
 adminRouter.get("/getReport",middleware.adminAuth,adminController.getReport);
+adminRouter.get("/sales-report/download", adminController.downloadReportPDF);
 adminRouter.get(
   "/logoutAdmin",
   middleware.adminAuth,
@@ -178,7 +179,7 @@ adminRouter.get(
   middleware.adminAuth,
   orderController.userOrdersInfo
 );
-adminRouter.post(
+adminRouter.patch(
   "/orders/update-status",
   middleware.adminAuth,
   orderController.changeOrderStatus

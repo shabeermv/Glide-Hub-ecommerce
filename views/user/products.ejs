@@ -1,434 +1,521 @@
 <%-include("../../views/partials/users/header.ejs")%>
 
 <div class="bg0 m-t-73 p-b-140">
-    <div class="container">
-        <div class="flex-w flex-sb-m p-b-52">
-            <div class="flex-w flex-l-m filter-tope-group m-tb-10">
-                <a href="/shop" class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5 <%= !selectedCategory ? 'how-active1' : '' %>">
-                    All Products
-                </a>
-                
-                <% categories.forEach(category => { %>
-                    <button 
-                        class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5 <%= selectedCategory === category.name ? 'how-active1' : '' %>"
-                        onclick="categoryFilter('<%= category.name %>')">
-                        <%= category.name %>
-                    </button>
-                <% }) %>
-            </div>
-                    
-            
-            <div class="flex-w flex-c-m m-tb-10">
-                <div class="flex-c-m stext-106 cl6 size-104 bor4 pointer hov-btn3 trans-04 m-r-8 m-tb-4 js-show-filter">
-                    <i class="icon-filter cl2 m-r-6 fs-15 trans-04 zmdi zmdi-filter-list"></i>
-                    <i class="icon-close-filter cl2 m-r-6 fs-15 trans-04 zmdi zmdi-close dis-none"></i>
-                     Filter
-                </div>
+  <div class="container">
+    <!-- Header Section with Filters -->
+    <div class="flex-w flex-sb-m p-b-52">
+      <!-- Category Filter -->
+      <div class="flex-w flex-l-m filter-tope-group m-tb-10">
+        <a
+          href="/shop"
+          class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5 <%= !selectedCategory ? 'how-active1' : '' %>"
+        >
+          All Products
+        </a>
 
-                <div class="flex-c-m stext-106 cl6 size-105 bor4 pointer hov-btn3 trans-04 m-tb-4 js-show-search">
-                    <i class="icon-search cl2 m-r-6 fs-15 trans-04 zmdi zmdi-search"></i>
-                    <i class="icon-close-search cl2 m-r-6 fs-15 trans-04 zmdi zmdi-close dis-none"></i>
-                    Search
-                </div>
-            </div>
-            
-            <!-- Search product -->
-            <div class="dis-none panel-search w-full p-t-10 p-b-15">
-                <div class="bor8 dis-flex p-l-15">
-                    <button class="size-113 flex-c-m fs-16 cl2 hov-cl1 trans-04">
-                        <i class="zmdi zmdi-search"></i>
-                    </button>
+        <% categories.forEach(category => { %>
+        <button
+          class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5 <%= selectedCategory === category.name ? 'how-active1' : '' %>"
+          onclick="categoryFilter('<%= category.name %>')"
+        >
+          <%= category.name %>
+        </button>
+        <% }) %>
+      </div>
 
-                    <input 
-                    class="mtext-107 cl2 size-114 plh2 p-r-15"
-                    type="text"
-                    name="search-product"
-                    placeholder="Search"
-                    value="<%= searchValue %>"
-                    onchange="searchValue(this.value)"
+      <!-- Filter and Search Buttons -->
+      <div class="flex-w flex-c-m m-tb-10">
+        <div
+          class="flex-c-m stext-106 cl6 size-104 bor4 pointer hov-btn3 trans-04 m-r-8 m-tb-4 js-show-filter"
+        >
+          <i
+            class="icon-filter cl2 m-r-6 fs-15 trans-04 zmdi zmdi-filter-list"
+          ></i>
+          <i
+            class="icon-close-filter cl2 m-r-6 fs-15 trans-04 zmdi zmdi-close dis-none"
+          ></i>
+          Filter
+        </div>
+
+        <div
+          class="flex-c-m stext-106 cl6 size-105 bor4 pointer hov-btn3 trans-04 m-tb-4 js-show-search"
+        >
+          <i class="icon-search cl2 m-r-6 fs-15 trans-04 zmdi zmdi-search"></i>
+          <i
+            class="icon-close-search cl2 m-r-6 fs-15 trans-04 zmdi zmdi-close dis-none"
+          ></i>
+          Search
+        </div>
+      </div>
+
+      <!-- Search Panel -->
+      <div class="dis-none panel-search w-full p-t-10 p-b-15">
+        <div class="bor8 dis-flex p-l-15">
+          <button class="size-113 flex-c-m fs-16 cl2 hov-cl1 trans-04">
+            <i class="zmdi zmdi-search"></i>
+          </button>
+
+          <input
+            class="mtext-107 cl2 size-114 plh2 p-r-15"
+            type="text"
+            name="search-product"
+            placeholder="Search"
+            value="<%= searchValue %>"
+            onchange="searchValue(this.value)"
+          />
+        </div>
+      </div>
+
+      <!-- Filter Panel -->
+      <div class="dis-none panel-filter w-full p-t-10">
+        <div class="wrap-filter flex-w bg6 w-full p-lr-40 p-t-27 p-lr-15-sm">
+          <!-- Sort By Section -->
+          <div class="filter-col1 p-r-15 p-b-27">
+            <div class="mtext-102 cl2 p-b-15">Sort By</div>
+
+            <ul>
+              <li class="p-b-6">
+                <a
+                  href="#"
+                  class="filter-link stext-106 trans-04 <%= selectedSort === '' ? 'filter-link-active' : '' %>"
+                  onclick="sortByPrice('')"
                 >
+                  Default
+                </a>
+              </li>
+              <li class="p-b-6">
+                <a
+                  href="#"
+                  class="filter-link stext-106 trans-04 <%= selectedSort === 'lowToHigh' ? 'filter-link-active' : '' %>"
+                  onclick="sortByPrice('lowToHigh')"
+                >
+                  Price: Low to High
+                </a>
+              </li>
+              <li class="p-b-6">
+                <a
+                  href="#"
+                  class="filter-link stext-106 trans-04 <%= selectedSort === 'highToLow' ? 'filter-link-active' : '' %>"
+                  onclick="sortByPrice('highToLow')"
+                >
+                  Price: High to Low
+                </a>
+              </li>
+            </ul>
+          </div>
 
-        <!-- Apply Button -->
-        
-                </div>
-            </div>
-
-            <!-- Filter -->
-            <div class="dis-none panel-filter w-full p-t-10">
-                <div class="wrap-filter flex-w bg6 w-full p-lr-40 p-t-27 p-lr-15-sm">
-                    <div class="filter-col1 p-r-15 p-b-27">
-                        <div class="mtext-102 cl2 p-b-15">
-                            Sort By
-                        </div>
-
-                        <ul>
-                            
-
-                            <li class="p-b-6">
-                                <a href="#" class="filter-link stext-106 trans-04 <%= selectedSort === '' ? 'filter-link-active' : '' %>"
-                                  onclick="sortByPrice('')">
-                                    Default
-                                </a>
-                            </li>
-                            <li class="p-b-6">
-                                <a href="#" class="filter-link stext-106 trans-04 <%= selectedSort === 'lowToHigh' ? 'filter-link-active' : '' %>"
-                                   onclick="sortByPrice('lowToHigh')">
-                                    Price: Low to High
-                                </a>
-                            </li>
-                            <li class="p-b-6">
-                                <a href="#" class="filter-link stext-106 trans-04 <%= selectedSort === 'highToLow' ? 'filter-link-active' : '' %>"
-                                   onclick="sortByPrice('highToLow')">
-                                    Price: High to Low
-                                </a>
-                            </li>
-                            
-                        </ul>
-                    </div>
-
-                    <div class="filter-col2 p-r-15 p-b-27">
-                        <div class="mtext-102 cl2 p-b-15">
-                            Price Range
-                        </div>
-                        <ul>
-                            <% priceRanges.forEach(range => { %>
-                                <li class="p-b-6">
-                                    <a href="#" 
-                                       onclick="filterByPriceRange('<%= range.value %>')" 
-                                       class="filter-link stext-106 trans-04 <%= selectedPriceRange === range.value ? 'filter-link-active' : '' %>">
-                                        <%= range.label %>
-                                    </a>
-                                </li>
-                            <% }) %>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+          <!-- Price Range Section -->
+          <div class="filter-col2 p-r-15 p-b-27">
+            <div class="mtext-102 cl2 p-b-15">Price Range</div>
+            <ul>
+              <% priceRanges.forEach(range => { %>
+              <li class="p-b-6">
+                <a
+                  href="#"
+                  onclick="filterByPriceRange('<%= range.value %>')"
+                  class="filter-link stext-106 trans-04 <%= selectedPriceRange === range.value ? 'filter-link-active' : '' %>"
+                >
+                  <%= range.label %>
+                </a>
+              </li>
+              <% }) %>
+            </ul>
+          </div>
         </div>
-
-        <% if (updatedProducts && updatedProducts.length > 0) { %>
-        <div class="row flex-wrap">
-            <% updatedProducts.forEach(product => { %>
-                <div class="col-sm-6 col-md-6 col-lg-3 p-b-35 isotope-item women">
-                    <div class="block2">
-                        <div class="block2-pic hov-img0">
-                            <img 
-                                src="<%= product.image && product.image.length > 0 ? product.image[0] : '/images/placeholder.jpg' %>"
-                                alt="<%= product.title %>"
-                                class="img-fluid"
-                            />
-                            <a href="/show/<%= product._id %>" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04">
-                                Quick View
-                            </a>
-                        </div>
-        
-                        <div class="block2-txt flex-w flex-t p-t-14">
-                            <div class="block2-txt-child1 flex-col-l">
-                                <a href="/show/<%= product._id %>" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                    <%= product.title %>
-                                </a>
-        
-                                <% if (product.hasDiscount) { %>
-                                    <!-- Discount badge - show offer type -->
-                                    <div class="offer-type-badge" style="background-color: <%= product.offerType === 'category' ? '#6c42f5' : '#dc3545' %>">
-                                        <%= product.offerType === 'category' ? 'CATEGORY OFFER' : 'PRODUCT OFFER' %>
-                                    </div>
-                                    
-                                    <!-- Price display with strikethrough -->
-                                    <div class="price-container">
-                                        <span class="original-price">
-                                            ₹<%= Math.round(product.originalPrice).toLocaleString('en-IN') %>
-                                        </span>
-                                        <span class="discounted-price">
-                                            ₹<%= Math.round(product.discountedPrice).toLocaleString('en-IN') %>
-                                        </span>
-                                    </div>
-                                    
-                                    <!-- Discount information -->
-                                    <div class="discount-info">
-                                        <span class="discount-badge">
-                                            <% if (product.appliedOffer.discountType === 'percentage') { %>
-                                                <%= Math.round(product.appliedOffer.discountValue) %>% OFF
-                                            <% } else { %>
-                                                ₹<%= Math.round(product.appliedOffer.discountValue) %> OFF
-                                            <% } %>
-                                        </span>
-                                        <span class="savings">
-                                            (Save ₹<%= Math.round(product.appliedOffer.discountAmount) %>)
-                                        </span>
-                                    </div>
-                                    
-                                    <!-- Offer description -->
-                                    <div class="offer-description">
-                                        <%= product.appliedOffer.description %>
-                                    </div>
-                                <% } else { %>
-                                    <p class="price" style="font-weight:500; font-size: 1.9rem;">
-                                        ₹<%= Math.round(product.originalPrice).toLocaleString('en-IN') %>
-                                    </p>
-                                <% } %>
-                            </div>
-                            
-                            <div class="block2-txt-child2 flex-r p-t-3">
-                                <a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2" data-id="<%= product._id %>">
-                                    <img class="icon-heart1 dis-block trans-04" src="/asset1/images/icons/icon-heart-01.png" alt="ICON">
-                                    <img class="icon-heart2 dis-block trans-04 ab-t-l" src="/asset1/images/icons/icon-heart-02.png" alt="ICON">
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <% }) %>
-        </div>
-        <% } else { %>
-        <div class="row">
-            <div class="col-12 text-center p-t-50 p-b-50">
-                <h3 class="mtext-111 cl2">No products found</h3>
-                <p class="stext-113 cl6 p-t-10">Try adjusting your filters or search terms</p>
-            </div>
-        </div>
-        <% } %>
-        
-        
-        <!-- Pagination -->
-        <div class="flex-c-m flex-w w-full p-t-45">
-            <% if (totalPages > 1) { %>
-                <% if (currentPage > 1) { %>
-                    <a href="javascript:void(0)" 
-                       onclick="goToPage(<%= currentPage - 1 %>)"
-                       class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 m-r-5">
-                        Previous
-                    </a>
-                <% } %>
-
-                <% 
-                let startPage = Math.max(1, currentPage - 2);
-                let endPage = Math.min(totalPages, currentPage + 2);
-                
-                if (currentPage <= 3) {
-                    endPage = Math.min(5, totalPages);
-                }
-                if (currentPage > totalPages - 3) {
-                    startPage = Math.max(1, totalPages - 4);
-                }
-                %>
-
-                <% if (startPage > 1) { %>
-                    <a href="javascript:void(0)" 
-                       onclick="goToPage(1)"
-                       class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 m-lr-3">
-                        1
-                    </a>
-                    <% if (startPage > 2) { %>
-                        <span class="flex-c-m stext-101 cl5 size-103 p-lr-15 m-lr-3">...</span>
-                    <% } %>
-                <% } %>
-
-                <% for (let i = startPage; i <= endPage; i++) { %>
-                    <a href="javascript:void(0)" 
-                       onclick="goToPage(<%= i %>)"
-                       class="flex-c-m stext-101 cl5 size-103 <%= i === currentPage ? 'bg1' : 'bg2' %> bor1 hov-btn1 p-lr-15 trans-04 m-lr-3">
-                        <%= i %>
-                    </a>
-                <% } %>
-
-                <% if (endPage < totalPages) { %>
-                    <% if (endPage < totalPages - 1) { %>
-                        <span class="flex-c-m stext-101 cl5 size-103 p-lr-15 m-lr-3">...</span>
-                    <% } %>
-                    <a href="javascript:void(0)" 
-                       onclick="goToPage(<%= totalPages %>)"
-                       class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 m-lr-3">
-                        <%= totalPages %>
-                    </a>
-                <% } %>
-
-                <% if (currentPage < totalPages) { %>
-                    <a href="javascript:void(0)" 
-                       onclick="goToPage(<%= currentPage + 1 %>)"
-                       class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 m-l-5">
-                        Next
-                    </a>
-                <% } %>
-            <% } %>
-        </div>
+      </div>
     </div>
+
+    <!-- Products Grid -->
+    <% if (updatedProducts && updatedProducts.length > 0) { %>
+    <div class="row flex-wrap">
+      <% updatedProducts.forEach(product => { %>
+      <div class="col-sm-6 col-md-6 col-lg-3 p-b-35 isotope-item">
+        <div class="block2">
+          <!-- Product Image Section -->
+          <div class="block2-pic hov-img0">
+            <img
+              src="<%= product.image && product.image.length > 0 ? product.image[0] : '/images/placeholder.jpg' %>"
+              alt="<%= product.title %>"
+              class="img-fluid"
+            />
+            <a
+              href="/show/<%= product._id %>"
+              class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04"
+            >
+              Quick View
+            </a>
+          </div>
+
+          <!-- Product Details Section -->
+          <div class="block2-txt flex-w flex-t p-t-14">
+            <div class="block2-txt-child1 flex-col-l w-full">
+              <!-- Product Title -->
+              <a
+                href="/show/<%= product._id %>"
+                class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6"
+              >
+                <%= product.title %>
+              </a>
+
+              <!-- Offer and Price Display -->
+              <% if (product.hasDiscount) { %>
+              <!-- Offer Type Badge -->
+              <div
+                class="offer-type-badge"
+                style="background-color: <%= product.offerType === 'category' ? '#6c42f5' : '#dc3545' %>"
+              >
+                <%= product.offerType === 'category' ? 'CATEGORY OFFER' : 'PRODUCT OFFER' %>
+              </div>
+
+              <!-- Price Container with Original and Discounted -->
+              <div class="price-container">
+                <span class="original-price">
+                  ₹<%= Math.round(product.originalPrice).toLocaleString('en-IN') %>
+                </span>
+                <span class="discounted-price">
+                  ₹<%= Math.round(product.discountedPrice).toLocaleString('en-IN') %>
+                </span>
+              </div>
+
+              <!-- Discount Information -->
+              <div class="discount-info">
+                <span class="discount-badge">
+                  <% if (product.appliedOffer.discountType === 'percentage') { %>
+                    <%= Math.round(product.appliedOffer.discountValue) %>% OFF
+                  <% } else { %>
+                    ₹<%= Math.round(product.appliedOffer.discountValue) %> OFF
+                  <% } %>
+                </span>
+                <span class="savings">
+                  (Save ₹<%= Math.round(product.appliedOffer.discountAmount) %>)
+                </span>
+              </div>
+
+              <!-- Offer Description -->
+              <div class="offer-description">
+                <%= product.appliedOffer.description %>
+              </div>
+              <% } else { %>
+              <!-- Regular Price (No Discount) -->
+              <p class="price" style="font-weight: 500; font-size: 1.9rem; color: #333;">
+                ₹<%= Math.round(product.originalPrice).toLocaleString('en-IN') %>
+              </p>
+              <% } %>
+            </div>
+
+            <!-- Wishlist Icon -->
+            <div class="block2-txt-child2 flex-r p-t-3">
+              <a
+                href="#"
+                class="btn-addwish-b2 dis-block pos-relative js-addwish-b2"
+                data-id="<%= product._id %>"
+              >
+                <img
+                  class="icon-heart1 dis-block trans-04"
+                  src="/asset1/images/icons/icon-heart-01.png"
+                  alt="ICON"
+                />
+                <img
+                  class="icon-heart2 dis-block trans-04 ab-t-l"
+                  src="/asset1/images/icons/icon-heart-02.png"
+                  alt="ICON"
+                />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } else { %>
+    <!-- No Products Found Message -->
+    <div class="row">
+      <div class="col-12 text-center p-t-50 p-b-50">
+        <h3 class="mtext-111 cl2">No products found</h3>
+        <p class="stext-113 cl6 p-t-10">
+          Try adjusting your filters or search terms
+        </p>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Pagination Section -->
+    <div class="flex-c-m flex-w w-full p-t-15 p-b-15">
+      <% if (totalPages > 1) { %>
+        <!-- Previous Button -->
+        <% if (currentPage > 1) { %>
+        <a
+          href="?page=<%= currentPage - 1 %>&search=<%= searchValue %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>&priceRange=<%= selectedPriceRange %>"
+          class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 m-r-5"
+        >
+          Previous
+        </a>
+        <% } %>
+
+        <!-- Page Numbers with Ellipsis -->
+        <% let startPage = Math.max(1, currentPage - 1); let endPage = Math.min(totalPages, currentPage + 1); if (currentPage <= 2) { startPage = 1; endPage = Math.min(3, totalPages); } if (currentPage > totalPages - 2) { startPage = Math.max(1, totalPages - 2); endPage = totalPages; } %>
+
+        <!-- First page & ellipsis -->
+        <% if (startPage > 1) { %>
+        <a
+          href="?page=1&search=<%= searchValue %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>&priceRange=<%= selectedPriceRange %>"
+          class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 m-lr-3"
+        >
+          1
+        </a>
+        <% if (startPage > 2) { %>
+        <span class="flex-c-m stext-101 cl5 size-103 p-lr-15 m-lr-3">...</span>
+        <% } %> <% } %>
+
+        <!-- Page numbers -->
+        <% for (let i = startPage; i <= endPage; i++) { %>
+        <a
+          href="?page=<%= i %>&search=<%= searchValue %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>&priceRange=<%= selectedPriceRange %>"
+          class="flex-c-m stext-101 cl5 size-103 <%= i === currentPage ? 'bg1' : 'bg2' %> bor1 hov-btn1 p-lr-15 trans-04 m-lr-3"
+        >
+          <%= i %>
+        </a>
+        <% } %>
+
+        <!-- Last page & ellipsis -->
+        <% if (endPage < totalPages) { %> <% if (endPage < totalPages - 1) { %>
+        <span class="flex-c-m stext-101 cl5 size-103 p-lr-15 m-lr-3">...</span>
+        <% } %>
+        <a
+          href="?page=<%= totalPages %>&search=<%= searchValue %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>&priceRange=<%= selectedPriceRange %>"
+          class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 m-lr-3"
+        >
+          <%= totalPages %>
+        </a>
+        <% } %>
+
+        <!-- Next Button -->
+        <% if (currentPage < totalPages) { %>
+        <a
+          href="?page=<%= currentPage + 1 %>&search=<%= searchValue %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>&priceRange=<%= selectedPriceRange %>"
+          class="flex-c-m stext-101 cl5 size-103 bg2 bor1 hov-btn1 p-lr-15 trans-04 m-l-5"
+        >
+          Next
+        </a>
+        <% } %> <% } %>
+    </div>
+  </div>
 </div>
 
 <%-include("../../views/partials/users/footer.ejs")%>
 
-
 <script src="/asset1/js/shop-ajax.js"></script>
 
 <script>
-function searchValue(val) {
+  // Search functionality
+  function searchValue(val) {
     const params = new URLSearchParams(window.location.search);
-    params.set('search', val);
-    params.set('page', '1'); 
+    params.set("search", val);
+    params.set("page", "1");
     window.location.href = `/shop?${params.toString()}`;
-}
+  }
 
-function categoryFilter(val) {
+  // Category filter functionality
+  function categoryFilter(val) {
     const params = new URLSearchParams(window.location.search);
-    
-    const search = params.get('search');
-    const sort = params.get('sort');
-    const priceRange = params.get('priceRange');
-    
+
+    const search = params.get("search");
+    const sort = params.get("sort");
+    const priceRange = params.get("priceRange");
+
     const newParams = new URLSearchParams();
-    
+
     if (val) {
-        newParams.set('category', val);
+      newParams.set("category", val);
     }
-    
-    if (search) newParams.set('search', search);
-    if (sort) newParams.set('sort', sort);
-    if (priceRange) newParams.set('priceRange', priceRange);
-    
-    newParams.set('page', '1');
-    
-    window.location.href = `/shop?${newParams.toString()}`;
-}
 
-function sortByPrice(val) {
+    if (search) newParams.set("search", search);
+    if (sort) newParams.set("sort", sort);
+    if (priceRange) newParams.set("priceRange", priceRange);
+
+    newParams.set("page", "1");
+
+    window.location.href = `/shop?${newParams.toString()}`;
+  }
+
+  // Sort by price functionality
+  function sortByPrice(val) {
     const params = new URLSearchParams(window.location.search);
-    
-    const category = params.get('category');
-    const search = params.get('search');
-    const priceRange = params.get('priceRange');
-    
+
+    const category = params.get("category");
+    const search = params.get("search");
+    const priceRange = params.get("priceRange");
+
     const newParams = new URLSearchParams();
-    
+
     if (val) {
-        newParams.set('sort', val);
+      newParams.set("sort", val);
     }
-    
-    if (category) newParams.set('category', category);
-    if (search) newParams.set('search', search);
-    if (priceRange) newParams.set('priceRange', priceRange);
-    
-    newParams.set('page', '1');
-    
-    window.location.href = `/shop?${newParams.toString()}`;
-}
 
-function filterByPriceRange(range) {
+    if (category) newParams.set("category", category);
+    if (search) newParams.set("search", search);
+    if (priceRange) newParams.set("priceRange", priceRange);
+
+    newParams.set("page", "1");
+
+    window.location.href = `/shop?${newParams.toString()}`;
+  }
+
+  // Filter by price range functionality
+  function filterByPriceRange(range) {
     const params = new URLSearchParams(window.location.search);
-    
-    const category = params.get('category');
-    const search = params.get('search');
-    const sort = params.get('sort');
-    
+
+    const category = params.get("category");
+    const search = params.get("search");
+    const sort = params.get("sort");
+
     const newParams = new URLSearchParams();
-    
-    if (range !== 'all') {
-        newParams.set('priceRange', range);
+
+    if (range !== "all") {
+      newParams.set("priceRange", range);
     }
-    
-    if (category) newParams.set('category', category);
-    if (search) newParams.set('search', search);
-    if (sort) newParams.set('sort', sort);
-    
-    newParams.set('page', '1');
-    
+
+    if (category) newParams.set("category", category);
+    if (search) newParams.set("search", search);
+    if (sort) newParams.set("sort", sort);
+
+    newParams.set("page", "1");
+
     window.location.href = `/shop?${newParams.toString()}`;
-}
+  }
 
-function goToPage(pageNum) {
-    const params = new URLSearchParams(window.location.search);
-    params.set('page', pageNum.toString());
-    window.location.href = `/shop?${params.toString()}`;
-}
+  // Wishlist add functionality
+  document.querySelectorAll(".js-addwish-b2").forEach((button) => {
+    button.addEventListener("click", function (e) {
+      e.preventDefault();
 
-document.querySelectorAll('.js-addwish-b2').forEach(button => {
-    button.addEventListener('click', function (e) {
-        e.preventDefault();
+      const productId = this.getAttribute("data-id");
 
-        const productId = this.getAttribute('data-id');
-
-        fetch(`/wishlist/add/${productId}`, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.href = '/shop';
-            } else {
-                console.log('Product can\'t be added to wishlist');
-            }
-        }).catch(error => {
-            console.log(error.message);
+      fetch(`/wishlist/add/${productId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            window.location.href = "/shop";
+          } else {
+            console.log("Product can't be added to wishlist");
+          }
+        })
+        .catch((error) => {
+          console.log(error.message);
         });
     });
-});
+  });
 </script>
 
 <style>
-    /* Add these custom styles for better offer display */
+  /* Price Display Styles */
+  .price-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+
+  .original-price {
+    text-decoration: line-through;
+    color: #999;
+    font-size: 1.6rem;
+  }
+
+  .discounted-price {
+    font-weight: bold;
+    color: #28a745;
+    font-size: 2rem;
+  }
+
+  /* Discount Badge */
+  .discount-badge {
+    background-color: #dc3545;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    font-weight: bold;
+  }
+
+  .savings {
+    font-size: 0.85rem;
+    color: #666;
+    margin-left: 6px;
+  }
+
+  /* Offer Display */
+  .discount-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+
+  .offer-description {
+    font-size: 0.9rem;
+    color: #dc3545;
+    margin-top: 3px;
+    font-style: italic;
+  }
+
+  .offer-type-badge {
+    display: inline-block;
+    margin-bottom: 6px;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  /* Block Hover Effect */
+  .block2:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  /* Pagination Styles */
+  .bg1 {
+    background-color: #717fe0 !important;
+    color: white !important;
+  }
+
+  .how-active1 {
+    color: #717fe0 !important;
+    border-color: #717fe0 !important;
+  }
+
+  /* Filter Link Active State */
+  .filter-link-active {
+    color: #717fe0 !important;
+    font-weight: bold;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
     .price-container {
-        display: flex;
-        align-items: center;
-        margin-bottom: 3px;
-    }
-    
-    .original-price {
-        text-decoration: line-through;
-        color: #6c757d;
-        margin-right: 8px;
-        font-size: 1.9rem;
-    }
-    
-    .discounted-price {
-        font-weight: bold;
-        color: #28a745;
-        font-size: 2.1rem;
-    }
-    
-    .discount-badge {
-        background-color: #dc3545;
-        color: white;
-        padding: 2px 5px;
-        border-radius: 3px;
-        font-size: 1.10rem;
-    }
-    
-    .savings {
-        font-size: 0.90rem;
-        color: #6c757d;
-        margin-left: 5px;
-    }
-    
-    .offer-description {
-        font-size: 1rem;
-        color: #dc3545;
-        margin-top: 2px;
-    }
-    
-    .offer-type-badge {
-        display: inline-block;
-        margin-bottom: 5px;
-        color: white;
-        font-size: 0.7rem;
-        padding: 1px 5px;
-        border-radius: 3px;
-    }
-    
-    
-    .block2:hover {
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-    }
-    
-    
-    .bg1 {
-        background-color: #717fe0 !important;
-        color: white !important;
+      flex-direction: column;
+      align-items: flex-start;
     }
 
-    .how-active1 {
-        color: #717fe0 !important;
-        border-color: #717fe0 !important;
+    .original-price,
+    .discounted-price {
+      font-size: 1.4rem;
     }
+
+    .discount-info {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .savings {
+      margin-left: 0;
+      margin-top: 4px;
+    }
+  }
 </style>

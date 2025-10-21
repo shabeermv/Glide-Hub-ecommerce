@@ -103,7 +103,7 @@ const cartPageInfo = async (req, res, next) => {
   }
 };
 
-const addProductCart = async (req, res) => {
+const addProductCart = async (req, res, next) => {
   const { productId, size } = req.body;
   let quantity = 1;
   const userId = req.session.userId;
@@ -115,9 +115,8 @@ const addProductCart = async (req, res) => {
   }
 
   if (!userId) {
-    return res
-      .status(statusCode.UNAUTHORIZED)
-      .json({ success: false, message: "User not logged in" });
+    // Send a JSON response telling frontend to redirect
+    return res.render('login')
   }
 
   try {
@@ -177,18 +176,7 @@ const addProductCart = async (req, res) => {
       });
     }
 
-    await product.save();
-
-    cart.totalPrice = cart.product.reduce(
-      (acc, item) => acc + item.totalPrice,
-      0
-    );
     await cart.save();
-
-    if (!req.session.cart) {
-      req.session.cart = [];
-      req.session.cart.push({ productId });
-    }
 
     return res.status(statusCode.OK).json({
       success: true,
@@ -203,6 +191,7 @@ const addProductCart = async (req, res) => {
     next(error);
   }
 };
+
 
 const addToCartFromWishlist = async (req, res) => {
   try {

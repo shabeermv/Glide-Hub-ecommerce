@@ -56,17 +56,17 @@ userRouter.get(
 
 userRouter.get(
   "/show/:id",
-  authMiddleware.authMiddleware,
+  
   productController.getDetailInfo
 );
 userRouter.get(
   "/shop",
-  authMiddleware.authMiddleware,
+  
   productController.shopInfo
 );
 userRouter.get(
   "/products",
-  authMiddleware.authMiddleware,
+  
   productController.getFilteredProducts
 );
 

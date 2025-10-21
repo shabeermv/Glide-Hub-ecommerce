@@ -79,24 +79,37 @@
       </div>
     </div>
 
+    <!-- Sliding Pagination -->
     <div class="pagination-area mt-15 mb-50">
       <nav aria-label="Page navigation example">
         <ul class="pagination justify-content-start">
-          <% if (currentPage > 1) { %>
+          <% 
+            const pagesToShow = 3;
+            const currentSet = Math.floor((currentPage - 1) / pagesToShow);
+            const startPage = currentSet * pagesToShow + 1;
+            const endPage = Math.min(startPage + pagesToShow - 1, totalPages);
+          %>
+
+          <!-- Left Arrow -->
+          <% if (startPage > 1) { %>
             <li class="page-item">
-              <a class="page-link" href="?page=<%= currentPage - 1 %>&search=<%= searchValue %>">
+              <a class="page-link" href="?page=<%= startPage - 1 %>&search=<%= searchValue %>">
                 <i class="material-icons md-chevron_left"></i>
               </a>
             </li>
           <% } %>
-          <% for (let i = 1; i <= totalPages; i++) { %>
+
+          <!-- Page Buttons -->
+          <% for (let i = startPage; i <= endPage; i++) { %>
             <li class="page-item <%= i === currentPage ? 'active' : '' %>">
               <a class="page-link" href="?page=<%= i %>&search=<%= searchValue %>"><%= i %></a>
             </li>
           <% } %>
-          <% if (currentPage < totalPages) { %>
+
+          <!-- Right Arrow -->
+          <% if (endPage < totalPages) { %>
             <li class="page-item">
-              <a class="page-link" href="?page=<%= currentPage + 1 %>&search=<%= searchValue %>">
+              <a class="page-link" href="?page=<%= endPage + 1 %>&search=<%= searchValue %>">
                 <i class="material-icons md-chevron_right"></i>
               </a>
             </li>

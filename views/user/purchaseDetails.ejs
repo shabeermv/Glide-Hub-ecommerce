@@ -65,10 +65,10 @@
     !["Cancel Requested", "Cancelled", "Returned"].includes(product.status)
 ) { %>
     <button type="button" 
-            class="btn btn-danger btn-sm mt-2" 
-            onclick="cancelProduct('<%= order._id %>', '<%= product.productId._id %>')">
-        Cancel Product
-    </button>
+        class="btn btn-danger btn-sm mt-2" 
+        onclick="cancelProduct('<%= order._id %>', '<%= product.productId._id %>', '<%= product.quantity %>')">
+    Cancel Product
+</button>
 <% } %>
 
         <div>
@@ -283,10 +283,14 @@
             </div>
             <div class="modal-body">
                 <form id="cancelReasonForm">
+                    <!-- EXISTING HIDDEN INPUTS -->
                     <input type="hidden" id="cancelOrderId">
                     <input type="hidden" id="cancelProductId">
                     <input type="hidden" id="cancelProductOrderId">
                     <input type="hidden" id="cancelType" value="product"> <!-- 'product' or 'order' -->
+                    
+                    <!-- ADD THIS NEW LINE FOR QUANTITY -->
+                    <input type="hidden" id="cancelProductQuantity">
 
                     <label for="cancelReason">Select a Reason:</label>
                     <select class="form-select" id="cancelReason" required>
@@ -365,26 +369,23 @@ function openReturnModal(orderId, productId, productOrderId) {
         return;
     }
 
-    // Set the values in the hidden form fields
     document.getElementById('returnOrderId').value = orderId;
     document.getElementById('returnProductId').value = productId;
     document.getElementById('returnProductOrderId').value = productOrderId;
 
-    // Show the return modal
     var returnModal = new bootstrap.Modal(document.getElementById('returnModal'));
     returnModal.show();
 }
 
-// Function to submit the return request
 async function submitReturn() {
-    // Get all necessary values from the form
+    
     const orderId = document.getElementById('returnOrderId').value;
     const productId = document.getElementById('returnProductId').value;
     const productOrderId = document.getElementById('returnProductOrderId').value;
     const reason = document.getElementById('reason').value;
     const customReason = document.getElementById('customReason').value;
 
-    // Validate required fields
+    
     if (!orderId || !productId || !productOrderId) {
         alert("Order ID, Product ID, and Product Order ID are required.");
         return;
@@ -398,7 +399,6 @@ async function submitReturn() {
     try {
         console.log('Submitting return request...', { orderId, productOrderId, productId, reason });
 
-        // Make API call to the server
         const response = await fetch(`/returnRequested/${orderId}/${productOrderId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -406,7 +406,7 @@ async function submitReturn() {
                 productId, 
                 reason, 
                 customReason,
-                singleProductReturn: true // Flag to indicate it's a single product return
+                singleProductReturn: true 
             })
         });
         console.log("Response received:", response);
@@ -419,17 +419,14 @@ async function submitReturn() {
         console.log("Return response:", data);
 
         if (data.success) {
-            // Close the return modal
             var returnModal = bootstrap.Modal.getInstance(document.getElementById('returnModal'));
             if (returnModal) {
                 returnModal.hide();
             }
             
-            // Show success message
             var successModal = new bootstrap.Modal(document.getElementById('successModal'));
             successModal.show();
 
-            // Reload the page after a short delay
             setTimeout(() => {
                 location.reload();
             }, 2000);
@@ -442,9 +439,7 @@ async function submitReturn() {
     }
 }
 
-// Add event listeners when the DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Add event listener for the return order button (full order return)
     const returnOrderBtn = document.getElementById('returnOrder');
     if (returnOrderBtn) {
         returnOrderBtn.addEventListener('click', function(e) {
@@ -452,16 +447,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const orderId = this.getAttribute('data-order-id');
             console.log('Return Order Button Clicked, orderId:', orderId);
             
-            // Store the orderId for later use
             document.getElementById('returnAllModal').setAttribute('data-order-id', orderId);
             
-            // Show the return all products modal
             const returnAllModal = new bootstrap.Modal(document.getElementById('returnAllModal'));
             returnAllModal.show();
         });
     }
     
-    // Find all return product buttons and attach event listeners
     document.querySelectorAll('.btn-return-product').forEach(button => {
         button.addEventListener('click', function() {
             const orderId = this.getAttribute('data-order-id');
@@ -472,7 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Function to submit a return for all products in an order
+
 async function submitReturnAll() {
     const orderId = document.getElementById('returnAllModal').getAttribute('data-order-id');
     const reason = document.getElementById('returnAllReason').value;
@@ -500,17 +492,17 @@ async function submitReturnAll() {
         console.log('Return response:', data);
         
         if (data.success) {
-            // Close the return all modal
+            
             var returnAllModal = bootstrap.Modal.getInstance(document.getElementById('returnAllModal'));
             if (returnAllModal) {
                 returnAllModal.hide();
             }
             
-            // Show success message
+            
             var successModal = new bootstrap.Modal(document.getElementById('successModal'));
             successModal.show();
 
-            // Reload the page after a short delay
+            
             setTimeout(() => {
                 location.reload();
             }, 2000);
@@ -523,7 +515,6 @@ async function submitReturnAll() {
     }
 }
 
-// Helper function to create modals programmatically if they don't exist
 function ensureModalExists(id, title, bodyContent, successBtnText = 'OK') {
     if (!document.getElementById(id)) {
         const modalHTML = `
@@ -551,7 +542,6 @@ function ensureModalExists(id, title, bodyContent, successBtnText = 'OK') {
     }
 }
 
-// Function to handle errors with a modal
 function showErrorModal(message) {
     ensureModalExists(
         'errorModal', 
@@ -564,7 +554,6 @@ function showErrorModal(message) {
     errorModal.show();
 }
 
-// Function to handle success with a modal
 function showSuccessModal(message) {
     ensureModalExists(
         'successModal', 
@@ -577,31 +566,30 @@ function showSuccessModal(message) {
     successModal.show();
 }
 
-function cancelProduct(orderId, productId) {
-    console.log("cancelProduct called with:", { orderId, productId });
+function cancelProduct(orderId, productId, quantity) {
+    console.log("cancelProduct called with:", { orderId, productId, quantity });
 
     if (!orderId || !productId) {
         console.error("Missing parameters in cancelProduct!", { orderId, productId });
         return;
     }
 
-    // Set values in the hidden fields
     document.getElementById('cancelOrderId').value = orderId;
     document.getElementById('cancelProductId').value = productId;
-    document.getElementById('cancelType').value = 'product'; // Indicate it's a product cancellation
+    document.getElementById('cancelProductQuantity').value = quantity; // Store quantity
+    document.getElementById('cancelType').value = 'product'; 
 
-    // Update modal title
     document.getElementById('cancelReasonModalLabel').textContent = 'Cancel Product';
 
-    // Show the cancel reason modal
     var cancelModal = new bootstrap.Modal(document.getElementById('cancelReasonModal'));
     cancelModal.show();
 }
 
-// Updated submit cancel request function to handle both order and product cancellation
+// Update submitCancelRequest to include quantity
 async function submitCancelRequest() {
     const orderId = document.getElementById('cancelOrderId').value;
     const productId = document.getElementById('cancelProductId').value;
+    const quantity = document.getElementById('cancelProductQuantity').value; // Get quantity
     const cancelType = document.getElementById('cancelType').value;
     const reason = document.getElementById('cancelReason').value;
     const customReason = document.getElementById('cancelCustomReason').value;
@@ -620,9 +608,13 @@ async function submitCancelRequest() {
                 return;
             }
             url = `/cancelProduct/${orderId}`;
-            requestBody = { productId, reason, customReason };
+            requestBody = { 
+                productId, 
+                quantity, // Include quantity
+                reason, 
+                customReason 
+            };
         } else if (cancelType === 'order') {
-            // For order cancellation
             url = `/orderCancel/${orderId}`;
             requestBody = { reason, customReason };
         }
@@ -642,14 +634,12 @@ async function submitCancelRequest() {
         const data = await response.json();
         console.log("Cancellation response:", data);
 
-        // Close the cancel reason modal
         var cancelReasonModal = bootstrap.Modal.getInstance(document.getElementById('cancelReasonModal'));
         if (cancelReasonModal) {
             cancelReasonModal.hide();
         }
 
         if (data.success) {
-            // Show appropriate success modal
             if (cancelType === 'order') {
                 var successModal = new bootstrap.Modal(document.getElementById('orderCancelSuccessModal'));
                 successModal.show();
@@ -658,12 +648,10 @@ async function submitCancelRequest() {
                 successModal.show();
             }
 
-            // Reload page after delay
             setTimeout(() => {
                 location.reload();
             }, 2000);
         } else {
-            // Show error modal
             document.getElementById('cancelErrorMessage').textContent = data.message || 'An error occurred while processing your request.';
             var errorModal = new bootstrap.Modal(document.getElementById('cancelErrorModal'));
             errorModal.show();
@@ -675,48 +663,169 @@ async function submitCancelRequest() {
         errorModal.show();
     }
 }
-
-// Function to reload the page
 function reloadPage() {
     location.reload();
 }
 
+
+// ============================================
+// FRONTEND: Updated retryPayment function
+// ============================================
+
 function retryPayment(orderId) {
+    console.log('Retrying payment for order:', orderId);
+    
+    // Show loading state
+    const retryBtn = document.getElementById('retryPayment');
+    if (retryBtn) {
+        retryBtn.disabled = true;
+        retryBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    }
+
     fetch('/create-razorpay-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId })  
+        body: JSON.stringify({ orderId, isRetry: true })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        // Reset button state
+        if (retryBtn) {
+            retryBtn.disabled = false;
+            retryBtn.innerHTML = 'Retry Payment';
+        }
+
         if (data.success) {
             const options = {
                 key: data.razorpayKeyId,
                 amount: data.amount,
                 currency: "INR",
                 name: "Your Store Name",
-                description: "Retry Payment for Order",
+                description: "Retry Payment for Order #" + orderId,
                 order_id: data.orderId,
+                prefill: {
+                    name: data.prefill?.name || '',
+                    email: data.prefill?.email || '',
+                    contact: data.prefill?.contact || ''
+                },
+                theme: {
+                    color: "#3399cc"
+                },
                 handler: function (response) {
-                    verifyPayment({
+                    console.log('Payment successful:', response);
+                    verifyRetryPayment({
                         razorpay_payment_id: response.razorpay_payment_id,
                         razorpay_order_id: response.razorpay_order_id,
                         razorpay_signature: response.razorpay_signature,
                         order_id: data.yourOrderId
                     });
+                },
+                modal: {
+                    ondismiss: function() {
+                        console.log('Payment modal closed');
+                        if (retryBtn) {
+                            retryBtn.disabled = false;
+                        }
+                    }
                 }
             };
 
             const rzp = new Razorpay(options);
             rzp.open();
+
+            rzp.on("payment.failed", function (response) {
+                console.error("Retry payment failed:", response.error);
+                
+                // Show error modal
+                const errorMsg = response.error.description || "Payment failed. Please try again.";
+                showPaymentError(errorMsg);
+                
+                if (retryBtn) {
+                    retryBtn.disabled = false;
+                }
+            });
         } else {
             alert(data.message || "Failed to retry payment. Please try again.");
         }
     })
     .catch(error => {
-        console.error(" Error:", error);
+        console.error("Error during retry payment:", error);
         alert("An error occurred: " + error.message);
+        
+        // Reset button state
+        if (retryBtn) {
+            retryBtn.disabled = false;
+            retryBtn.innerHTML = 'Retry Payment';
+        }
     });
+}
+
+function verifyRetryPayment(paymentData) {
+    fetch('/verify-razorpay-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...paymentData, isRetry: true })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            showPaymentSuccess(data.orderId || data._id);
+            
+            // Redirect after delay
+            setTimeout(() => {
+                window.location.href = '/orders';
+            }, 3000);
+        } else {
+            alert(data.message || 'Payment verification failed. Please contact support.');
+        }
+    })
+    .catch(error => {
+        console.error('Error during payment verification:', error);
+        alert('An error occurred during payment verification: ' + error.message);
+    });
+}
+
+function showPaymentError(message) {
+    // Ensure error modal exists
+    ensureModalExists(
+        'paymentErrorModal',
+        'Payment Failed',
+        `<p class="text-danger">${message}</p>`,
+        'Close'
+    );
+    
+    const errorModal = new bootstrap.Modal(document.getElementById('paymentErrorModal'));
+    errorModal.show();
+}
+
+function showPaymentSuccess(orderId) {
+    // Ensure success modal exists
+    ensureModalExists(
+        'paymentSuccessModal',
+        'Payment Successful',
+        `
+            <div class="text-center">
+                <i class="fas fa-check-circle text-success" style="font-size: 50px;"></i>
+                <p class="mt-3">Payment completed successfully!</p>
+                <p class="text-muted">Order ID: #${orderId}</p>
+            </div>
+        `,
+        'View Orders'
+    );
+    
+    const successModal = new bootstrap.Modal(document.getElementById('paymentSuccessModal'));
+    successModal.show();
 }
 </script>
 
