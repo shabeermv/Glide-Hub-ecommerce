@@ -1070,6 +1070,10 @@ const cancelPartialProduct = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4b230875865586a8f1cbb6f58d1d69aaea2cbe51
 const orderCancel = async (req, res) => {
   try {
     const orderId = req.params.id;
