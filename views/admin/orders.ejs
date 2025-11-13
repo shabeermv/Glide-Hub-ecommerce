@@ -214,6 +214,21 @@ let statusModal;
 document.addEventListener('DOMContentLoaded', function() {
     statusModal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
 });
+function openStatusModal(orderStatus) {
+  const select = document.getElementById("orderStatusSelect");
+
+  if (orderStatus === "Delivered") {
+    for (let opt of select.options) {
+      if (opt.value !== "Delivered") opt.disabled = true;
+    }
+  } else {
+    for (let opt of select.options) {
+      opt.disabled = false;
+    }
+  }
+
+  statusModal.show();
+}
 
 function updateOrderStatus(orderId, currentStatus) {
     document.getElementById('orderIdInput').value = orderId;

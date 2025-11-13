@@ -273,7 +273,6 @@ const cartCheckoutPage = async (req, res) => {
       })
     );
 
-    // 🔹 VALID COUPONS
     const allCoupons = await Coupon.find({
       minPurchase: { $lte: totalPrice },
       expireDate: { $gte: new Date() },
@@ -401,7 +400,6 @@ const buyNow = async (req, res) => {
       return res.status(404).json({ success: false, message: "Cart not found" });
     }
 
-    // Extract product IDs from frontend form data
     const formProducts = formData.products.map(p => ({
       productId: p.productId.toString(),
       size: p.size,
@@ -409,7 +407,7 @@ const buyNow = async (req, res) => {
     }));
 
     let purchasedItems = [];
-    let totalAmount = 0; // track total price
+    let totalAmount = 0; 
 
     for (const formItem of formProducts) {
       const cartItem = userCart.product.find(
@@ -425,7 +423,6 @@ const buyNow = async (req, res) => {
         });
       }
 
-      // Verify stock
       const product = await Product.findById(formItem.productId);
       if (!product) {
         return res.status(404).json({
@@ -442,7 +439,6 @@ const buyNow = async (req, res) => {
         });
       }
 
-      // Decrease stock
       await Product.updateOne(
         { _id: formItem.productId, "sizes.size": formItem.size },
         {
@@ -454,11 +450,9 @@ const buyNow = async (req, res) => {
         }
       );
 
-      // Calculate total for this product
       const itemTotal = cartItem.price * formItem.quantity;
       totalAmount += itemTotal;
 
-      // Push item to order list
       purchasedItems.push({
         productId: formItem.productId,
         size: formItem.size,
@@ -468,7 +462,6 @@ const buyNow = async (req, res) => {
       });
     }
 
-    // Remove purchased items from cart
     userCart.product = userCart.product.filter(
       item =>
         !formProducts.some(
@@ -479,7 +472,6 @@ const buyNow = async (req, res) => {
     );
     await userCart.save();
 
-    // Create shipping address
     const shippingAddress = {
       fullName: `${formData.firstName} ${formData.lastName}`,
       address:
@@ -492,7 +484,6 @@ const buyNow = async (req, res) => {
       phone: formData.phone
     };
 
-    // Normalize payment method
     let paymentMethod = formData.paymentMethod?.toLowerCase().trim();
     if (paymentMethod.includes("cash on delivery") || paymentMethod.includes("cod")) {
       paymentMethod = "cod";
@@ -519,7 +510,6 @@ const buyNow = async (req, res) => {
 
     await newOrder.save();
 
-    // ✅ Send totalAmount and orderId back for modal
     res.status(200).json({
       success: true,
       message: "Order placed successfully",
@@ -536,7 +526,6 @@ const razorpayCreation = async (req, res) => {
     const userId = req.session.userId;
     const { orderId, isRetry, ...formData } = req.body;
 
-    // ========== RETRY PAYMENT LOGIC ==========
     if (isRetry && orderId) {
       const existingOrder = await Order.findById(orderId)
         .populate('userId')
@@ -546,7 +535,6 @@ const razorpayCreation = async (req, res) => {
         return res.status(404).json({ success: false, message: "Order not found" });
       }
 
-      // Validate order status
       if (existingOrder.orderStatus !== 'Order Pending') {
         return res.status(400).json({ 
           success: false, 
@@ -554,7 +542,6 @@ const razorpayCreation = async (req, res) => {
         });
       }
 
-      // Validate user ownership
       if (existingOrder.userId._id.toString() !== userId.toString()) {
         return res.status(403).json({ 
           success: false, 
@@ -581,7 +568,6 @@ const razorpayCreation = async (req, res) => {
         }
       }
 
-      // Initialize Razorpay
       const razorpay = new Razorpay({
         key_id: process.env.RAZORPAY_ID_KEY,
         key_secret: process.env.RAZORPAY_SECRET_KEY,
@@ -589,7 +575,6 @@ const razorpayCreation = async (req, res) => {
 
       const amountInPaise = Math.round(existingOrder.totalAmount * 100);
 
-      // Create new Razorpay order for retry
       const razorpayOrder = await razorpay.orders.create({
         amount: amountInPaise,
         currency: "INR",
@@ -602,7 +587,6 @@ const razorpayCreation = async (req, res) => {
         },
       });
 
-      // Update order with new Razorpay order ID
       existingOrder.razorpayOrderId = razorpayOrder.id;
       existingOrder.paymentStatus = "Pending";
       await existingOrder.save();
@@ -621,7 +605,6 @@ const razorpayCreation = async (req, res) => {
       });
     }
 
-    // ========== NEW ORDER CREATION LOGIC ==========
     if (!formData.products || formData.products.length === 0) {
       return res.status(400).json({ success: false, message: "No products provided" });
     }
@@ -661,14 +644,12 @@ const razorpayCreation = async (req, res) => {
         });
       }
 
-      // Get Product Offer
       const productOffer = await ProductOffer.findOne({
         productId: product._id,
         startDate: { $lte: new Date() },
         endDate: { $gte: new Date() },
       });
 
-      // Get Category Offer
       let categoryOffer = null;
       if (product.category && product.category._id) {
         categoryOffer = await CategoryOffer.findOne({
@@ -678,7 +659,6 @@ const razorpayCreation = async (req, res) => {
         });
       }
 
-      // Calculate final price
       let price = Number(product.price || product.originalPrice || 0);
 
       if (productOffer) {
@@ -720,7 +700,6 @@ const razorpayCreation = async (req, res) => {
       email: formData.email,
     };
 
-    // Create temporary order
     const order = await Order.create({
       orderId: generateOrderId(),
       userId,
@@ -801,7 +780,6 @@ const verifyRazorPay = async (req, res) => {
     order.razorpaySignature = razorpay_signature;
     order.isTemporary = false;
 
-    // Update stock and sale count
     for (const item of order.products) {
       await Product.updateOne(
         { _id: item.productId, "sizes.size": item.size },
@@ -814,7 +792,6 @@ const verifyRazorPay = async (req, res) => {
       );
     }
 
-    // Remove purchased items from cart (only for new orders, not retries)
     if (!wasRetry) {
       const userCart = await Cart.findOne({ userId: order.userId });
       if (userCart) {
@@ -830,7 +807,6 @@ const verifyRazorPay = async (req, res) => {
       }
     }
 
-    // Increment coupon count if used (only once, not on retry)
     if (order.couponCode && !wasRetry) {
       const coupon = await Coupon.findOne({ code: order.couponCode });
       if (coupon) {
@@ -968,7 +944,6 @@ const cancelPartialProduct = async (req, res) => {
 
     console.log(req.body, "Received from cancel product");
 
-    // Basic validation
     if (!orderId || !productId || !quantity) {
       return res
         .status(statusCode.BAD_REQUEST)
@@ -997,7 +972,6 @@ const cancelPartialProduct = async (req, res) => {
         .json({ success: false, message: "Product already cancelled." });
     }
 
-    // Check quantity validity
     if (quantity > product.quantity) {
       return res.status(statusCode.BAD_REQUEST).json({
         success: false,
@@ -1005,7 +979,6 @@ const cancelPartialProduct = async (req, res) => {
       });
     }
 
-    // Update product status
     product.status = "Cancelled";
     product.cancelledQuantity = quantity;
     product.cancelReason = reason || "Not specified";
@@ -1026,7 +999,6 @@ const cancelPartialProduct = async (req, res) => {
       await productData.save();
     }
 
-    // Update user wallet
     const user = await User.findById(order.userId);
     if (user) {
       user.wallet = (user.wallet || 0) + refundAmount;
@@ -1041,7 +1013,6 @@ const cancelPartialProduct = async (req, res) => {
       await user.save();
     }
 
-    // Check if all products are cancelled
     const allCancelled = order.products.every(
       (p) =>
         ["Cancel Requested", "Cancelled"].includes(p.status) ||
@@ -1081,7 +1052,6 @@ const orderCancel = async (req, res) => {
 
     console.log(req.body, "this is the body..");
 
-    // Find order
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(statusCode.NOT_FOUND).json({
@@ -1090,7 +1060,6 @@ const orderCancel = async (req, res) => {
       });
     }
 
-    // Find user
     const user = await User.findById(userId);
     if (!user) {
       return res.status(statusCode.NOT_FOUND).json({
@@ -1099,11 +1068,9 @@ const orderCancel = async (req, res) => {
       });
     }
 
-    // ✅ Restore stock & reduce sale count
     for (const item of order.products) {
       const product = await Product.findById(item.productId);
       if (product) {
-        // Reduce sale count (cannot go below 0)
         product.saleCount = Math.max(0, (product.saleCount || 0) - item.quantity);
 
         // Ensure sizes array exists
@@ -1112,7 +1079,6 @@ const orderCancel = async (req, res) => {
           continue;
         }
 
-        // Restore stock
         const sizeIndex = product.sizes.findIndex(
           (sizeObj) => sizeObj.size === item.size
         );
@@ -1120,7 +1086,6 @@ const orderCancel = async (req, res) => {
         if (sizeIndex !== -1) {
           product.sizes[sizeIndex].stock += item.quantity;
         } else {
-          // If size not found, add it
           product.sizes.push({
             size: item.size,
             stock: item.quantity,
@@ -1131,7 +1096,6 @@ const orderCancel = async (req, res) => {
       }
     }
 
-    // ✅ Mark products & order as cancelled
     order.products.forEach((product) => {
       product.status = "Cancelled";
     });
@@ -1144,10 +1108,8 @@ const orderCancel = async (req, res) => {
     order.orderStatus = "Cancelled";
     order.markModified("products");
 
-    // ✅ Refund logic
     let refundedAmount = 0;
 
-    // Refund only if payment completed and not COD
     if (
       order.paymentStatus === "completed" &&
       !order.paymentMethod.includes("cod")
@@ -1163,13 +1125,11 @@ const orderCancel = async (req, res) => {
 
       await user.save();
 
-      // Update order payment status
       order.paymentStatus = "Refunded";
     }
 
     await order.save();
 
-    // ✅ Response
     return res.status(statusCode.OK).json({
       success: true,
       message: "Order cancelled successfully",

@@ -78,11 +78,31 @@ const changeOrderStatus = async (req, res, next) => {
         .json({ success: false, message: "Order not found" });
     }
 
+    // 🚫 If order is already delivered, block further changes
+    if (order.orderStatus === "Delivered") {
+      return res.status(statusCode.BAD_REQUEST).json({
+        success: false,
+        message: "This order has already been delivered and cannot be updated.",
+      });
+    }
+
     const validStatuses = ["Pending", "Shipped", "Delivered", "Cancelled"];
     if (!validStatuses.includes(status)) {
       return res
         .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: "Invalid status provided" });
+    }
+
+    // 🟡 Prevent moving backwards (e.g., from Shipped -> Pending)
+    const statusOrder = ["Pending", "Shipped", "Delivered", "Cancelled"];
+    const currentIndex = statusOrder.indexOf(order.orderStatus);
+    const newIndex = statusOrder.indexOf(status);
+
+    if (newIndex < currentIndex) {
+      return res.status(statusCode.BAD_REQUEST).json({
+        success: false,
+        message: `Cannot change status from ${order.orderStatus} to ${status}.`,
+      });
     }
 
     order.orderStatus = status;
@@ -114,6 +134,7 @@ const changeOrderStatus = async (req, res, next) => {
   }
 };
 
+
 const viewOrderDetails = async (req, res, next) => {
   const id = req.params.id;
   console.log(id, "Order ID received");
@@ -138,11 +159,9 @@ const viewOrderDetails = async (req, res, next) => {
         .render("admin/error", { message: "Order not found" });
     }
 
-    // 🔍 Check what kind of offer or coupon was used
     let offerType = null;
     let offerDetails = null;
 
-    // If a coupon was used
     if (order.couponCode) {
       offerType = "Coupon";
       offerDetails = {
@@ -150,7 +169,6 @@ const viewOrderDetails = async (req, res, next) => {
         discountAmount: order.discountAmount || 0,
       };
     } else {
-      // If product/category offers were applied to products
       const productWithOffer = order.products.find(
         (p) => p.appliedOffer && p.appliedOffer.discountAmount > 0
       );
@@ -367,28 +385,38 @@ const setUpReturnRequest = async (req, res) => {
         if (coupon.discount === "percentage") {
           refundAmount -= (refundAmount * coupon.discountValue) / 100;
         } else if (coupon.discount === "fixed") {
-          const productShare = refundAmount / order.totalAmount;
+          const totalOrderValue = order.products.reduce(
+            (acc, p) => acc + p.price * p.quantity,
+            0
+          );
+          const productShare = refundAmount / totalOrderValue;
           refundAmount -= productShare * coupon.discountValue;
         }
+        refundAmount = Math.max(refundAmount, 0);
         console.log(
-          `Applying ${coupon.discountValue}${
-            coupon.discount === "percentage" ? "%" : "₹"
-          } discount. New refund: ₹${refundAmount}`
+          `Coupon applied: new refund = ₹${refundAmount.toFixed(2)}`
         );
       }
     }
 
     if (action === "approved") {
       productToReturn.status = "Returned";
-      user.wallet += refundAmount;
+
+      user.wallet = (user.wallet || 0) + refundAmount;
 
       user.walletHistory.push({
         date: new Date(),
         amount: refundAmount,
-        description: `Refund for product: ${productToReturn.productId.title} (Order #${order.orderId})`,
+        type: "credit",
+        description: `Refund for ${productToReturn.productId.title} (Order #${order.orderId})`,
       });
 
       await user.save();
+
+      const allReturned = order.products.every((p) => p.status === "Returned");
+      if (allReturned) {
+        order.paymentStatus = "Refunded";
+      }
     } else {
       productToReturn.status = "Return Rejected";
     }
@@ -399,9 +427,10 @@ const setUpReturnRequest = async (req, res) => {
       success: true,
       message:
         action === "approved"
-          ? "Return approved and refunded successfully"
+          ? "Return approved and refund added to wallet successfully"
           : "Return rejected successfully",
-      refundAmount,
+      refundAmount: refundAmount.toFixed(2),
+      newWalletBalance: user.wallet.toFixed(2),
     });
   } catch (error) {
     console.error("Error processing return request:", error);
@@ -410,6 +439,7 @@ const setUpReturnRequest = async (req, res) => {
       .json({ success: false, message: "Internal Server Error" });
   }
 };
+
 
 const setCancelAction = async (req, res) => {
   try {

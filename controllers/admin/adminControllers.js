@@ -671,10 +671,8 @@ const downloadOrdersPDF = async (req, res) => {
 
     doc.pipe(res);
 
-    // Title
     doc.fontSize(20).text("Orders Report", { align: "center" }).moveDown(1.5);
 
-    // Table headers
     const headers = ["Order ID", "Customer", "Total Amount", "Payment Status", "Date"];
     const columnWidths = [80, 150, 100, 100, 80];
     const startX = 50;
@@ -690,7 +688,6 @@ const downloadOrdersPDF = async (req, res) => {
 
     doc.moveDown(0.5).moveTo(startX, doc.y).lineTo(startX + columnWidths.reduce((a, b) => a + b, 0), doc.y).stroke();
 
-    // Table rows
     doc.font("Helvetica").fontSize(10);
     let totalSales = 0;
 
@@ -718,7 +715,6 @@ const downloadOrdersPDF = async (req, res) => {
       doc.moveDown(1);
     });
 
-    // Summary
     doc.moveDown(1);
     doc.font("Helvetica-Bold").fontSize(12);
     doc.text(`Total Orders: ${orders.length}`, startX, doc.y);
@@ -737,7 +733,6 @@ const downloadOrdersExcel = async (req, res) => {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Orders Report");
 
-    // Header row
     sheet.columns = [
       { header: "Order ID", key: "orderId", width: 20 },
       { header: "Customer", key: "customer", width: 25 },
@@ -746,7 +741,6 @@ const downloadOrdersExcel = async (req, res) => {
       { header: "Date", key: "orderDate", width: 20 },
     ];
 
-    // Add rows
     let totalSales = 0;
     orders.forEach((order) => {
       const orderId = order.orderId || order._id.toString().slice(-6).toUpperCase();
@@ -762,12 +756,10 @@ const downloadOrdersExcel = async (req, res) => {
       sheet.addRow({ orderId, customer, totalAmount, paymentStatus, orderDate });
     });
 
-    // Summary row
     sheet.addRow([]);
     sheet.addRow({ orderId: "Total Orders:", customer: orders.length });
     sheet.addRow({ orderId: "Total Sales:", customer: totalSales.toFixed(2) });
 
-    // Formatting (bold headers)
     sheet.getRow(1).font = { bold: true };
 
     res.setHeader(
