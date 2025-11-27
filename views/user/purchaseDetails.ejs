@@ -24,7 +24,7 @@
     <div class="container mt-9">
         <h2 class="mb-3">Order Details</h2>
         <div class="order-card">
-            <h5>Order ID: #<%= order.id %></h5>
+            <h5>Order ID:  <%= order.orderId %></h5>
             <p><small><%= order.createdAt %></small></p>
             <span class="badge-status"><%= order.orderStatus %></span>
         
@@ -44,7 +44,6 @@
         <div>
             <p><strong>Product:</strong> <%= product.productId.title || 'No title available' %></p>
             
-            <!-- Show product original price vs discounted price -->
             <p>
                 <strong>Price:</strong> 
                 <% if (product.productId.price !== product.price) { %>

@@ -661,9 +661,8 @@ const userProfileInfo = async (req, res) => {
         path: "products.productId",
         select: "title price",
       })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: 1 });
 
-    // Filter out null productIds or add default values
     orders.forEach(order => {
       order.products.forEach(product => {
         if (!product.productId) {
@@ -872,7 +871,7 @@ const deleteAddress = async (req, res) => {
   const addressId = req.params.id;
   const userId = req.session.userId;
 
-  // console.log('addressid kitttiiiiiii',addressId);
+  console.log('addressid kitttiiiiiii',addressId);
 
   try {
     if (!userId) {

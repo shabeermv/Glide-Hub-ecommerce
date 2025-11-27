@@ -693,7 +693,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const newPostCode = document.getElementById('new-pCode').value;
         const newMobile = document.getElementById('new-mobile').value;
         
-        // Validate required fields
         if (!newFName || !newLName || !newCountry || !newAddress || !newCity || !newState || !newPostCode || !newMobile) {
             alert('Please fill in all required fields');
             return;
@@ -884,7 +883,7 @@ function createOrderAndInitiatePayment(formData) {
   fetch('/create-razorpay-order', { 
     method: 'POST', 
     headers: { 'Content-Type': 'application/json' }, 
-    body: JSON.stringify(formData)  // formData now includes products array
+    body: JSON.stringify(formData)  
   }) 
   .then(response => response.json()) 
   .then(data => { 
@@ -916,7 +915,7 @@ function createOrderAndInitiatePayment(formData) {
             razorpay_order_id: response.razorpay_order_id, 
             razorpay_signature: response.razorpay_signature, 
             order_id: data.yourOrderId,
-            products: formData.products  // Pass products to verification
+            products: formData.products  
           }); 
         } 
       }; 
@@ -942,7 +941,7 @@ function verifyPayment(paymentData) {
   fetch('/verify-razorpay-payment', { 
     method: 'POST', 
     headers: { 'Content-Type': 'application/json' }, 
-    body: JSON.stringify(paymentData)  // Now includes products
+    body: JSON.stringify(paymentData)  
   }) 
   .then(response => { 
     if (!response.ok) { 
@@ -984,16 +983,16 @@ function handleFailedPayment(orderId) {
             console.error("Error updating failed payment status:", data.message);
         }
         
-        // Show the failure modal
+        
         document.getElementById("paymentErrorMessage").textContent = 
             data.message || "Your payment was not successful. Please try again.";
         
         $("#paymentErrorModal").modal("show");
         
-        // Redirect to checkout page after showing the modal
+        
         setTimeout(() => {
             $("#paymentErrorModal").modal("hide");
-            window.location.href = '/cart-checkout'; // Redirect back to checkout page
+            window.location.href = '/cart-checkout'; 
         }, 2000);
     })
     .catch(error => {
@@ -1005,7 +1004,7 @@ function handleFailedPayment(orderId) {
         
         setTimeout(() => {
             $("#paymentErrorModal").modal("hide");
-            window.location.href = '/cart-checkout'; // Redirect back to checkout page
+            window.location.href = '/cart-checkout'; 
         }, 5000);
     });
 }

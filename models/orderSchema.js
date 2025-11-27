@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
+const moment = require('moment')
 
 const orderSchema = new mongoose.Schema({
   orderId: {
@@ -112,9 +113,9 @@ const orderSchema = new mongoose.Schema({
     required: true,
   },
   createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  type: String,
+  default: moment().format("YYYY-MM-DD HH:mm:ss"),
+},
   returnReason: {
     type: String,
     required: false,

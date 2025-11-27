@@ -333,7 +333,7 @@ const getCancelRequests = async (req, res) => {
 
 const setUpReturnRequest = async (req, res) => {
   try {
-    const { orderId, productId, action } = req.body;
+    const { orderId, productId, action, reason } = req.body;
     console.log("Processing return request:", { orderId, productId, action });
 
     const order = await Order.findById(orderId)
@@ -342,13 +342,11 @@ const setUpReturnRequest = async (req, res) => {
       .populate("coupon");
 
     if (!order) {
-      return res
-        .status(statusCode.NOT_FOUND)
-        .json({ success: false, message: "Order not found" });
+      return res.status(404).json({ success: false, message: "Order not found" });
     }
 
     if (order.paymentStatus !== "completed") {
-      return res.status(statusCode.BAD_REQUEST).json({
+      return res.status(400).json({
         success: false,
         message: "Refund cannot be processed. Payment is not completed.",
       });
@@ -356,9 +354,7 @@ const setUpReturnRequest = async (req, res) => {
 
     const user = order.userId;
     if (!user) {
-      return res
-        .status(statusCode.NOT_FOUND)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
     const productToReturn = order.products.find(
@@ -366,21 +362,25 @@ const setUpReturnRequest = async (req, res) => {
     );
 
     if (!productToReturn) {
-      return res
-        .status(statusCode.NOT_FOUND)
-        .json({ success: false, message: `Product not found in order` });
+      return res.status(404).json({
+        success: false,
+        message: "Product not found in the order",
+      });
     }
 
     if (productToReturn.status === "Returned") {
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .json({ success: false, message: `Product has already been returned` });
+      return res.status(400).json({
+        success: false,
+        message: "Product has already been returned",
+      });
     }
 
+    // Refund calculation
     let refundAmount = productToReturn.price * productToReturn.quantity;
 
     if (order.coupon) {
       const coupon = await Coupon.findById(order.coupon);
+
       if (coupon) {
         if (coupon.discount === "percentage") {
           refundAmount -= (refundAmount * coupon.discountValue) / 100;
@@ -389,16 +389,18 @@ const setUpReturnRequest = async (req, res) => {
             (acc, p) => acc + p.price * p.quantity,
             0
           );
+
           const productShare = refundAmount / totalOrderValue;
           refundAmount -= productShare * coupon.discountValue;
         }
+
         refundAmount = Math.max(refundAmount, 0);
-        console.log(
-          `Coupon applied: new refund = ₹${refundAmount.toFixed(2)}`
-        );
       }
     }
 
+    // ============================
+    // APPROVED RETURN
+    // ============================
     if (action === "approved") {
       productToReturn.status = "Returned";
 
@@ -408,37 +410,48 @@ const setUpReturnRequest = async (req, res) => {
         date: new Date(),
         amount: refundAmount,
         type: "credit",
-        description: `Refund for ${productToReturn.productId.title} (Order #${order.orderId})`,
+        description: `Refund for returned product: "${
+          productToReturn.productId.title
+        }" | Order #${order.orderId}${reason ? " | Reason: " + reason : ""}`,
       });
 
       await user.save();
 
+      // Update MAIN orderStatus
       const allReturned = order.products.every((p) => p.status === "Returned");
+      const someReturned = order.products.some((p) => p.status === "Returned");
+
       if (allReturned) {
+        order.orderStatus = "Returned";
         order.paymentStatus = "Refunded";
+      } else if (someReturned) {
+        order.orderStatus = "Partially Returned"; // custom status
       }
+
     } else {
       productToReturn.status = "Return Rejected";
     }
 
     await order.save();
 
-    res.status(statusCode.OK).json({
+    res.status(200).json({
       success: true,
       message:
         action === "approved"
-          ? "Return approved and refund added to wallet successfully"
-          : "Return rejected successfully",
+          ? "Return approved and refund credited to wallet"
+          : "Return rejected",
       refundAmount: refundAmount.toFixed(2),
       newWalletBalance: user.wallet.toFixed(2),
     });
   } catch (error) {
     console.error("Error processing return request:", error);
-    res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({ success: false, message: "Internal Server Error" });
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   }
 };
+
 
 
 const setCancelAction = async (req, res) => {

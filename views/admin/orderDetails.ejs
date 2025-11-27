@@ -52,7 +52,7 @@
     <div class="container mt-5">
         <h2 class="mb-3">Order Details</h2>
         <div class="order-card">
-            <h5>Order ID: #<%= order.orderId %></h5>
+            <h5>Order ID: <%= order.orderId %></h5>
             <p><small>Placed on: <%= new Date(order.createdAt).toLocaleString() %></small></p>
             <span class="badge-status"><%= order.orderStatus %></span>
 
