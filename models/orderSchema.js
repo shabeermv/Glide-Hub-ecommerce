@@ -113,8 +113,9 @@ const orderSchema = new mongoose.Schema({
     required: true,
   },
   createdAt: {
-  type: String,
-  default: moment().format("YYYY-MM-DD HH:mm:ss"),
+  type: Date,
+  default: Date.now
+
 },
   returnReason: {
     type: String,
